@@ -48,10 +48,10 @@ def get_tenants():
         return True, ret.json()
     except:
         pass
-        return False
+        return False, json.dumps([])
 
-def create_user(uid, tenant, name, email, services, gateway):
-    data = {'uid': uid, 'tenant': tenant, 'name': name, 'email': email, 'services': services, 'gateway': gateway}
+def create_user(uid, tenant, name, email, services, gateway, pod):
+    data = {'uid': uid, 'tenant': tenant, 'name': name, 'email': email, 'services': services, 'gateway': gateway, 'pod': pod}
     try:
         ret = requests.post(url+"adduser", json=data)
         if ret.status_code != 200 or ret.json()['Result'] != "ok":
@@ -61,8 +61,8 @@ def create_user(uid, tenant, name, email, services, gateway):
         pass
         return False
 
-def create_bundle(bid, tenant, name, services, gateway):
-    data = {'bid': bid, 'tenant': tenant, 'name': name, 'services': services, 'gateway': gateway}
+def create_bundle(bid, tenant, name, services, gateway, pod):
+    data = {'bid': bid, 'tenant': tenant, 'name': name, 'services': services, 'gateway': gateway, 'pod': pod}
     try:
         ret = requests.post(url+"addbundle", json=data)
         if ret.status_code != 200 or ret.json()['Result'] != "ok":
@@ -162,7 +162,7 @@ if __name__ == '__main__':
 
     ok, tenants = get_tenants()
     while not ok:
-        print('Tenant creation failed, retrying ...')
+        print('Tenant fetch failed, retrying ...')
         time.sleep(1)
         ok, tenants = get_tenants()
 
@@ -170,11 +170,11 @@ if __name__ == '__main__':
     # to search for the right tenant name or something inside the returned list of tenants
     tenant = tenants[0]['_id']
 
-    ok = create_user('test1@nextensio.net', tenant, 'Test User1', 'test1@nextensio.net', ['test1-nextensio-net'], 'gateway.testa.nextensio.net')
+    ok = create_user('test1@nextensio.net', tenant, 'Test User1', 'test1@nextensio.net', ['test1-nextensio-net'], 'gateway.testa.nextensio.net', 1)
     while not ok:
         print('User creation failed, retrying ...')
         time.sleep(1)
-        ok = create_user('test1@nextensio.net', tenant, 'Test User1', 'test1@nextensio.net', ['test1-nextensio-net'], 'gateway.testa.nextensio.net')
+        ok = create_user('test1@nextensio.net', tenant, 'Test User1', 'test1@nextensio.net', ['test1-nextensio-net'], 'gateway.testa.nextensio.net', 1)
 
     ok = create_user_attr('test1@nextensio.net', tenant, 'employee', 'IC', 50, ['ABU,BBU'], ['engineering','sales'])
     while not ok:
@@ -182,11 +182,11 @@ if __name__ == '__main__':
         time.sleep(1)
         ok = create_user_attr('test1@nextensio.net', tenant, 'employee', 'IC', 50, ['ABU,BBU'], ['engineering','sales'])
     
-    ok = create_user('test2@nextensio.net', tenant, 'Test User2', 'test2@nextensio.net', ['test2-nextensio-net'], 'gateway.testa.nextensio.net')
+    ok = create_user('test2@nextensio.net', tenant, 'Test User2', 'test2@nextensio.net', ['test2-nextensio-net'], 'gateway.testa.nextensio.net', 2)
     while not ok:
         print('User creation failed, retrying ...')
         time.sleep(1)
-        ok = create_user('test2@nextensio.net', tenant, 'Test User2', 'test2@nextensio.net', ['test2-nextensio-net'], 'gateway.testa.nextensio.net')
+        ok = create_user('test2@nextensio.net', tenant, 'Test User2', 'test2@nextensio.net', ['test2-nextensio-net'], 'gateway.testa.nextensio.net', 2)
     
     ok = create_user_attr('test2@nextensio.net', tenant, 'employee', 'IC', 50, ['ABU,BBU'], ['engineering','sales'])
     while not ok:
@@ -194,11 +194,11 @@ if __name__ == '__main__':
         time.sleep(1)
         ok = create_user_attr('test2@nextensio.net', tenant, 'employee', 'IC', 50, ['ABU,BBU'], ['engineering','sales'])
 
-    ok = create_bundle('default@nextensio.net', tenant, 'Default Internet Route', ['default-internet'], 'gateway.testc.nextensio.net')
+    ok = create_bundle('default@nextensio.net', tenant, 'Default Internet Route', ['default-internet'], 'gateway.testc.nextensio.net', 3)
     while not ok:
         print('Bundle creation failed, retrying ...')
         time.sleep(1)
-        ok = create_bundle('default@nextensio.net', tenant, 'Default Internet Route', ['default-internet'], 'gateway.testc.nextensio.net')
+        ok = create_bundle('default@nextensio.net', tenant, 'Default Internet Route', ['default-internet'], 'gateway.testc.nextensio.net', 3)
 
     ok = create_bundle_attr('default@nextensio.net', tenant, ['ABU,BBU'], ['engineering','sales'], 1, 1, "allowed")
     while not ok:
@@ -206,11 +206,11 @@ if __name__ == '__main__':
         time.sleep(1)
         ok = create_bundle_attr('default@nextensio.net', tenant, ['ABU,BBU'], ['engineering','sales'], 1, 1, "allowed")
 
-    ok = create_bundle('v1.kismis@nextensio.net', tenant, 'Kismis Version ONE', ['v1.kismis.org'], 'gateway.testc.nextensio.net')
+    ok = create_bundle('v1.kismis@nextensio.net', tenant, 'Kismis Version ONE', ['v1.kismis.org'], 'gateway.testc.nextensio.net', 4)
     while not ok:
         print('Bundle creation failed, retrying ...')
         time.sleep(1)
-        ok = create_bundle('v1.kismis@nextensio.net', tenant, 'Kismis Version ONE', ['v1.kismis.org'], 'gateway.testc.nextensio.net')
+        ok = create_bundle('v1.kismis@nextensio.net', tenant, 'Kismis Version ONE', ['v1.kismis.org'], 'gateway.testc.nextensio.net', 4)
 
     ok = create_bundle_attr('v1.kismis@nextensio.net', tenant, ['ABU,BBU'], ['engineering','sales'], 1, 1, "allowed")
     while not ok:
@@ -218,11 +218,11 @@ if __name__ == '__main__':
         time.sleep(1)
         ok = create_bundle_attr('v1.kismis@nextensio.net', tenant, ['ABU,BBU'], ['engineering','sales'], 1, 1, "allowed")
 
-    ok = create_bundle('v2.kismis@nextensio.net', tenant, 'Kismis Version ONE', ['v2.kismis.org'], 'gateway.testc.nextensio.net')
+    ok = create_bundle('v2.kismis@nextensio.net', tenant, 'Kismis Version ONE', ['v2.kismis.org'], 'gateway.testc.nextensio.net', 5)
     while not ok:
         print('Bundle creation failed, retrying ...')
         time.sleep(1)
-        ok = create_bundle('v2.kismis@nextensio.net', tenant, 'Kismis Version ONE', ['v2.kismis.org'], 'gateway.testc.nextensio.net')
+        ok = create_bundle('v2.kismis@nextensio.net', tenant, 'Kismis Version ONE', ['v2.kismis.org'], 'gateway.testc.nextensio.net', 5)
         
     ok = create_bundle_attr('v2.kismis@nextensio.net', tenant, ['ABU,BBU'], ['engineering','sales'], 1, 1, "allowed")
     while not ok:

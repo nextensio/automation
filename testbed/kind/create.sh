@@ -136,6 +136,10 @@ function consul_query_config {
     cluster=$1
 
     $kubectl config use-context kind-$cluster
+    ret=`kubectl exec -it $cluster-consul-server-0 -n consul-system -- curl --request GET http://127.0.0.1:8500/v1/query`
+    while [[ "$ret" == "[]" ]]; 
+    do
+    echo "Adding consul query in $cluster"
     $kubectl exec -it $cluster-consul-server-0 -n consul-system -- curl --request POST http://127.0.0.1:8500/v1/query --data-binary @- << EOF
 {
   "Name": "",
@@ -151,6 +155,8 @@ function consul_query_config {
   }
 }
 EOF
+    ret=`kubectl exec -it $cluster-consul-server-0 -n consul-system -- curl --request GET http://127.0.0.1:8500/v1/query`
+    done
 }
 
 function consul_join {
@@ -245,34 +251,34 @@ function create_all {
     ./ctrl.py $ctrl_ip $tmpdir
     echo "Controller config done, going to create agents and connectors"
 
-    docker kill nxt-agent1; docker rm nxt-agent1
-    docker kill nxt-agent2; docker rm nxt-agent2
-    docker kill nxt-default; docker rm nxt-default
-    docker kill nxt-kismis-ONE; docker rm nxt-kismis-ONE
-    docker kill nxt-kismis-TWO; docker rm nxt-kismis-TWO
+    docker kill nxt_agent1; docker rm nxt_agent1
+    docker kill nxt_agent2; docker rm nxt_agent2
+    docker kill nxt_default; docker rm nxt_default
+    docker kill nxt_kismis_ONE; docker rm nxt_kismis_ONE
+    docker kill nxt_kismis_TWO; docker rm nxt_kismis_TWO
     docker container prune -f
-    create_agent nxt-agent1 true test1@nextensio.net
-    create_agent nxt-agent2 true test2@nextensio.net
-    create_agent nxt-default false default@nextensio.net 127.0.0.1 foobar.com default-internet
-    create_agent nxt-kismis-ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org v1-kismis-org
-    create_agent nxt-kismis-TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org v2-kismis-org
-    agent1_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt-agent1`
-    agent2_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt-agent2`
+    create_agent nxt_agent1 true test1@nextensio.net
+    create_agent nxt_agent2 true test2@nextensio.net
+    create_agent nxt_default false default@nextensio.net 127.0.0.1 foobar.com default-internet
+    create_agent nxt_kismis_ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org v1-kismis-org
+    create_agent nxt_kismis_TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org v2-kismis-org
+    nxt_agent1=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent1`
+    nxt_agent2=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent2`
 }
 
 function save_env {
     echo "###########################################################################"
     echo "######You can access controller UI at http://$ctrl_ip:3000/  ############"
-    echo "##You can set a broswer proxy to $agent1_ip:8081 to send traffic via nextensio##"
-    echo "##OR You can set a broswer proxy to $agent2_ip:8081 to send traffic via nextensio##"
+    echo "##You can set a broswer proxy to $nxt_agent1:8081 to send traffic via nextensio##"
+    echo "##OR You can set a broswer proxy to $nxt_agent2:8081 to send traffic via nextensio##"
     echo "##All the above information is saved in $tmpdir/environment for future reference##"
     
     envf=$tmpdir/environment
     echo "testa_ip=$testa_ip" > $envf
     echo "testc_ip=$testc_ip" >> $envf
     echo "ctrl_ip=$ctrl_ip" >> $envf
-    echo "agent1_ip=$agent1_ip" >> $envf
-    echo "agent2_ip=$agent2_ip" >> $envf
+    echo "nxt_agent1=$nxt_agent1" >> $envf
+    echo "nxt_agent2=$nxt_agent2" >> $envf
 }
 
 function main {
@@ -311,6 +317,9 @@ function usage {
 
 options=$1
 case "$options" in
+"")
+    main remote
+    ;;
 *usage)
     usage
     ;;
@@ -319,28 +328,28 @@ case "$options" in
     ;;
 *reset-agent)
     source $tmpdir/environment
-    docker kill nxt-agent1; docker rm nxt-agent1
-    docker kill nxt-agent2; docker rm nxt-agent2
+    docker kill nxt_agent1; docker rm nxt_agent1
+    docker kill nxt_agent2; docker rm nxt_agent2
     docker container prune -f
-    create_agent nxt-agent1 true test1@nextensio.net
-    create_agent nxt-agent2 true test2@nextensio.net
-    agent1_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt-agent1`
-    agent2_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt-agent2`
-    echo "##You can set a broswer proxy to $agent1_ip:8081 to send traffic via nextensio##"
-    echo "##OR You can set a broswer proxy to $agent2_ip:8081 to send traffic via nextensio##"
+    create_agent nxt_agent1 true test1@nextensio.net
+    create_agent nxt_agent2 true test2@nextensio.net
+    nxt_agent1=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent1`
+    nxt_agent2=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent2`
+    echo "##You can set a broswer proxy to $nxt_agent1:8081 to send traffic via nextensio##"
+    echo "##OR You can set a broswer proxy to $nxt_agent2:8081 to send traffic via nextensio##"
     ;;
 *reset-conn)
     source $tmpdir/environment
-    docker kill nxt-default; docker rm nxt-default
-    docker kill nxt-kismis-ONE; docker rm nxt-kismis-ONE
-    docker kill nxt-kismis-TWO; docker rm nxt-kismis-TWO
+    docker kill nxt_default; docker rm nxt_default
+    docker kill nxt_kismis_ONE; docker rm nxt_kismis_ONE
+    docker kill nxt_kismis_TWO; docker rm nxt_kismis_TWO
     docker container prune -f
-    create_agent nxt-default false default@nextensio.net 127.0.0.1 foobar.com default-internet
-    create_agent nxt-kismis-ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org v1-kismis-org
-    create_agent nxt-kismis-TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org v2-kismis-org
+    create_agent nxt_default false default@nextensio.net 127.0.0.1 foobar.com default-internet
+    create_agent nxt_kismis_ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org v1-kismis-org
+    create_agent nxt_kismis_TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org v2-kismis-org
     ;;
-*) 
-    main remote
+*)
+    echo "Unknown option $options"  
     ;;
 esac
 

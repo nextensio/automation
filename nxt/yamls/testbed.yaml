@@ -1,0 +1,139 @@
+testbed:
+  name: Nextensio Two-Cluster
+devices:
+  nxt_agent1:
+    os: linux
+    type: docker
+    connections:
+      defaults:
+        class: 'containers.DockerConnection'
+      container:
+        name: nxt_agent1
+  nxt_agent2:
+    os: linux
+    type: docker
+    connections:
+      defaults:
+        class: 'containers.DockerConnection'
+      container:
+        name: nxt_agent2
+  nxt_default:
+    os: linux
+    type: docker
+    connections:
+      defaults:
+        class: 'containers.DockerConnection'
+      container:
+        name: nxt_default
+  nxt_kismis_ONE:
+    os: linux
+    type: docker
+    connections:
+      defaults:
+        class: 'containers.DockerConnection'
+      container:
+        name: nxt_kismis_ONE
+  nxt_kismis_TWO:
+    os: linux
+    type: docker
+    connections:
+      defaults:
+        class: 'containers.DockerConnection'
+      container:
+        name: nxt_kismis_TWO
+  testa_pod1:
+    os: linux
+    type: kubernetes
+    connections:
+      defaults:
+        class: 'containers.KubernetesConnection'
+      container:
+        name: 'kind-testa:pod1'
+  testa_pod2:
+    os: linux
+    type: kubernetes
+    connections:
+      defaults:
+        class: 'containers.KubernetesConnection'
+      container:
+        name: 'kind-testa:pod2'
+  testa_pod3:
+    os: linux
+    type: kubernetes
+    connections:
+      defaults:
+        class: 'containers.KubernetesConnection'
+      container:
+        name: 'kind-testa:pod3'
+  testa_pod4:
+    os: linux
+    type: kubernetes
+    connections:
+      defaults:
+        class: 'containers.KubernetesConnection'
+      container:
+        name: 'kind-testa:pod4'
+  testa_pod5:
+    os: linux
+    type: kubernetes
+    connections:
+      defaults:
+        class: 'containers.KubernetesConnection'
+      container:
+        name: 'kind-testa:pod5'
+  testa_consul:
+    os: linux
+    type: kubernetes
+    connections:
+      defaults:
+        class: 'containers.KubernetesConnection'
+      container:
+        name: 'kind-testa:consul-server'
+  testc_pod1:
+    os: linux
+    type: kubernetes
+    connections:
+      defaults:
+        class: 'containers.KubernetesConnection'
+      container:
+        name: 'kind-testc:pod1'
+  testc_pod2:
+    os: linux
+    type: kubernetes
+    connections:
+      defaults:
+        class: 'containers.KubernetesConnection'
+      container:
+        name: 'kind-testc:pod2'
+  testc_pod3:
+    os: linux
+    type: kubernetes
+    connections:
+      defaults:
+        class: 'containers.KubernetesConnection'
+      container:
+        name: 'kind-testc:pod3'
+  testc_pod4:
+    os: linux
+    type: kubernetes
+    connections:
+      defaults:
+        class: 'containers.KubernetesConnection'
+      container:
+        name: 'kind-testc:pod4'
+  testc_pod5:
+    os: linux
+    type: kubernetes
+    connections:
+      defaults:
+        class: 'containers.KubernetesConnection'
+      container:
+        name: 'kind-testc:pod5'
+  testc_consul:
+    os: linux
+    type: kubernetes
+    connections:
+      defaults:
+        class: 'containers.KubernetesConnection'
+      container:
+        name: 'kind-testc:consul-server'

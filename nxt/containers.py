@@ -5,7 +5,7 @@ from kubernetes.client.configuration import Configuration
 from kubernetes.config import kube_config
 from kubernetes.client import api_client
 from kubernetes.client.api import core_v1_api
-from kubernetes.stream import stream, portforward
+from kubernetes.stream import stream
 from kubernetes.stream.ws_client import ERROR_CHANNEL
 from kubernetes.client import AppsV1Api
 

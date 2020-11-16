@@ -6,7 +6,7 @@ import os
 import re
 import requests
 import time
-from controller import *
+from nextensio_controller import *
 import subprocess
 from containers import kube_get_pod
 

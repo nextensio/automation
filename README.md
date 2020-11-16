@@ -26,6 +26,7 @@ automation scripts
 3. pip3 install dotenv
 4. pip3 install docker
 5. pip3 install kubernetes
+6. controller apis - get the controller git repo from gitlab, "cd controller/apis/python; pip3 install ."
 
 ### Running automation
 
@@ -40,4 +41,7 @@ your laptop, go to the nxt directory and type the below
 The testbed directory has utilities to create the testbed used for nextensio automation and for development/testing
 
 
+## deployment
 
+This directory automates the deployment of nextensio stack on public cloud providers. The
+deployment/aws/README.md provides information on terraforming nextensio stack on AWS EKS cluster

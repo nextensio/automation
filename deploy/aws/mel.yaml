@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextensio-mgr
+  labels:
+    app: nextensio-mgr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nextensio-mgr
+  template:
+    metadata:
+      labels:
+        app: nextensio-mgr
+        role: mel
+    spec:
+      containers:
+      - name: mel
+        image: registry.gitlab.com/nextensio/clustermgr/mel-deploy:latest
+        imagePullPolicy: IfNotPresent
+        stdin: true 
+        tty: true 
+        env:
+          - name: MY_POD_CLUSTER
+            value: "REPLACE_CLUSTER"
+          - name: MY_YAML
+            value: "/go/yaml/"
+          - name: MY_WAN_IP
+            value: "REPLACE_SELF_NODE_IP"
+          - name: MY_MONGO_URI
+            value: "mongodb://mongodb-0-service.nextensio.net:27017,mongodb-1-service.nextensio.net:27018,mongodb-2-service.nextensio.net:27019/"
+      imagePullSecrets:
+      - name: regcred

@@ -47,6 +47,8 @@ on your host.
 
 ### Pre Requisites 
 
+* controller apis - get the controller git repo from gitlab, "cd controller/apis/python; pip3 install ."
+
 * install docker - plenty of docs on internet to do that
 
 * docker login registry.gitlab.com - the script uses images for each of the components - controller, UI/UX, cluster/minion 

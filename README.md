@@ -24,6 +24,8 @@ automation scripts
 1. pip3 install pyats[full]
 2. pip3 install requests 
 3. pip3 install dotenv
+4. pip3 install docker
+5. pip3 install kubernetes
 
 ### Running automation
 

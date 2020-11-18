@@ -48,6 +48,7 @@ function bootstrap_controller {
     tmpf=$tmpdir/controller.yaml
     cp controller.yaml $tmpf
     sed -i "s/REPLACE_SELF_NODE_IP/$my_ip/g" $tmpf
+    sed -i "s/REPLACE_CONTROLLER_IP/$ctrl_ip/g" $tmpf
     $kubectl apply -f $tmpf
     $kubectl apply -f mongo.yaml
 }
@@ -188,14 +189,13 @@ function create_agent {
     services=$6
 
     docker run -d -it \
-        --hostname $name \
         -e NXT_GW_1_IP=$testa_ip -e NXT_GW_1_NAME=gateway.testa.nextensio.net \
         -e NXT_GW_2_IP=$testc_ip -e NXT_GW_2_NAME=gateway.testc.nextensio.net \
         -e NXT_GW_3_IP=$etchost_ip -e NXT_GW_3_NAME=$etchost_name \
         -e NXT_USERNAME=$username -e NXT_PWD=LetMeIn123 \
         -e NXT_AGENT=$agent -e NXT_CONTROLLER=$ctrl_ip:8080 \
         -e NXT_AGENT_NAME=$name -e NXT_SERVICES=$services \
-        --network kind --name $name registry.gitlab.com/nextensio/agent/agent-deploy:latest 
+        --network kind --name $name registry.gitlab.com/nextensio/agent/agent-deploy:latest
 }
 
 function create_all {

@@ -58,6 +58,9 @@ spec:
         tty: true 
         ports:
         - containerPort: 3000
+        env:
+          - name: REACT_APP_API_URL
+            value: "http://REPLACE_CONTROLLER_IP:8080"
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress

@@ -49,6 +49,8 @@
         value: "example"
       - name: "MONGODB_ID"
         value: "mongo-0"
+      - name: "NEXTENSIO_DOMAIN"
+        value: "default.svc.cluster.local"
       livenessProbe:
         exec:
           command:
@@ -117,6 +119,8 @@
         value: "example"
       - name: "MONGODB_ID"
         value: "mongo-1"
+      - name: "NEXTENSIO_DOMAIN"
+        value: "default.svc.cluster.local"
       livenessProbe:
         exec:
           command:
@@ -185,6 +189,8 @@
         value: "example"
       - name: "MONGODB_ID"
         value: "mongo-2"
+      - name: "NEXTENSIO_DOMAIN"
+        value: "default.svc.cluster.local"
       livenessProbe:
         exec:
           command:

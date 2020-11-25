@@ -60,6 +60,9 @@ function create_cluster {
     # Create a docker-in-docker kubernetes cluster with a single node (control-plane) running everything
     kind create cluster --config ./kind-config.yaml --name $cluster
 
+    # We should have done a docker login to be able to download images from the gitlab registry
+    $kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
+
     # This is NOT the right thing to do in real deployment, either we should limit the 
     # roles (RBAC) of the clustermgr or even better make clustermgr use kube APIs instead
     # of kubectl

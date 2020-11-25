@@ -4,7 +4,7 @@
 # Its just kept here for saving it in case the docker image gets blown off
 
 function mongo_join {
-mongo --eval "mongodb = ['mongodb-0-service.default.svc.cluster.local:$MONGODB_0_SERVICE_SERVICE_PORT', 'mongodb-1-service.default.svc.cluster.local:$MONGODB_1_SERVICE_SERVICE_PORT', 'mongodb-2-service.default.svc.cluster.local:$MONGODB_2_SERVICE_SERVICE_PORT']" --shell << EOL
+mongo --eval "mongodb = ['mongodb-0-service.$NEXTENSIO_DOMAIN:$MONGODB_0_SERVICE_SERVICE_PORT', 'mongodb-1-service.$NEXTENSIO_DOMAIN:$MONGODB_1_SERVICE_SERVICE_PORT', 'mongodb-2-service.$NEXTENSIO_DOMAIN:$MONGODB_2_SERVICE_SERVICE_PORT']" --shell << EOL
 cfg = {
         _id: "rs0",
         members:

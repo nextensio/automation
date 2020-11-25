@@ -5,8 +5,8 @@ import requests
 import time
 from nextensio_controller import *
 
-url = "http://" + sys.argv[1] + ":8080/api/v1/"
-tmpdir = sys.argv[2]
+url = "http://server.nextensio.net:8080/api/v1/"
+tmpdir = "/tmp/nextensio-eks"
 f = open(tmpdir+"/rootca.crt", 'r')
 cert = f.read()
 f.close()

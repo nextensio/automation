@@ -741,7 +741,7 @@ def consul_join(gws):
     gw = gws[0]
     config = "./" + gw + "/kubeconfig"
     for g in gws[1:]:
-        gcfg = "./" + gw + "/cluster_" + gw + "_state.json"
+        gcfg = "./" + g + "/cluster_" + g + "_state.json"
         f = open(gcfg)
         gdata = f.read()
         gjson = json.loads(gdata)
@@ -789,7 +789,7 @@ def consul_query(gws):
             check_output(
                 gwkube + "cp ./consul_query.json consul-system/" + pod + ":/tmp/query.json")
             check_output(gwkube + "exec -it " + pod +
-                         " -n consul-system -- curl -k --request POST --data @/tmp/query.json https://consul.ric.nextensio.net/v1/query")
+                         " -n consul-system -- curl -k --request POST --data @/tmp/query.json http://127.0.0.1:8500/v1/query")
         except subprocess.CalledProcessError as e:
             pass
             print(e.output)

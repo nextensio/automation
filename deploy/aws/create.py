@@ -896,6 +896,7 @@ if __name__ == "__main__":
         create_cluster(args.create[0])
         with open('cluster_%s_state.json' % args.create[0], 'w') as f:
             json.dump(outputState, f)
+        print("Cluster creation succesful")
         sys.exit(0)
 
     if args.delete:

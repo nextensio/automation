@@ -5,7 +5,7 @@ module "eks" {
 
   aws-region              = "us-east-1"
   availability-zones      = ["us-east-1a", "us-east-1b"]
-  cluster-name            = "useast1"
+  cluster-name            = "awsuseast1"
   k8s-version             = "1.18"
   node-instance-type      = "t3a.medium"
   desired-capacity        = 2

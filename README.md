@@ -23,7 +23,7 @@ automation scripts
 
 1. pip3 install pyats[full]
 2. pip3 install requests 
-3. pip3 install dotenv
+3. pip3 install python-dotenv
 4. pip3 install docker
 5. pip3 install kubernetes
 6. controller apis - get the controller git repo from gitlab, "cd controller/apis/python; pip3 install ."

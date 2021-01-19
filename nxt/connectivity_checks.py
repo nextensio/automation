@@ -313,7 +313,7 @@ def resetPods(devices, cluster, pods):
 def proxyGet(agent, url, expected):
     proxyDict = {"https": "https://" + os.getenv(agent) + ":8081"}
     try:
-        r = requests.get(url, proxies=proxyDict, verify=False, timeout=2)
+        r = requests.get(url, proxies=proxyDict, verify=False, timeout=5)
     except:
         pass
         return False

@@ -9,6 +9,7 @@ import time
 from nextensio_controller import *
 import subprocess
 from containers import kube_get_pod
+from containers import docker_run
 
 # THE MOTTO: DO DETERMINISTIC TESTING. What it means is simple. Lets say we configure something
 # on the controller and we want to wait to ensure all the pods have got that config. One approach
@@ -311,15 +312,14 @@ def resetPods(devices, cluster, pods):
 
 
 def proxyGet(agent, url, expected):
-    proxyDict = {"https": "https://" + os.getenv(agent) + ":8081"}
+    env = {"https_proxy": "http://" + os.getenv(agent) + ":8081"}
     try:
-        r = requests.get(url, proxies=proxyDict, verify=False, timeout=5)
-    except:
+        text = docker_run("curl", "curl --silent --connect-timeout 5 --max-time 5 -k %s" % url, environment=env)
+    except Exception as e:
         pass
+        print("Exception %s" % e)
         return False
-    if r.status_code != 200:
-        return False
-    if expected not in r.text:
+    if expected not in text:
         return False
     return True
 

@@ -10,11 +10,11 @@ from kubernetes.stream.ws_client import ERROR_CHANNEL
 from kubernetes.client import AppsV1Api
 
 
-def docker_run(cname, cmd):
+def docker_run(cname, cmd, environment={}):
     try:
         client = docker.from_env()
         container = client.containers.get(cname)
-        out = container.exec_run(['sh', '-c', cmd])
+        out = container.exec_run(cmd, environment=environment)
         return out.output.decode("utf-8")
     except:
         pass

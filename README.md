@@ -21,6 +21,7 @@ At some point we will have a docker container pre-installed with all the require
 automation, till that point, the below is what you need to install on your laptop to run the
 automation scripts
 
+0. docker pull curlimages/curl - we test access to various links by running curl from a container
 1. pip3 install pyats[full]
 2. pip3 install requests 
 3. pip3 install python-dotenv

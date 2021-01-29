@@ -272,8 +272,8 @@ function create_all {
 function save_env {
     echo "###########################################################################"
     echo "######You can access controller UI at http://$ctrl_ip:3000/  ############"
-    echo "##You can set a broswer proxy to $nxt_agent1:8081 to send traffic via nextensio##"
-    echo "##OR You can set a broswer proxy to $nxt_agent2:8081 to send traffic via nextensio##"
+    echo "##You can set a broswer proxy to $nxt_agent1:8080 to send traffic via nextensio##"
+    echo "##OR You can set a broswer proxy to $nxt_agent2:8080 to send traffic via nextensio##"
     echo "##All the above information is saved in $tmpdir/environment for future reference##"
     
     envf=$tmpdir/environment
@@ -338,8 +338,8 @@ case "$options" in
     create_agent nxt_agent2 true test2@nextensio.net
     nxt_agent1=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent1`
     nxt_agent2=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent2`
-    echo "##You can set a broswer proxy to $nxt_agent1:8081 to send traffic via nextensio##"
-    echo "##OR You can set a broswer proxy to $nxt_agent2:8081 to send traffic via nextensio##"
+    echo "##You can set a broswer proxy to $nxt_agent1:8080 to send traffic via nextensio##"
+    echo "##OR You can set a broswer proxy to $nxt_agent2:8080 to send traffic via nextensio##"
     ;;
 *reset-conn)
     source $tmpdir/environment

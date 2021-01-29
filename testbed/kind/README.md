@@ -114,7 +114,7 @@ kubernetes policies corresponding to the users and connectors etc..
 Once the clusters are all created, at the end of the script run, it will clearly say a message asking us to
 add the gateway domain names to our /etc/host file so we can use the domain names in our test cases.
 
-The script will output the address of two agents at port 8081. You can point your browser to either of 
+The script will output the address of two agents at port 8080. You can point your browser to either of 
 the agents and browse internet, that all goes via the local nextensio clusters ! And you can use the 
 nextensio UI to add / modify the routing rules for the agents etc.. There is also a kismis.org internal
 website hosted on two docker containers nxt-kismis-ONE and nxt-kismis-TWO, agent1 goes to kismis-ONE and

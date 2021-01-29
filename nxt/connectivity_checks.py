@@ -312,7 +312,7 @@ def resetPods(devices, cluster, pods):
 
 
 def proxyGet(agent, url, expected):
-    env = {"https_proxy": "http://" + os.getenv(agent) + ":8081"}
+    env = {"https_proxy": "http://" + os.getenv(agent) + ":8080"}
     try:
         text = docker_run("curl", "curl --silent --connect-timeout 5 --max-time 5 -k %s" % url, environment=env)
     except Exception as e:

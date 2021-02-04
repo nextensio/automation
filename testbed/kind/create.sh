@@ -191,7 +191,7 @@ function create_agent {
     etchost_name=$5
     services=$6
 
-    docker run -d -it \
+    docker run -d -it --user 0:0 --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun \
         -e NXT_GW_1_IP=$testa_ip -e NXT_GW_1_NAME=gateway.testa.nextensio.net \
         -e NXT_GW_2_IP=$testc_ip -e NXT_GW_2_NAME=gateway.testc.nextensio.net \
         -e NXT_GW_3_IP=$etchost_ip -e NXT_GW_3_NAME=$etchost_name \

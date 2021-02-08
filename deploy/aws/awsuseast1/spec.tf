@@ -7,7 +7,7 @@ module "eks" {
   availability-zones      = ["us-east-1a", "us-east-1b"]
   cluster-name            = "awsuseast1"
   k8s-version             = "1.18"
-  node-instance-type      = "t3a.medium"
+  node-instance-type      = "t3a.large"
   desired-capacity        = 2
   max-size                = 5
   min-size                = 1

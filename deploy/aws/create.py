@@ -32,54 +32,58 @@ def check_output(command):
 
 def kube_scriptdir_apply(cluster, file):
     fname = scriptdir + "/" + cluster + "/" + file
-    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig kubectl"
+    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
     check_output(kubeconfig + " apply -f " + fname)
 
 
 def kube_tmpdir_apply(cluster, file):
     fname = tmpdir + "/" + file
-    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig kubectl"
+    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
     check_output(kubeconfig + " apply -f " + fname)
 
 
 def kube_tmpdir_replace(cluster, file):
     fname = tmpdir + "/" + file
-    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig kubectl"
+    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
     check_output(kubeconfig + " replace -n kube-system -f " + fname)
 
 
 def kube_get_svc_ip(service, namespace):
-    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig kubectl"
+    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl 
     return check_output(kubeconfig + " get service " + service + " -n " + namespace + " -o jsonpath='{.spec.clusterIP}'")
 
 
 def kube_secret(cfg):
-    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig kubectl"
+    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
     check_output(
         "%s create secret generic regcred --from-file=.dockerconfigjson=%s --type=kubernetes.io/dockerconfigjson" % (kubeconfig, cfg))
 
 
 def kube_delete_storage(storage):
-    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig kubectl"
+    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
     check_output(
-        "%s delete storageclass %s" % (kubectl, storage))
+        "%s delete storageclass %s" % (kubeconfig, storage))
 
 
 def kubectl_permissive_rbac():
-    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig kubectl"
+    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
     check_output("%s create clusterrolebinding permissive-binding --clusterrole=cluster-admin --user=admin --user=kubelet --group=system:serviceaccounts" % kubeconfig)
 
 
 def kubectl_create_gw_cred():
-    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig kubectl"
+    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
     check_output(
         "%s create -n istio-system secret tls gw-credential --key=%s/gw.key --cert=%s/gw.crt" % (kubeconfig, tmpdir, tmpdir))
 
 
 def kubectl_create_namespace(namespace):
-    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig kubectl"
+    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
     check_output("%s create namespace %s" % (kubeconfig, namespace))
 
+
+def helm_apply(cmd):
+    helmconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + helm
+    check_call(helmconfig + " " + cmd)
 
 def download_utils():
     try:
@@ -152,20 +156,24 @@ def terraform_cluster(cluster):
 
 
 def bootstrap_controller():
+    # AWS has a gp2 class by default, all this will go away once we start using
+    # cloud hosted mongo (TODO)
     try:
         kube_delete_storage("standard")
     except subprocess.CalledProcessError as e:
         pass
         print(e.output)
-        if not "not found" in str(e.output):
-            return False
 
     try:
-        check_call(
-            "%s repo add rimusz https://charts.rimusz.net" % helm)
-        check_call("%s repo update" % helm)
-        check_call(
-            "%s upgrade --install hostpath-provisioner --namespace kube-system rimusz/hostpath-provisioner" % helm)
+        kube_delete_storage("gp2")
+    except subprocess.CalledProcessError as e:
+        pass
+        print(e.output)
+
+    try:
+        helm_apply("repo add rimusz https://charts.rimusz.net")
+        helm_apply("repo update")
+        helm_apply("upgrade --install hostpath-provisioner --namespace kube-system rimusz/hostpath-provisioner")
         kube_scriptdir_apply('controller', 'controller.yaml')
         kube_scriptdir_apply('controller', 'mongo.yaml')
         return True
@@ -330,7 +338,7 @@ def aws_check_target_attributes(target, cluster, region):
     return False
 
 
-def aws_get_target_groups(cluster, region):
+def aws_get_target_groups(cluster, region, vpc):
     ret = []
     try:
         out = check_output(
@@ -338,7 +346,7 @@ def aws_get_target_groups(cluster, region):
         o = json.loads(out)
         tgts = o['TargetGroups']
         for t in tgts:
-            if aws_check_target_attributes(t['TargetGroupArn'], cluster, region) == True:
+            if aws_check_target_attributes(t['TargetGroupArn'], cluster, region) == True and t['VpcId'] == vpc:
                 ret.append(t)
         return ret
     except subprocess.CalledProcessError as e:
@@ -611,7 +619,7 @@ def configure_gateway_loadbalancers(cluster):
         return False
 
     print("Adding all target groups to cluster autoscale group")
-    tgts = aws_get_target_groups(cluster, region)
+    tgts = aws_get_target_groups(cluster, region, vpc)
     # Five groups for istio and two for consul
     if len(tgts) != 7:
         return False
@@ -817,7 +825,8 @@ def delete_all_gateway(cluster):
     for l in loads:
         if aws_del_loadbalancerv2(region, l['loadbalancer']) == False:
             return False
-    targets = aws_get_target_groups(cluster, region)
+    vpc = loads[0]['vpc']
+    targets = aws_get_target_groups(cluster, region, vpc)
     for t in targets:
         if aws_del_target_group(region, t['TargetGroupArn']) == False:
             return False

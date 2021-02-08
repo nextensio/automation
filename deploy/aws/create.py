@@ -673,8 +673,10 @@ def bootstrap_gateway(cluster):
         # openssl returns non-zero exit values!
         pass
     try:
-        check_call("""openssl x509 -req -days 365 -CA %s/rootca.crt -CAkey %s/rootca.key -set_serial 0 -in %s/gw.csr -out %s/gw.crt""" %
-                   (rootca, rootca, tmpdir, tmpdir))
+        extfile = "%s/extfile.conf" % tmpdir
+        check_call("""echo "subjectAltName = DNS:gateway.%s.nextensio.net" > %s""" % (cluster, extfile))
+        check_call("""openssl x509 -req -days 365 -CA %s/rootca.crt -CAkey %s/rootca.key -set_serial 0 -in %s/gw.csr -out %s/gw.crt -extfile %s""" %
+                   (rootca, rootca, tmpdir, tmpdir, extfile))
     except subprocess.CalledProcessError as e:
         print(e.output)
         # openssl returns non-zero exit values!
@@ -842,7 +844,10 @@ def delete_cluster(cluster):
 
 
 def generate_rootca(cadir):
-    check_call("""openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -subj '/O=Nextensio Gateway/CN=gateway.*.nextensio.net' -keyout %s/rootca.key -out %s/rootca.crt""" % (cadir, cadir))
+    rootkey = "%s/rootca.key" % cadir
+    rootcrt = "%s/rootca.crt" % cadir
+    check_call("""openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -subj '/O=Nextensio Gateway/CN=gateway.*.nextensio.net' -keyout %s -out %s""" % \
+               (rootkey, rootcrt))
 
 
 def parser_init():

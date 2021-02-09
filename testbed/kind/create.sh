@@ -13,19 +13,19 @@ istioctl=$tmpdir/istioctl
 helm=$tmpdir/linux-amd64/helm
 
 function download_images {
-    docker pull registry.gitlab.com/nextensio/ux/ux-deploy:latest
-    docker pull registry.gitlab.com/nextensio/controller/controller-test:latest
+    docker pull registry.gitlab.com/nextensio/ux/ux:latest
+    docker pull registry.gitlab.com/nextensio/controller/controller:latest
     docker pull registry.gitlab.com/nextensio/cluster/minion:latest
-    docker pull registry.gitlab.com/nextensio/clustermgr/mel-deploy:latest
-    docker pull registry.gitlab.com/nextensio/agent/agent-deploy:latest
+    docker pull registry.gitlab.com/nextensio/clustermgr/mel:latest
+    docker pull registry.gitlab.com/nextensio/agent/agent:latest
 }
 
 # Create a controller
 function create_controller {
     kind create cluster --config ./kind-config.yaml --name controller
 
-    kind load docker-image registry.gitlab.com/nextensio/ux/ux-deploy:latest --name controller
-    kind load docker-image registry.gitlab.com/nextensio/controller/controller-test:latest --name controller
+    kind load docker-image registry.gitlab.com/nextensio/ux/ux:latest --name controller
+    kind load docker-image registry.gitlab.com/nextensio/controller/controller:latest --name controller
 
     # metallb as a loadbalancer to map services to externally accessible IPs
     $kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
@@ -83,7 +83,7 @@ function create_cluster {
 
     # kind needs all images locally present, it wont download from any registry
     kind load docker-image registry.gitlab.com/nextensio/cluster/minion:latest --name $cluster
-    kind load docker-image registry.gitlab.com/nextensio/clustermgr/mel-deploy:latest --name $cluster
+    kind load docker-image registry.gitlab.com/nextensio/clustermgr/mel:latest --name $cluster
 
     EXTFILE="$tmpdir/$cluster-extfile.conf"
     echo "subjectAltName = DNS:gateway.$cluster.nextensio.net" > "${EXTFILE}"
@@ -201,7 +201,7 @@ function create_agent {
         -e NXT_USERNAME=$username -e NXT_PWD=LetMeIn123 \
         -e NXT_AGENT=$agent -e NXT_CONTROLLER=$ctrl_ip:8080 \
         -e NXT_AGENT_NAME=$name -e NXT_SERVICES=$services \
-        --network kind --name $name registry.gitlab.com/nextensio/agent/agent-deploy:latest
+        --network kind --name $name registry.gitlab.com/nextensio/agent/agent:latest
 }
 
 function create_all {
@@ -274,7 +274,7 @@ function create_all {
 
 function save_env {
     echo "###########################################################################"
-    echo "######You can access controller UI at http://$ctrl_ip:3000/  ############"
+    echo "######You can access controller UI at https://$ctrl_ip/  ############"
     echo "##You can set a broswer proxy to $nxt_agent1:8080 to send traffic via nextensio##"
     echo "##OR You can set a broswer proxy to $nxt_agent2:8080 to send traffic via nextensio##"
     echo "##All the above information is saved in $tmpdir/environment for future reference##"

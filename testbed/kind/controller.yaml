@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: controller
-        image: registry.gitlab.com/nextensio/controller/controller-test:latest
+        image: registry.gitlab.com/nextensio/controller/controller:latest
         imagePullPolicy: IfNotPresent
         stdin: true 
         tty: true 
@@ -57,7 +57,7 @@ spec:
         stdin: true 
         tty: true 
         ports:
-        - containerPort: 3000
+        - containerPort: 443
         env:
           - name: REACT_APP_API_URL
             value: "http://REPLACE_CONTROLLER_IP:8080"
@@ -71,7 +71,7 @@ metadata:
 spec:
   backend:
     serviceName: nextensio-ux
-    servicePort: 3000
+    servicePort: 443
   backend:
     serviceName: nextensio-controller
     servicePort: 8080
@@ -96,8 +96,8 @@ spec:
     app: nextensio-ux
   ports:
   - protocol: TCP
-    port: 3000
-    targetPort: 3000
+    port: 443
+    targetPort: 443
   type: LoadBalancer
 ---
 apiVersion: v1

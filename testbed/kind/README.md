@@ -94,7 +94,7 @@ The automated scripts do the following today.
 'controller'. kind get clusters will show the name, a docker ps will also show the name. Inside this 
 cluster, one pod will be running the controller code, one pod will be running the UI/UX code. The 
 controller will come preconfigured with a user named 'agent-1' and a connector named 'default'. Anyone
-is free to point their browsert to the IP of the controller docker instance at port 3000, access the UI
+is free to point their browsert to the IP of the controller docker instance at port 443, access the UI
 and make more config changes as required for their development/testing. The controller pod will also 
 run a mongodb instance which is accesible via the docker instance IP and port 27017. Very soon we might
 run mongodb as kubernetes pods in this cluster, with replication turned on so that we can test mongodb

@@ -52,7 +52,7 @@ spec:
     spec:
       containers:
       - name: ux
-        image: registry.gitlab.com/nextensio/ux/ux-deploy:latest
+        image: registry.gitlab.com/nextensio/ux/ux:latest
         imagePullPolicy: IfNotPresent
         stdin: true 
         tty: true 

@@ -31,8 +31,6 @@ function create_controller {
     $kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
     $kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml
     $kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
-    # haproxy as an "ingress" mechanism - we dont use istio here, thats an overkill
-    $kubectl apply -f https://raw.githubusercontent.com/haproxytech/kubernetes-ingress/master/deploy/haproxy-ingress.yaml
     # hostpath-provisioner for mongodb pods to get persistent storage from kubernetes host disk
     $kubectl delete storageclass standard
     $helm repo add rimusz https://charts.rimusz.net

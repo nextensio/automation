@@ -28,8 +28,10 @@ spec:
             value: "false"
           - name: TEST_ENVIRONMENT
             value: "true"
+          - name: CLIENT_ID
+            value: "0oa24hr70oNBZW0b64x7"
           - name: IDP_URI
-            value: "https://dev-635657.okta.com/oauth2/default/v1/"
+            value: "https://dev-635657.okta.com/oauth2/default"
           - name: MONGO_URI
             value: "mongodb://mongodb-0-service:27017,mongodb-1-service:27018,mongodb-2-service:27019"
 ---
@@ -61,6 +63,10 @@ spec:
         env:
           - name: REACT_APP_API_URL
             value: "http://REPLACE_CONTROLLER_IP:8080"
+          - name: REACT_APP_CLIENT_ID
+            value: "0oa24hr70oNBZW0b64x7"
+          - name: REACT_APP_IDP_URI
+            value: "https://dev-635657.okta.com"
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress

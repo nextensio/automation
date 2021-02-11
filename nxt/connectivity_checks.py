@@ -389,7 +389,7 @@ class CommonSetup(aetest.CommonSetup):
 
         # Load the testbed information variables as environment variables
         load_dotenv(dotenv_path='/tmp/nextensio-kind/environment')
-        url = "http://" + os.getenv('ctrl_ip') + ":8080/api/v1/"
+        url = "https://" + os.getenv('ctrl_ip') + ":8080/api/v1/"
         ok, tenants = get_tenants(url)
         while not ok:
             logger.info('Tenant fetch %s failed, retrying ...' % url)

@@ -5,9 +5,9 @@ import requests
 import time
 from nextensio_controller import *
 
-url = "http://" + sys.argv[1] + ":8080/api/v1/"
-tmpdir = sys.argv[2]
-f = open(tmpdir+"/rootca.crt", 'r')
+url = "https://" + sys.argv[1] + ":8080/api/v1/"
+rootca = sys.argv[2]
+f = open(rootca, 'r')
 cert = f.read()
 f.close()
 

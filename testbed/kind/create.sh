@@ -43,6 +43,16 @@ function bootstrap_controller {
 
     $kubectl config use-context kind-controller
 
+    # Create tls keys for controller (UI) and server (API)
+    EXTFILE="$tmpdir/controller-extfile.conf"
+    echo "subjectAltName = IP:$my_ip" > "${EXTFILE}"
+    # Create ssl keys/certificates for agents/connectors to establish secure websocket
+    openssl req -out $tmpdir/controller.csr -newkey rsa:2048 -nodes -keyout $tmpdir/controller.key \
+        -subj "/CN=$my_ip/O=Nextensio Controller and Server"
+    openssl x509 -req -days 365 -CA ../../testCert/nextensio.crt -CAkey ../../testCert/nextensio.key -set_serial 0 \
+        -in $tmpdir/controller.csr -out $tmpdir/controller.crt -extfile "${EXTFILE}" -passin pass:Nextensio123
+    $kubectl create secret tls controller-cert --key="$tmpdir/controller.key" --cert="$tmpdir/controller.crt"
+
     tmpf=$tmpdir/controller.yaml
     cp controller.yaml $tmpf
     sed -i "s/REPLACE_SELF_NODE_IP/$my_ip/g" $tmpf
@@ -88,8 +98,8 @@ function create_cluster {
     # Create ssl keys/certificates for agents/connectors to establish secure websocket
     openssl req -out $tmpdir/$cluster-gw.csr -newkey rsa:2048 -nodes -keyout $tmpdir/$cluster-gw.key \
         -subj "/CN=gateway.$cluster.nextensio.net/O=Nextensio Gateway $cluster"
-    openssl x509 -req -days 365 -CA $tmpdir/rootca.crt -CAkey $tmpdir/rootca.key -set_serial 0 \
-        -in $tmpdir/$cluster-gw.csr -out $tmpdir/$cluster-gw.crt -extfile "${EXTFILE}"
+    openssl x509 -req -days 365 -CA ../../testCert/nextensio.crt -CAkey ../../testCert/nextensio.key -set_serial 0 \
+        -in $tmpdir/$cluster-gw.csr -out $tmpdir/$cluster-gw.crt -extfile "${EXTFILE}" -passin pass:Nextensio123
 }
 
 function bootstrap_cluster {
@@ -208,9 +218,6 @@ function create_all {
     kind delete cluster --name testc
     kind delete cluster --name controller
 
-    # Create a root CA
-    openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -subj '/O=Nextensio Gateway/CN=gateway.*.nextensio.net' \
-        -keyout $tmpdir/rootca.key -out $tmpdir/rootca.crt
     create_controller
     # Find controller ip address
     ctrl_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' controller-control-plane`
@@ -252,7 +259,7 @@ function create_all {
     done
     # configure the controller with some default customer/tenant information
     echo "Configuring the controller, may take a few seconds"
-    ./ctrl.py $ctrl_ip $tmpdir
+    NEXTENSIO_CERT=../../testCert/nextensio.crt ./ctrl.py $ctrl_ip ../../testCert/nextensio.crt
     echo "Controller config done, going to create agents and connectors"
 
     docker kill nxt_agent1; docker rm nxt_agent1

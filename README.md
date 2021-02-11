@@ -35,7 +35,7 @@ This directory contains the automation code. To run automaton on your linux envi
 create a testbed as described in the next section testbed/kind. Once the testbed is created on
 your laptop, go to the nxt directory and type the below 
 
-```PYTHONPATH=$PYTHONPATH:. pyats run job sanity_jobs.py --testbed-file yamls/testbed.yaml```
+```NEXTENSIO_CERT=../testCert/nextensio.crt PYTHONPATH=$PYTHONPATH:. pyats run job sanity_jobs.py --testbed-file yamls/testbed.yaml```
 
 ## testbed/kind
 

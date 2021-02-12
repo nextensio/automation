@@ -78,7 +78,7 @@ spec:
         - containerPort: 443
         env:
           - name: REACT_APP_API_URL
-            value: "http://server.nextensio.net:8080"
+            value: "https://server.nextensio.net:8080"
           - name: REACT_APP_CLIENT_ID
             value: "0oa24hr70oNBZW0b64x7"
           - name: REACT_APP_IDP_URI

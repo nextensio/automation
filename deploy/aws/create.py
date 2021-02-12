@@ -53,11 +53,15 @@ def kube_get_svc_ip(service, namespace):
     return check_output(kubeconfig + " get service " + service + " -n " + namespace + " -o jsonpath='{.spec.clusterIP}'")
 
 
-def kube_secret(cfg):
+def docker_secret(cfg):
     kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
     check_output(
         "%s create secret generic regcred --from-file=.dockerconfigjson=%s --type=kubernetes.io/dockerconfigjson" % (kubeconfig, cfg))
 
+def tls_secret(name, key, crt):
+    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
+    check_output(
+        "%s create secret tls %s --key=\"%s\" --cert=\"%s\"" % (kubeconfig, name, key, crt))
 
 def kube_delete_storage(storage):
     kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
@@ -107,7 +111,7 @@ def download_utils():
         return False
 
     try:
-        kube_secret(dockercfg)
+        docker_secret(dockercfg)
     except subprocess.CalledProcessError as e:
         pass
         print(e.output)
@@ -155,7 +159,51 @@ def terraform_cluster(cluster):
     return True
 
 
+def controller_ux_keys():
+    try:
+        check_call("""openssl req -out %s/ux.csr -newkey rsa:2048 -nodes -keyout %s/ux.key -subj "/CN=controller.nextensio.net/O=Nextensio Controller" """ %
+                   (tmpdir, tmpdir))
+    except subprocess.CalledProcessError as e:
+        print(e.output)
+        # openssl returns non-zero exit values!
+        pass
+    try:
+        extfile = "%s/ux.extfile.conf" % tmpdir
+        check_call("""echo "subjectAltName = DNS:controller.nextensio.net" > %s""" % extfile)
+        check_call("""openssl x509 -req -days 365 -CA %s/nextensio.crt -CAkey %s/nextensio.key -set_serial 0 -in %s/ux.csr -out %s/ux.crt -extfile %s -passin pass:Nextensio123""" %
+                   (rootca, rootca, tmpdir, tmpdir, extfile))
+    except subprocess.CalledProcessError as e:
+        print(e.output)
+        # openssl returns non-zero exit values!
+        pass
+    
+    tls_secret("ux-cert", "%s/ux.key" % tmpdir, "%s/ux.crt" % tmpdir)
+
+def controller_server_keys():
+    try:
+        check_call("""openssl req -out %s/server.csr -newkey rsa:2048 -nodes -keyout %s/server.key -subj "/CN=server.nextensio.net/O=Nextensio Server" """ %
+                   (tmpdir, tmpdir))
+    except subprocess.CalledProcessError as e:
+        print(e.output)
+        # openssl returns non-zero exit values!
+        pass
+    try:
+        extfile = "%s/server.extfile.conf" % tmpdir
+        check_call("""echo "subjectAltName = DNS:server.nextensio.net" > %s""" % extfile)
+        check_call("""openssl x509 -req -days 365 -CA %s/nextensio.crt -CAkey %s/nextensio.key -set_serial 0 -in %s/server.csr -out %s/server.crt -extfile %s -passin pass:Nextensio123""" %
+                   (rootca, rootca, tmpdir, tmpdir, extfile))
+    except subprocess.CalledProcessError as e:
+        print(e.output)
+        # openssl returns non-zero exit values!
+        pass
+
+    tls_secret("server-cert", "%s/server.key" % tmpdir, "%s/server.crt" % tmpdir)
+
 def bootstrap_controller():
+    # Setup the TLS cert and keys
+    controller_ux_keys()
+    controller_server_keys()
+
     # AWS has a gp2 class by default, all this will go away once we start using
     # cloud hosted mongo (TODO)
     try:
@@ -653,7 +701,7 @@ def configure_gateway_loadbalancers(cluster):
 
 def bootstrap_gateway(cluster):
     try:
-        kube_secret(dockercfg)
+        docker_secret(dockercfg)
     except subprocess.CalledProcessError as e:
         pass
         print(e.output)
@@ -683,7 +731,7 @@ def bootstrap_gateway(cluster):
     try:
         extfile = "%s/extfile.conf" % tmpdir
         check_call("""echo "subjectAltName = DNS:gateway.%s.nextensio.net" > %s""" % (cluster, extfile))
-        check_call("""openssl x509 -req -days 365 -CA %s/rootca.crt -CAkey %s/rootca.key -set_serial 0 -in %s/gw.csr -out %s/gw.crt -extfile %s""" %
+        check_call("""openssl x509 -req -days 365 -CA %s/nextensio.crt -CAkey %s/nextensio.key -set_serial 0 -in %s/gw.csr -out %s/gw.crt -extfile %s -passin pass:Nextensio123""" %
                    (rootca, rootca, tmpdir, tmpdir, extfile))
     except subprocess.CalledProcessError as e:
         print(e.output)
@@ -852,13 +900,6 @@ def delete_cluster(cluster):
         delete_all_gateway(cluster)
 
 
-def generate_rootca(cadir):
-    rootkey = "%s/rootca.key" % cadir
-    rootcrt = "%s/rootca.crt" % cadir
-    check_call("""openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -subj '/O=Nextensio Gateway/CN=gateway.*.nextensio.net' -keyout %s -out %s""" % \
-               (rootkey, rootcrt))
-
-
 def parser_init():
     parser = argparse.ArgumentParser(
         description='Nextensio cluster management')
@@ -870,10 +911,6 @@ def parser_init():
                         help='docker config file')
     parser.add_argument('-terraform', nargs=1, action='store',
                         help='name of cluster to terraform')
-    parser.add_argument('-genca', nargs=1, action='store',
-                        help='name of directory to generate root CA certificates')
-    parser.add_argument('-rootca', nargs=1, action='store',
-                        help='name of directory that has root CA certificates')
     parser.add_argument('-consul', nargs='*', action='store',
                         help='name of clusters to join in consul')
     args = parser.parse_args()
@@ -889,10 +926,6 @@ if __name__ == "__main__":
 
     args = parser_init()
 
-    if args.genca:
-        generate_rootca(args.genca[0])
-        sys.exit(0)
-
     if args.terraform:
         terraform_cluster(args.terraform[0])
         sys.exit(0)
@@ -901,12 +934,9 @@ if __name__ == "__main__":
         if not args.docker:
             print("Please provide path to docker config file with -docker <path> option")
             sys.exit(1)
-        if not args.rootca:
-            print(
-                "Please provide path to root CA certificates with -rootca <path> option")
-            sys.exit(1)
         dockercfg = args.docker[0]
-        rootca = args.rootca[0]
+        # TODO: This will go away once we have proper certificates
+        rootca = scriptdir + "/../../testCert/"
         create_cluster(args.create[0])
         with open('cluster_%s_state.json' % args.create[0], 'w') as f:
             json.dump(outputState, f)

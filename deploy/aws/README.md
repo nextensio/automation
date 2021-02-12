@@ -75,10 +75,6 @@ common/ and <cluster-name>/spec.tf
 * This is what I do. I create a directory like /tmp/nextensio-eks. And if I want three clusters, I
 create three directories inside that like "controller", "useast1" and "uswest1" (latter two are gateways)
 
-* Since we are still not "official", we use self signed certificates for our tls connections, and 
-we need a rootCA certificate which we can use for the controllers and gateways, lets first generate 
-that in /tmp/nextensio-eks/ by saying automation/deploy/aws/create.py -genca .
-
 * Now lets say we create the controller. So "cd controller"; and "create.py -terraform controller".
 You have to answer "yes" at some point, and then this will take 15 to 20 minutes. You have to be
 ready for manual intervention if something goes wrong with terraform. Once its all done, the 
@@ -88,9 +84,9 @@ or it cant destroy the cluster etc.. Then you will have to do all that very pain
 via the aws UI or CLIs etc..
 
 * Now that the controller cluster is terraformed, we need to configure nextensio software on it by saying
-"create.py  -create controller -docker /home/gopa/.docker/config.json -rootca ../" - the docker parameter
+"create.py  -create controller -docker /home/gopa/.docker/config.json" - the docker parameter
 will copy our docker credentials to the cluster so that more nextensio software can be downloaded on
-the cluster. The rootca just points to the directory where we created some certificates before.
+the cluster. 
 
 The above step will install all required nextensio software and also create domain name mappings 
 for controller.nextensio.net (the UI), server.nextensio.net (controller), and three mongodb names
@@ -100,7 +96,7 @@ At this point you can access controller.nextensio.net and start configuring the 
 * Next to terraform the gateways, do the same as for controller. Lets say we are terraforming the
 uswest2 gateway, first create a directory uswest2 in /tmp/nextensio-eks and "cd uswest2" and
 "create.py -terraform uswest2". Once thats done then configure the gateways with nextensio software,
-"create.py  -create uswest2 -docker /home/gopa/.docker/config.json -rootca ../"
+"create.py  -create uswest2 -docker /home/gopa/.docker/config.json"
 
 At this point we have a domain name gateway.uswest2.nextensio.net available, with the istio ingress
 gateways and consul and nextensio clustermgr etc.. installed. Now the clustermgr will try looking

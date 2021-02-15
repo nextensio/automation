@@ -29,14 +29,14 @@ spec:
         env:
           - name: NXT_READONLY
             value: "false"
-          - name: TEST_ENVIRONMENT
-            value: "true"
-          - name: CLIENT_ID
+          - name: AGENT_CLIENT_ID
+            value: "0oaz5lndczD0DSUeh4x6"
+          - name: API_CLIENT_ID
             value: "0oa24hr70oNBZW0b64x7"
           - name: IDP_URI
             value: "https://dev-635657.okta.com/oauth2/default"
           - name: MONGO_URI
-            value: "mongodb://mongodb-0-service:27017,mongodb-1-service:27018,mongodb-2-service:27019"
+            value: "mongodb+srv://nextensio:nextensio238@cluster0.prph0.mongodb.net"
           - name: TLS_KEY
             value: "/etc/nxt-certs/tls.key"
           - name: TLS_CRT

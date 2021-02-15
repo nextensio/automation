@@ -223,7 +223,6 @@ def bootstrap_controller():
         helm_apply("repo update")
         helm_apply("upgrade --install hostpath-provisioner --namespace kube-system rimusz/hostpath-provisioner")
         kube_scriptdir_apply('controller', 'controller.yaml')
-        kube_scriptdir_apply('controller', 'mongo.yaml')
         return True
     except subprocess.CalledProcessError as e:
         pass
@@ -446,7 +445,8 @@ def create_target_group(cluster, region, name, proto, port, vpc, healthport):
                 --tags Key="kubernetes.io/cluster/%s",Value=owned --region %s""" % (name, proto, port, vpc, healthport, cluster, region))
         o = json.loads(out)
         return o['TargetGroups'][0]
-    except:
+    except Exception as e:
+        print("Exception %s" % e)
         pass
         return None
 

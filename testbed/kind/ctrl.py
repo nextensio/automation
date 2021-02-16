@@ -75,6 +75,16 @@ if __name__ == '__main__':
     bundle3attrjson = {"bid":"v2.kismis@nextensio.net", "tenant":tenant, "dept":["ABU","BBU"],
                        "team":["engineering","sales"], "IC":1, "manager":1, "nonemployee":"allow"}
     
+    host1attrjson = { "host": "kismis.org", "tenant":tenant,
+                      "routeattrs": [
+		      {"tag": "v2", "team": ["engineering"], "dept": ["ABU","BBU"],
+		       "category": ["employee","nonemployee"], "type": ["IC","manager"], "IClvl": 1, "mlvl": 1
+                      },
+		      {"tag": "v1", "team": ["sales"], "dept": ["BBU","ABU"],
+		        "category": ["employee"], "type": ["manager","IC"], "IClvl": 4, "mlvl": 4
+		      } ]
+		    }
+
     ok = create_user(url, user1json)
     while not ok:
         print('User creation failed, retrying ...')
@@ -135,6 +145,12 @@ if __name__ == '__main__':
         time.sleep(1)
         ok = create_bundle_attr(url, bundle3attrjson)
 
+    ok = create_host_attr(url, host1attrjson)
+    while not ok:
+        print('HostAttr creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_host_attr(url, host1attrjson)
+    
     route1json = {"tenant":tenant, "route":"test1@nextensio.net:kismis.org", "tag":"v1"}
     route2json = {"tenant":tenant, "route":"test2@nextensio.net:kismis.org", "tag":"v2"}
     
@@ -157,6 +173,14 @@ if __name__ == '__main__':
         print('Access Policy creation failed, retrying ...')
         time.sleep(1)
         ok = create_policy(url, tenant, 'AccessPolicy', rego)
+
+    with open('policy.RoutePolicy','r') as file:
+        rego = file.read()
+    ok = create_policy(url, tenant, 'RoutePolicy', rego)
+    while not ok:
+        print('Route Policy creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_policy(url, tenant, 'RoutePolicy', rego)
 
     ok = create_cert(url, cert)
     while not ok:

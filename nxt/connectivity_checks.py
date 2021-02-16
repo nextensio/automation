@@ -241,66 +241,68 @@ def publicFail():
 
 
 def config_routes(tag1, tag2):
-    ok = create_route(url, tenant, 'test1@nextensio.net', 'kismis.org', tag1)
+    route1json = {"tenant":tenant, "route":"test1@nextensio.net:kismis.org", "tag":tag1}
+    route2json = {"tenant":tenant, "route":"test2@nextensio.net:kismis.org", "tag":tag2}
+    ok = create_route(url, route1json)
     while not ok:
         logger.info('Route creation failed, retrying ...')
         time.sleep(1)
-        ok = create_route(url, tenant, 'test1@nextensio.net',
-                          'kismis.org', tag1)
-    ok = create_route(url, tenant, 'test2@nextensio.net', 'kismis.org', tag2)
+        ok = create_route(url, route1json)
+    ok = create_route(url, route2json)
     while not ok:
         logger.info('Route creation failed, retrying ...')
         time.sleep(1)
-        ok = create_route(url, tenant, 'test2@nextensio.net',
-                          'kismis.org', tag2)
+        ok = create_route(url, route2json)
 
 
 def config_user_attr(level1, level2):
-    ok = create_user_attr(url, 'test1@nextensio.net', tenant, 'employee',
-                          'IC', level1, ['ABU,BBU'], ['engineering', 'sales'])
+    user1attrjson = {"uid":"test1@nextensio.net", "tenant":tenant, "category":"employee",
+                     "type":"IC", "level":level1, "dept":["ABU","BBU"], "team":["engineering","sales"] }
+    user2attrjson = {"uid":"test2@nextensio.net", "tenant":tenant, "category":"employee",
+                     "type":"IC", "level":level2, "dept":["ABU","BBU"], "team":["engineering","sales"] }
+    ok = create_user_attr(url, user1attrjson)
     while not ok:
         logger.info('UserAttr test1 config failed, retrying ...')
         time.sleep(1)
-        ok = create_user_attr(url, 'test1@nextensio.net', tenant, 'employee',
-                              'IC', level1, ['ABU,BBU'], ['engineering', 'sales'])
+        ok = create_user_attr(url, user1attrjson)
 
-    ok = create_user_attr(url, 'test2@nextensio.net', tenant, 'employee',
-                          'IC', level2, ['ABU,BBU'], ['engineering', 'sales'])
+    ok = create_user_attr(url, user2attrjson)
     while not ok:
         logger.info('UserAttr test2 config failed, retrying ...')
         time.sleep(1)
-        ok = create_user_attr(url, 'test2@nextensio.net', tenant, 'employee',
-                              'IC', level2, ['ABU,BBU'], ['engineering', 'sales'])
+        ok = create_user_attr(url, user2attrjson)
 
 
 def config_user(user, service, gateway, pod):
-    ok = create_user(url, user, tenant, 'Test User %s' % user, user,
-                     [service], gateway, pod)
+    usernm = 'Test User %s' % user
+    userjson = {"uid":user, "tenant":tenant, "name":usernm, "email":user,
+                 "services":[service], "gateway":gateway, "pod":pod}
+    ok = create_user(url, userjson)
     while not ok:
         logger.info('User %s updation failed, retrying ...' % user)
         time.sleep(1)
-        ok = create_user(url, user, tenant, 'Test User %s' % user, user,
-                         [service], gateway, pod)
+        ok = create_user(url, userjson)
 
 
 def config_bundle(bundle, service, gateway, pod):
-    ok = create_bundle(url, bundle, tenant, 'Bundle %s' % bundle,
-                       [service], gateway, pod)
+    bundlenm = 'Bundle %s' % bundle
+    bundlejson = {"bid":bundle, "tenant":tenant, "name":bundlenm,
+                   "services":[service], "gateway":gateway, "pod":pod}
+    ok = create_bundle(url, bundlejson)
     while not ok:
         logger.info('Bundle %s updation failed, retrying ...' % bundle)
         time.sleep(1)
-        ok = create_bundle(url, bundle, tenant, 'Bundle %s' % bundle,
-                           [service], gateway, pod)
+        ok = create_bundle(url, bundlejson)
 
 
 def config_default_bundle_attr(depts, teams):
-    ok = create_bundle_attr(url, 'default@nextensio.net', tenant,
-                            depts, teams, 10, 10, "allowed")
+    bundleattrjson = {"bid":"default@nextensio.net", "tenant":tenant, "dept":depts,
+                       "team":teams, "IC":10, "manager":10, "nonemployee":"allow"}
+    ok = create_bundle_attr(url, bundleattrjson)
     while not ok:
         logger.info('BundleAttr bundle default config failed, retrying ...')
         time.sleep(1)
-        ok = create_bundle_attr(url, 'default@nextensio.net',
-                                tenant, depts, teams, 10, 10, "allowed")
+        ok = create_bundle_attr(url, bundleattrjson)
 
 
 def resetPods(devices, cluster, pods):

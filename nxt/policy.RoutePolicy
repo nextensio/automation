@@ -9,7 +9,7 @@ route_tag = rtag {
     input.user.maj_ver == app.maj_ver
     input.host == app.host
     some n
-    input.user.category == app.routeattrs[n].category[_]
+    input.user.type == app.routeattrs[n].type[_]
     input.user.team[_] == app.routeattrs[n].team[_]
     input.user.dept[_] == app.routeattrs[n].dept[_]
     rtag := app.routeattrs[n].tag

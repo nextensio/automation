@@ -239,27 +239,46 @@ def publicFail():
                 "I am Nextensio agent nxt_default") == True:
         raise Exception("agent2 default internet works!")
 
+    
+def config_policy():
+    with open('policy.AccessPolicy','r') as file:
+        rego = file.read()
+    ok = create_policy(url, tenant, 'AccessPolicy', rego)
+    while not ok:
+        logger.info('Access Policy creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_policy(url, tenant, 'AccessPolicy', rego)
+        
+    with open('policy.RoutePolicy','r') as file:
+        rego = file.read()
+    ok = create_policy(url, tenant, 'RoutePolicy', rego)
+    while not ok:
+        logger.info('Route Policy creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_policy(url, tenant, 'RoutePolicy', rego)
 
+        
 def config_routes(tag1, tag2):
-    route1json = {"tenant":tenant, "route":"test1@nextensio.net:kismis.org", "tag":tag1}
-    route2json = {"tenant":tenant, "route":"test2@nextensio.net:kismis.org", "tag":tag2}
-    ok = create_route(url, route1json)
+    routejson = { "host": "kismis.org", "tenant":tenant,
+                      "routeattrs": [
+		      {"tag": tag1, "team": ["engineering","sales"], "dept": ["ABU","BBU"],
+                       "category":["employee","nonemployee"], "type":["IC"] },
+		      {"tag": tag2, "team": ["engineering","sales"], "dept": ["ABU","BBU"],
+                       "category":["employee"], "type":["manager"] }
+		      ]
+                }
+    ok = create_host_attr(url, routejson)
     while not ok:
         logger.info('Route creation failed, retrying ...')
         time.sleep(1)
-        ok = create_route(url, route1json)
-    ok = create_route(url, route2json)
-    while not ok:
-        logger.info('Route creation failed, retrying ...')
-        time.sleep(1)
-        ok = create_route(url, route2json)
+        ok = create_host_attr(url, routejson)
 
 
 def config_user_attr(level1, level2):
     user1attrjson = {"uid":"test1@nextensio.net", "tenant":tenant, "category":"employee",
                      "type":"IC", "level":level1, "dept":["ABU","BBU"], "team":["engineering","sales"] }
     user2attrjson = {"uid":"test2@nextensio.net", "tenant":tenant, "category":"employee",
-                     "type":"IC", "level":level2, "dept":["ABU","BBU"], "team":["engineering","sales"] }
+                     "type":"manager", "level":level2, "dept":["ABU","BBU"], "team":["engineering","sales"] }
     ok = create_user_attr(url, user1attrjson)
     while not ok:
         logger.info('UserAttr test1 config failed, retrying ...')
@@ -336,10 +355,11 @@ def basicAccessSanity(devices):
     increments = {'user': 0, 'bundle': 0, 'route': 0, 'policy': 0}
     logger.info('STEP1')
     versions = getAllOpaVersions(devices, {}, increments)
+    config_policy()
     config_routes('v1', 'v2')
     config_user_attr(50, 50)
     config_default_bundle_attr(['ABU,BBU'], ['engineering', 'sales'])
-    increments = {'user': 2, 'bundle': 1, 'route': 0, 'policy': 0}
+    increments = {'user': 2, 'bundle': 1, 'route': 1, 'policy': 1}
     versions = getAllOpaVersions(devices, versions, increments)
     # Test public and private access via default routing setup
     publicAndPvtPass("ONE", "TWO")
@@ -347,7 +367,7 @@ def basicAccessSanity(devices):
     logger.info('STEP2')
     # Switch routes and ensure private route http get has switched
     config_routes('v2', 'v1')
-    increments = {'user': 0, 'bundle': 0, 'route': 0, 'policy': 0}
+    increments = {'user': 0, 'bundle': 0, 'route': 1, 'policy': 0}
     versions = getAllOpaVersions(devices, versions, increments)
     publicAndPvtPass("TWO", "ONE")
 

@@ -60,14 +60,13 @@ def docker_secret(cfg):
 
 def tls_secret(name, key, crt):
     kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
-    check_output(
-        "%s create secret tls %s --key=\"%s\" --cert=\"%s\"" % (kubeconfig, name, key, crt))
-
-def kube_delete_storage(storage):
-    kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
-    check_output(
-        "%s delete storageclass %s" % (kubeconfig, storage))
-
+    try:
+        check_output(
+            "%s create secret tls %s --key=\"%s\" --cert=\"%s\"" % (kubeconfig, name, key, crt))
+    except subprocess.CalledProcessError as e:
+        print(e.output)
+        if "already exists" in e.output.decode():
+            pass
 
 def kubectl_permissive_rbac():
     kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
@@ -204,24 +203,7 @@ def bootstrap_controller():
     controller_ux_keys()
     controller_server_keys()
 
-    # AWS has a gp2 class by default, all this will go away once we start using
-    # cloud hosted mongo (TODO)
     try:
-        kube_delete_storage("standard")
-    except subprocess.CalledProcessError as e:
-        pass
-        print(e.output)
-
-    try:
-        kube_delete_storage("gp2")
-    except subprocess.CalledProcessError as e:
-        pass
-        print(e.output)
-
-    try:
-        helm_apply("repo add rimusz https://charts.rimusz.net")
-        helm_apply("repo update")
-        helm_apply("upgrade --install hostpath-provisioner --namespace kube-system rimusz/hostpath-provisioner")
         kube_scriptdir_apply('controller', 'controller.yaml')
         return True
     except subprocess.CalledProcessError as e:
@@ -501,8 +483,8 @@ def controller_route53():
     if region == None:
         return False
     loads = aws_get_cluster_loadbalancers('controller', region)
-    # One service for controller, one for ux, three for mongo
-    if len(loads) != 5:
+    # One service for controller, one for ux
+    if len(loads) != 2:
         return False
     for l in loads:
         if l['service'] == 'default/nextensio-ux':
@@ -511,15 +493,6 @@ def controller_route53():
         if l['service'] == 'default/nextensio-controller':
             aws_pgm_route53(
                 "UPSERT", "server.nextensio.net", l['domain'])
-        if l['service'] == 'default/mongodb-0-service':
-            aws_pgm_route53(
-                "UPSERT", "mongodb-0-service.nextensio.net", l['domain'])
-        if l['service'] == 'default/mongodb-1-service':
-            aws_pgm_route53(
-                "UPSERT", "mongodb-1-service.nextensio.net", l['domain'])
-        if l['service'] == 'default/mongodb-2-service':
-            aws_pgm_route53(
-                "UPSERT", "mongodb-2-service.nextensio.net", l['domain'])
 
     return True
 

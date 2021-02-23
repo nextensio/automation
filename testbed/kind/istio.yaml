@@ -33,10 +33,10 @@ spec:
               name: status-port
             - port: 80
               targetPort: 8080
-              name: http2
+              name: https-internal
             - port: 443
               targetPort: 8443
-              name: https
+              name: https-agent
             - port: 31400
               targetPort: 31400
               name: tcp

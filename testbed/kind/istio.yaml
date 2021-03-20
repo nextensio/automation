@@ -48,12 +48,34 @@ spec:
     policy:
       enabled: false
       k8s:
+        env:
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: GOMAXPROCS
+            value: "6"
+        hpaSpec:
+          maxReplicas: 5
+          minReplicas: 1
+          scaleTargetRef:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: istio-telemetry
+          metrics:
+            - type: Resource
+              resource:
+                name: cpu
+                targetAverageUtilization: 80
+        replicaCount: 1       
         resources:
           requests:
             cpu: 10m
             memory: 100Mi
 
     telemetry:
+      enabled: false
       k8s:
         resources:
           requests:
@@ -86,13 +108,13 @@ spec:
 
   addonComponents:
     kiali:
-      enabled: false
+      enabled: true 
     grafana:
       enabled: false
     tracing:
-      enabled: false
+      enabled: true 
     prometheus:
-      enabled: false
+      enabled: true 
 
   values:
     global:
@@ -104,6 +126,22 @@ spec:
 
     pilot:
       autoscaleEnabled: false
+
+    telemetry:
+      enabled: true
+      v1:
+        enabled: false
+      v2:
+        enabled: true
+        metadataExchange: {}
+        prometheus:
+          enabled: true
+        stackdriver:
+          enabled: false
+          logging: false
+          monitoring: false
+          topology: false
+          configOverride: {}
 
     mixer:
       adapters:
@@ -128,5 +166,64 @@ spec:
         autoscaleEnabled: false
       istio-ingressgateway:
         autoscaleEnabled: false
+        
+    prometheus:
+      hub: docker.io/prom
+      tag: v2.15.1
+      retention: 6h
+      scrapeInterval: 15s
+      contextPath: /prometheus
+      security:
+        enabled: true
+      nodeSelector: {}
+      tolerations: []
+      podAntiAffinityLabelSelector: []
+      podAntiAffinityTermLabelSelector: []
+      provisionPrometheusCert: true
+
+    tracing:
+      provider: jaeger
+      nodeSelector: {}
+      podAntiAffinityLabelSelector: []
+      podAntiAffinityTermLabelSelector: []
+      jaeger:
+        hub: docker.io/jaegertracing
+        tag: "1.16"
+        memory:
+          max_traces: 50000
+        spanStorageType: badger
+        persist: false
+        storageClassName: ""
+        accessMode: ReadWriteMany
+      service:
+        annotations: {}
+        name: http-query
+        type: ClusterIP
+        externalPort: 9411
+   
     kiali:
-      createDemoSecret: true
+      hub: quay.io/kiali
+      tag: v1.18
+      contextPath: /kiali
+      nodeSelector: {}
+      podAntiAffinityLabelSelector: []
+      podAntiAffinityTermLabelSelector: []
+      dashboard:
+        secretName: kiali
+        usernameKey: username
+        passphraseKey: passphrase
+        viewOnlyMode: false
+        grafanaURL:
+        grafanaInClusterURL: http://grafana:3000
+        jaegerURL:
+        jaegerInClusterURL: http://tracing/jaeger
+        auth:
+          strategy: login
+      prometheusNamespace:
+      createDemoSecret: true 
+      security:
+        enabled: false
+        cert_file: /kiali-cert/cert-chain.pem
+        private_key_file: /kiali-cert/key.pem
+      service:
+        annotations: {}

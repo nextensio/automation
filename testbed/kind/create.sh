@@ -17,8 +17,8 @@ function download_images {
     docker pull registry.gitlab.com/nextensio/controller/controller:latest
     docker pull registry.gitlab.com/nextensio/cluster/minion:latest
     docker pull registry.gitlab.com/nextensio/clustermgr/mel:latest
-    docker pull registry.gitlab.com/nextensio/go-agent/agent:latest
-    docker pull registry.gitlab.com/nextensio/rust-agent/agent:latest
+    docker pull registry.gitlab.com/nextensio/agent/go-agent:latest
+    docker pull registry.gitlab.com/nextensio/agent/rust-agent:latest
 }
 
 # Create a controller
@@ -210,7 +210,7 @@ function create_agent {
         -e NXT_USERNAME=$username -e NXT_PWD=LetMeIn123 \
         -e NXT_AGENT=$agent -e NXT_CONTROLLER=$ctrl_ip:8080 \
         -e NXT_AGENT_NAME=$name -e NXT_SERVICES=$services \
-        --network kind --name $name registry.gitlab.com/nextensio/rust-agent/agent:latest
+        --network kind --name $name registry.gitlab.com/nextensio/agent/rust-agent:latest
 }
 
 function create_connector {
@@ -228,7 +228,7 @@ function create_connector {
         -e NXT_USERNAME=$username -e NXT_PWD=LetMeIn123 \
         -e NXT_AGENT=$agent -e NXT_CONTROLLER=$ctrl_ip:8080 \
         -e NXT_AGENT_NAME=$name -e NXT_SERVICES=$services \
-        --network kind --name $name registry.gitlab.com/nextensio/go-agent/agent:latest
+        --network kind --name $name registry.gitlab.com/nextensio/agent/go-agent:latest
 }
 
 function create_all {

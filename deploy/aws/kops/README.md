@@ -57,6 +57,10 @@ before hand
    here each time we create a cluster. Having this summary route allows us to not worry about
    modifying this if we create / delete a new cluster
 
+   NOTE: The private route table is shown as the VPC's 'main' route table, I dont know if 
+   private being main or not matters, but just noting it down here. And similarly, the public
+   route table is not the 'main' route table
+
 8. The public subnets route table should have two routes
    0.0.0.0/0 --> via INTERNET gateway
    10.0.0.0/8 --> via Transit gateway

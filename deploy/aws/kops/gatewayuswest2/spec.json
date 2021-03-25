@@ -1,0 +1,8 @@
+{
+    "cluster": "gatewayuswest2",
+    "master-size": "t2.small",
+    "node-size": "t2.medium",
+    "region": "us-west-2",
+    "zone": "us-west-2a",
+    "cidr": "10.1.0.0/16"
+}

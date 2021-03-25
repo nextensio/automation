@@ -454,7 +454,7 @@ def aws_get_cluster_loadbalancersv2(cluster, region):
         tags = aws_get_loadbalancerv2_tags(region, l['LoadBalancerArn'])
         match = False
         for t in tags:
-            if t['Key'] == 'kubernetes.io/cluster/%s' % cluster:
+            if t['Key'] == 'kubernetes.io/cluster/%s.kops.nextensio.net' % cluster:
                 match = True
         if match:
             for t in tags:
@@ -476,7 +476,7 @@ def aws_check_target_attributes(target, cluster, region):
     o = json.loads(out)
     tags = o['TagDescriptions'][0]['Tags']
     for t in tags:
-        if t['Key'] == "kubernetes.io/cluster/%s" % cluster:
+        if t['Key'] == "kubernetes.io/cluster/%s.kops.nextensio.net" % cluster:
             return True
     return False
 
@@ -516,10 +516,9 @@ def aws_get_asg(cluster, region):
             "aws autoscaling describe-auto-scaling-groups --region %s" % region)
         o = json.loads(out)['AutoScalingGroups']
         for group in o:
-            tags = group['Tags']
-            for t in tags:
-                if t['Key'] == 'eks:cluster-name' and t['Value'] == cluster:
-                    asgs.append(group)
+            name = group['AutoScalingGroupName']
+            if ('%s.kops.nextensio.net' % cluster in name) and ('nodes' in name):
+                asgs.append(group)
     except subprocess.CalledProcessError as e:
         pass
         print(e.output)
@@ -538,7 +537,7 @@ def create_target_group(cluster, region, name, proto, port, vpc, healthport):
         out = check_output("""aws elbv2 create-target-group --name %s \
                --protocol %s --port %s --vpc-id %s \
                --health-check-protocol TCP --health-check-port %s --target-type instance \
-                --tags Key="kubernetes.io/cluster/%s",Value=owned --region %s""" % (name, proto, port, vpc, healthport, cluster, region))
+                --tags Key="kubernetes.io/cluster/%s.kops.nextensio.net",Value=owned --region %s""" % (name, proto, port, vpc, healthport, cluster, region))
         o = json.loads(out)
         return o['TargetGroups'][0]
     except Exception as e:
@@ -561,10 +560,11 @@ def add_consul_listeners(region, loadbalancer, consul_svr, consul_serf):
 def get_cluster_security_group(cluster, region):
     try:
         out = check_output(
-            "aws eks describe-cluster --name %s --region %s" % (cluster, region))
+            "aws ec2 describe-security-groups --region %s" % region)
         o = json.loads(out)
-        cluster = o['cluster']
-        return cluster['resourcesVpcConfig']['clusterSecurityGroupId']
+        for s in o['SecurityGroups']:
+            if s['GroupName'] == 'nodes.%s.kops.nextensio.net' % cluster:
+                return s['GroupId']
     except:
         pass
         return None
@@ -647,7 +647,7 @@ def gateway_route53(cluster):
     if len(loads) != 1:
         return False
     aws_pgm_route53(
-        "UPSERT", "gateway.%s.nextensio.net" % cluster, loads[0]['domain'])
+        "UPSERT", "%s.nextensio.net" % cluster, loads[0]['domain'])
 
     return True
 
@@ -733,13 +733,13 @@ def configure_gateway_loadbalancers(cluster):
     if len(loads) != 1:
         return False
 
-    print("Enabling cross zone loadbalancing")
-    try:
-        aws_loadbalancerv2_enable_cross_zone(region, loads[0]['loadbalancer'])
-    except subprocess.CalledProcessError as e:
-        pass
-        print(e.output)
-        return False
+    #print("Enabling cross zone loadbalancing")
+    #try:
+        #aws_loadbalancerv2_enable_cross_zone(region, loads[0]['loadbalancer'])
+    #except subprocess.CalledProcessError as e:
+        #pass
+        #print(e.output)
+        #return False
 
     print("Creating consul target groups")
     vpc = loads[0]['vpc']
@@ -813,7 +813,7 @@ def bootstrap_gateway(cluster):
                (istioctl, kubeconfig, istiocfg))
 
     try:
-        check_call("""openssl req -out %s/gw.csr -newkey rsa:2048 -nodes -keyout %s/gw.key -subj "/CN=gateway.%s.nextensio.net/O=Nextensio Gateway %s" """ %
+        check_call("""openssl req -out %s/gw.csr -newkey rsa:2048 -nodes -keyout %s/gw.key -subj "/CN=%s.nextensio.net/O=Nextensio Gateway %s" """ %
                    (tmpdir, tmpdir, cluster, cluster))
     except subprocess.CalledProcessError as e:
         print(e.output)
@@ -821,7 +821,7 @@ def bootstrap_gateway(cluster):
         pass
     try:
         extfile = "%s/extfile.conf" % tmpdir
-        check_call("""echo "subjectAltName = DNS:gateway.%s.nextensio.net" > %s""" % (cluster, extfile))
+        check_call("""echo "subjectAltName = DNS:%s.nextensio.net" > %s""" % (cluster, extfile))
         check_call("""openssl x509 -req -days 365 -CA %s/nextensio.crt -CAkey %s/nextensio.key -set_serial 0 -in %s/gw.csr -out %s/gw.crt -extfile %s -passin pass:Nextensio123""" %
                    (rootca, rootca, tmpdir, tmpdir, extfile))
     except subprocess.CalledProcessError as e:

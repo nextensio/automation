@@ -559,7 +559,7 @@ def create_gateway_mgr(cluster):
               loads[0]['domain'])
         pass
         return False
-    copyfile(scriptdir + "/mel.yaml", tmpdir + "/mel.yaml")
+    copyfile(scriptdir + "/../mel.yaml", tmpdir + "/mel.yaml")
     f = open(tmpdir + "/mel.yaml", "r+")
     mel = f.read()
     mel = re.sub(r'REPLACE_CLUSTER', cluster, mel)
@@ -586,7 +586,7 @@ def create_consul_dns(cluster):
         print(e.output)
         return False
 
-    copyfile(scriptdir + "/coredns.yaml", tmpdir + "/coredns.yaml")
+    copyfile(scriptdir + "/../coredns.yaml", tmpdir + "/coredns.yaml")
     f = open(tmpdir + "/coredns.yaml", "r+")
     dns = f.read()
     dns = re.sub(r'REPLACE_CONSUL_DNS', consul_dns, dns)
@@ -689,7 +689,7 @@ def bootstrap_gateway(cluster):
         if not "already exists" in str(e.output):
             return False
 
-    istiocfg = scriptdir + "/istio.yaml"
+    istiocfg = scriptdir + "/../istio.yaml"
     kubeconfig = tmpdir + "/kubeconfig"
     check_call("%s manifest apply --kubeconfig %s -f %s" %
                (istioctl, kubeconfig, istiocfg))
@@ -909,7 +909,7 @@ if __name__ == "__main__":
             sys.exit(1)
         dockercfg = args.docker[0]
         # TODO: This will go away once we have proper certificates
-        rootca = scriptdir + "/../../testCert/"
+        rootca = scriptdir + "/../../../testCert/"
         create_cluster(args.create[0])
         with open('cluster_%s_state.json' % args.create[0], 'w') as f:
             json.dump(outputState, f)

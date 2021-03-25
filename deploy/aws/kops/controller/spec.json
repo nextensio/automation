@@ -1,4 +1,7 @@
 {
+    "cluster": "controller",
+    "master-size": "t2.small",
+    "node-size": "t2.small",
     "region": "us-west-2",
     "zone": "us-west-2a",
     "cidr": "10.0.0.0/16"

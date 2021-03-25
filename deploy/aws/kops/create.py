@@ -120,63 +120,26 @@ def download_utils():
     return True
 
 
-def terraform_config(cluster):
-    copyfile(scriptdir + "/" + cluster + "/spec.json", tmpdir + "/spec.json")
-
 def terraform_cluster(cluster):
-    terraform_config(cluster)
     try:
-        check_call("terraform init %s/" % tmpdir)
-        check_call("terraform apply %s/" % tmpdir)
+        check_call("terraform init %s/%s/out/terraform/" % (scriptdir, cluster))
+        check_call("terraform apply %s/%s/out/terraform/" % (scriptdir, cluster))
+        # Only after we configure the transit gateway stuff will the cluster have internet access
+        # It will take a while for the cluster loadbalancers to detect the api gateway port 443
+        # after this point, so kubectl calls can fail for a few minutes before it succeeds
+        setup_transit_gw(cluster)
         check_call("KUBECONFIG=%s/kubeconfig kops export kubecfg %s.kops.nextensio.net --state s3://clusters.kops.nextensio.net  --admin" % (tmpdir, cluster));
         check_call("chmod 600 %s/kubeconfig" % tmpdir)
     except subprocess.CalledProcessError as e:
         pass
-        print(e.output)
-        return False
-
-    return True
-
+        print("Terraform failed [%s]" % e.output)
+        return
 
 def controller_ux_keys():
-    try:
-        check_call("""openssl req -out %s/ux.csr -newkey rsa:2048 -nodes -keyout %s/ux.key -subj "/CN=controller.nextensio.net/O=Nextensio Controller" """ %
-                   (tmpdir, tmpdir))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
-    try:
-        extfile = "%s/ux.extfile.conf" % tmpdir
-        check_call("""echo "subjectAltName = DNS:controller.nextensio.net" > %s""" % extfile)
-        check_call("""openssl x509 -req -days 365 -CA %s/nextensio.crt -CAkey %s/nextensio.key -set_serial 0 -in %s/ux.csr -out %s/ux.crt -extfile %s -passin pass:Nextensio123""" %
-                   (rootca, rootca, tmpdir, tmpdir, extfile))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
-    
-    tls_secret("ux-cert", "%s/ux.key" % tmpdir, "%s/ux.crt" % tmpdir)
+    tls_secret("ux-cert", "%s/nextensio.key" % rootca, "%s/nextensio.crt" % rootca)
 
 def controller_server_keys():
-    try:
-        check_call("""openssl req -out %s/server.csr -newkey rsa:2048 -nodes -keyout %s/server.key -subj "/CN=server.nextensio.net/O=Nextensio Server" """ %
-                   (tmpdir, tmpdir))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
-    try:
-        extfile = "%s/server.extfile.conf" % tmpdir
-        check_call("""echo "subjectAltName = DNS:server.nextensio.net" > %s""" % extfile)
-        check_call("""openssl x509 -req -days 365 -CA %s/nextensio.crt -CAkey %s/nextensio.key -set_serial 0 -in %s/server.csr -out %s/server.crt -extfile %s -passin pass:Nextensio123""" %
-                   (rootca, rootca, tmpdir, tmpdir, extfile))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
-
-    tls_secret("server-cert", "%s/server.key" % tmpdir, "%s/server.crt" % tmpdir)
+    tls_secret("server-cert", "%s/nextensio.key" % rootca, "%s/nextensio.crt" % rootca)
 
 def bootstrap_controller():
     # Setup the TLS cert and keys
@@ -617,19 +580,19 @@ def add_consul_security_rules(region, sgid):
 
 
 def get_cluster_region(cluster):
-    spec = tmpdir + '/spec.json'
+    spec = scriptdir + '/%s/spec.json' % cluster
     with open(spec) as json_file:
         data = json.load(json_file)
         return data['region']
 
 def get_cluster_zone(cluster):
-    spec = tmpdir + '/spec.json'
+    spec = scriptdir + '/%s/spec.json' % cluster
     with open(spec) as json_file:
         data = json.load(json_file)
         return data['zone']
 
 def get_cluster_cidr(cluster):
-    spec = tmpdir + '/spec.json'
+    spec = scriptdir + '/%s/spec.json' % cluster
     with open(spec) as json_file:
         data = json.load(json_file)
         return data['cidr']
@@ -1011,23 +974,32 @@ def delete_all_gateway(cluster):
 
 def setup_transit_gw(cluster):
     region = get_cluster_region(cluster)
-    if region == None:
-        return False
+    while region == None:
+        print("Unable to get region, retrying..")
+        time.sleep(1)
+        region = get_cluster_region(cluster)
 
     tgwid = aws_get_transit_gwid(region)
-    if tgwid == None:
-        return False
-    vpcid = aws_get_vpc(region, cluster)
-    if vpcid == None:
-        return False
-    if aws_add_transit_attachment(region, cluster, vpcid, tgwid) == False:
-        return False
-    if aws_add_transit_route(region, cluster, tgwid, get_cluster_cidr(cluster)) == False:
-        return False
-    if aws_add_pvt_transit_route(region, vpcid, tgwid) == False:
-        return False
+    while tgwid == None:
+        print("Unable to get transit gateway, retrying")
+        time.sleep(1)
+        tgwid = aws_get_transit_gwid(region)
 
-    return True
+    vpcid = aws_get_vpc(region, cluster)
+    while vpcid == None:
+        print("Unable to get vpc, retrying")
+        time.sleep(1)
+        vpcid = aws_get_vpc(region, cluster)
+
+    while aws_add_transit_attachment(region, cluster, vpcid, tgwid) == False:
+        print("Unable to attach vpc to transit gateway, retrying")  
+        time.sleep(1)
+    while aws_add_transit_route(region, cluster, tgwid, get_cluster_cidr(cluster)) == False:
+        print("Unable to add vpc route to transit gateway, retrying")  
+        time.sleep(1)
+    while aws_add_pvt_transit_route(region, vpcid, tgwid) == False:
+        print("Unable to add default route to vpc, retrying")  
+        time.sleep(1)
 
 def teardown_transit_gw(cluster):
     region = get_cluster_region(cluster)
@@ -1044,11 +1016,6 @@ def teardown_transit_gw(cluster):
     return True
 
 def create_cluster(cluster):
-    while setup_transit_gw(cluster) != True:
-        print("Transit setup failed, retrying")
-        time.sleep(1)
-    print("Transit gateway configured")
-
     while download_utils() != True:
         print("Download utils failed, retrying")
         time.sleep(1)
@@ -1107,8 +1074,7 @@ if __name__ == "__main__":
             print("Please provide path to docker config file with -docker <path> option")
             sys.exit(1)
         dockercfg = args.docker[0]
-        # TODO: This will go away once we have proper certificates
-        rootca = scriptdir + "/../../../testCert/"
+        rootca = scriptdir + "/../../letsencrypt/"
         create_cluster(args.create[0])
         with open('cluster_%s_state.json' % args.create[0], 'w') as f:
             json.dump(outputState, f)

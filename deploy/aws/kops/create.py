@@ -226,9 +226,8 @@ def aws_get_pvt_route_table(region, vpcid):
             "aws ec2 describe-route-tables --no-paginate --region %s --filters Name=vpc-id,Values=%s" % (region, vpcid))
         o = json.loads(out)
         for rt in o["RouteTables"]:
-            for t in rt["Tags"]:
-                if t['Key'] == 'kubernetes.io/kops/role' and ("private" in t['Value']):
-                    return rt['RouteTableId']
+            if rt['Associations'][0]['Main'] == True:
+                return rt['RouteTableId']
     except subprocess.CalledProcessError as e:
         pass
         print(e.output)

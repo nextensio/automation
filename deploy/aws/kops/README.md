@@ -111,7 +111,7 @@ Again go to the ~/deployments/<cluster>/ directory used for creating the cluster
 1. First say "<git-repo-root>/automation/deploy/aws/kops/create.py  -delete <cluster>" - this will remove 
    all the nextensio specific stuff we added to amazon (like transit gateway attachments, loadbalancers et..)
 
-2. Then say "terraform destroy" - if we dont do step 1, then terraform will not be able to destroy the 
+2. Then say "terraform destroy out/terraform" - if we dont do step 1, then terraform will not be able to destroy the 
    cluster because of dependent resources not cleaned up. This will take 5 minutes and the cluster will
    be destroyed. Terraform will wait for a user input, answer 'yes' when terraform asks so we give permission
    to delete the stuff created by terraform

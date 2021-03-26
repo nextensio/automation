@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 # The routines in this file sets up a kind (kubernetes in docker) based
-# topology with a controller, testa gateway cluster and testc gateway cluster
+# topology with a controller, gatewaytesta gateway cluster and gatewaytestc gateway cluster
 # The script does the necessary things to ensure that the clusters are
 # connected to each other and the controller is programmed with a sample
-# user(agent) and app(connector), the Agent connecting to testa and connector
-# connecting to testc cluster
+# user(agent) and app(connector), the Agent connecting to gatewaytesta and connector
+# connecting to gatewaytestc cluster
 
 tmpdir=/tmp/nextensio-kind
 kubectl=$tmpdir/kubectl
@@ -62,7 +62,7 @@ function bootstrap_controller {
     $kubectl apply -f mongo.yaml
 }
 
-# Create kind clusters for testa and testc
+# Create kind clusters for gatewaytesta and gatewaytestc
 function create_cluster {
     cluster=$1
 
@@ -166,7 +166,7 @@ function consul_query_config {
     "Service": "\${name.full}",
     "Failover": {
       "NearestN": 3,
-      "Datacenters": ["testc", "testa"]
+      "Datacenters": ["gatewaytestc", "gatewaytesta"]
     }
   }
 }
@@ -176,23 +176,23 @@ EOF
 }
 
 function consul_join {
-    $kubectl config use-context kind-testa
+    $kubectl config use-context kind-gatewaytesta
     consul=`$kubectl get pods -n consul-system | grep consul-server | grep Running`;
     while [ -z "$consul" ]; do
-      echo "Waiting for testa consul pod";
+      echo "Waiting for gatewaytesta consul pod";
       consul=`$kubectl get pods -n consul-system | grep consul-server | grep Running`;
       sleep 5;
     done
-    $kubectl config use-context kind-testc
+    $kubectl config use-context kind-gatewaytestc
     consul=`$kubectl get pods -n consul-system | grep consul-server | grep Running`;
     while [ -z "$consul" ]; do
-      echo "Waiting for testc consul pod";
+      echo "Waiting for gatewaytestc consul pod";
       consul=`$kubectl get pods -n consul-system | grep consul-server | grep Running`;
       sleep 5;
     done
     # TODO: Again, if consul crashes, will it remember this join config and automatically
     # rejoin, or we have to monitor and rejoin ourselves ?
-    $kubectl exec -it testc-consul-server-0 -n consul-system -- consul join -wan $testa_ip
+    $kubectl exec -it gatewaytestc-consul-server-0 -n consul-system -- consul join -wan $gatewaytesta_ip
 }
 
 function create_agent {
@@ -204,8 +204,8 @@ function create_agent {
     services=$6
 
     docker run -d -it --user 0:0 --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun \
-        -e NXT_GW_1_IP=$testa_ip -e NXT_GW_1_NAME=gatewaytesta.nextensio.net \
-        -e NXT_GW_2_IP=$testc_ip -e NXT_GW_2_NAME=gatewaytestc.nextensio.net \
+        -e NXT_GW_1_IP=$gatewaytesta_ip -e NXT_GW_1_NAME=gatewaytesta.nextensio.net \
+        -e NXT_GW_2_IP=$gatewaytestc_ip -e NXT_GW_2_NAME=gatewaytestc.nextensio.net \
         -e NXT_GW_3_IP=$etchost_ip -e NXT_GW_3_NAME=$etchost_name \
         -e NXT_USERNAME=$username -e NXT_PWD=LetMeIn123 \
         -e NXT_AGENT=$agent -e NXT_CONTROLLER=$ctrl_ip:8080 \
@@ -222,8 +222,8 @@ function create_connector {
     services=$6
 
     docker run -d -it --user 0:0 --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun \
-        -e NXT_GW_1_IP=$testa_ip -e NXT_GW_1_NAME=gatewaytesta.nextensio.net \
-        -e NXT_GW_2_IP=$testc_ip -e NXT_GW_2_NAME=gatewaytestc.nextensio.net \
+        -e NXT_GW_1_IP=$gatewaytesta_ip -e NXT_GW_1_NAME=gatewaytesta.nextensio.net \
+        -e NXT_GW_2_IP=$gatewaytestc_ip -e NXT_GW_2_NAME=gatewaytestc.nextensio.net \
         -e NXT_GW_3_IP=$etchost_ip -e NXT_GW_3_NAME=$etchost_name \
         -e NXT_USERNAME=$username -e NXT_PWD=LetMeIn123 \
         -e NXT_AGENT=$agent -e NXT_CONTROLLER=$ctrl_ip:8080 \
@@ -233,8 +233,8 @@ function create_connector {
 
 function create_all {
     # delete existing clusters
-    kind delete cluster --name testa
-    kind delete cluster --name testc
+    kind delete cluster --name gatewaytesta
+    kind delete cluster --name gatewaytestc
     kind delete cluster --name controller
 
     create_controller
@@ -242,32 +242,32 @@ function create_all {
     ctrl_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' controller-control-plane`
     bootstrap_controller $ctrl_ip
 
-    create_cluster testa
-    create_cluster testc
-    # Find out ip addresses of testa cluster and testc cluster
-    testa_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' testa-control-plane`
-    testc_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' testc-control-plane`
+    create_cluster gatewaytesta
+    create_cluster gatewaytestc
+    # Find out ip addresses of gatewaytesta cluster and gatewaytestc cluster
+    gatewaytesta_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' gatewaytesta-control-plane`
+    gatewaytestc_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' gatewaytestc-control-plane`
 
     # Create dns entries inside kubernetes (coredns) for the gateway hostnames
     tmpf=$tmpdir/coredns.yaml
     cp coredns.yaml $tmpf
-    sed -i "s/REPLACE_NODE1_IP/$testa_ip/g" $tmpf
+    sed -i "s/REPLACE_NODE1_IP/$gatewaytesta_ip/g" $tmpf
     sed -i "s/REPLACE_NODE1_NAME/gatewaytesta.nextensio.net/g" $tmpf
-    sed -i "s/REPLACE_NODE2_IP/$testc_ip/g" $tmpf
+    sed -i "s/REPLACE_NODE2_IP/$gatewaytestc_ip/g" $tmpf
     sed -i "s/REPLACE_NODE2_NAME/gatewaytestc.nextensio.net/g" $tmpf
 
     # Configure the basic infrastructure elements in the cluster - like the loadbalancer,
     # coredns for DNS entries and the cluster manager itself
-    bootstrap_cluster testa $testa_ip $ctrl_ip
-    bootstrap_cluster testc $testc_ip $ctrl_ip
+    bootstrap_cluster gatewaytesta $gatewaytesta_ip $ctrl_ip
+    bootstrap_cluster gatewaytestc $gatewaytestc_ip $ctrl_ip
 
     # Finally, join the consuls in both clusters after ensuring their pods are Running
     consul_join
 
     # Configure consul in one cluster to query the remote cluster if local service lookup fails
     # Not sure if this needs to be done on both DCs, doing it anyways
-    consul_query_config testa
-    consul_query_config testc
+    consul_query_config gatewaytesta
+    consul_query_config gatewaytestc
 
     $kubectl config use-context kind-controller
     ctrlpod=`$kubectl get pods -n default | grep nextensio-controller | grep Running`;
@@ -304,8 +304,8 @@ function save_env {
     echo "##All the above information is saved in $tmpdir/environment for future reference##"
     
     envf=$tmpdir/environment
-    echo "testa_ip=$testa_ip" > $envf
-    echo "testc_ip=$testc_ip" >> $envf
+    echo "gatewaytesta_ip=$gatewaytesta_ip" > $envf
+    echo "gatewaytestc_ip=$gatewaytestc_ip" >> $envf
     echo "ctrl_ip=$ctrl_ip" >> $envf
     echo "nxt_agent1=$nxt_agent1" >> $envf
     echo "nxt_agent2=$nxt_agent2" >> $envf

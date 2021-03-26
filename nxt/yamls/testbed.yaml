@@ -41,99 +41,99 @@ devices:
         class: 'containers.DockerConnection'
       container:
         name: nxt_kismis_TWO
-  testa_pod1:
+  gatewaytesta_pod1:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-testa:pod1'
-  testa_pod2:
+        name: 'kind-gatewaytesta:pod1'
+  gatewaytesta_pod2:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-testa:pod2'
-  testa_pod3:
+        name: 'kind-gatewaytesta:pod2'
+  gatewaytesta_pod3:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-testa:pod3'
-  testa_pod4:
+        name: 'kind-gatewaytesta:pod3'
+  gatewaytesta_pod4:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-testa:pod4'
-  testa_pod5:
+        name: 'kind-gatewaytesta:pod4'
+  gatewaytesta_pod5:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-testa:pod5'
-  testa_consul:
+        name: 'kind-gatewaytesta:pod5'
+  gatewaytesta_consul:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-testa:consul-server'
-  testc_pod1:
+        name: 'kind-gatewaytesta:consul-server'
+  gatewaytestc_pod1:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-testc:pod1'
-  testc_pod2:
+        name: 'kind-gatewaytestc:pod1'
+  gatewaytestc_pod2:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-testc:pod2'
-  testc_pod3:
+        name: 'kind-gatewaytestc:pod2'
+  gatewaytestc_pod3:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-testc:pod3'
-  testc_pod4:
+        name: 'kind-gatewaytestc:pod3'
+  gatewaytestc_pod4:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-testc:pod4'
-  testc_pod5:
+        name: 'kind-gatewaytestc:pod4'
+  gatewaytestc_pod5:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-testc:pod5'
-  testc_consul:
+        name: 'kind-gatewaytestc:pod5'
+  gatewaytestc_consul:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-testc:consul-server'
+        name: 'kind-gatewaytestc:consul-server'

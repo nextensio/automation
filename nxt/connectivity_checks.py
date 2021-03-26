@@ -489,27 +489,27 @@ def placeAndVerifyAgents(specs):
 
 class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
     '''Agent1 and Agent2 in two seperate pods, default, kismis.v1 and kismisv2 in
-    three seperate pods, and agent and connector in two seperate clusters (testa, testc)
+    three seperate pods, and agent and connector in two seperate clusters (gatewaytesta, gatewaytestc)
     '''
     @ aetest.setup
     def setup(self, testbed):
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'testa', 'pod': 1},
+                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'testa', 'pod': 2},
+                'service': 'test2-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'default-internet', 'gateway': 'testc', 'pod': 3},
+                'service': 'default-internet', 'gateway': 'gatewaytestc', 'pod': 3},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'testc', 'pod': 4},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 4},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'testc', 'pod': 5}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 5}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
         # reset all pods everywhere
-        resetPods(testbed.devices, 'testa', [1, 2, 3, 4, 5])
-        resetPods(testbed.devices, 'testc', [1, 2, 3, 4, 5])
+        resetPods(testbed.devices, 'gatewaytesta', [1, 2, 3, 4, 5])
+        resetPods(testbed.devices, 'gatewaytestc', [1, 2, 3, 4, 5])
         checkConsulDnsAll(testbed.devices)
 
     @ aetest.test
@@ -523,26 +523,26 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
 
 class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
     '''Agent1 and Agent2 in two seperate pods, default, kismis.v1 and kismisv2 in
-    three seperate pods, and agent and connector in the same cluster (testa)
+    three seperate pods, and agent and connector in the same cluster (gatewaytesta)
     '''
     @ aetest.setup
     def setup(self, testbed):
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'testa', 'pod': 1},
+                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'testa', 'pod': 2},
+                'service': 'test2-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'default-internet', 'gateway': 'testa', 'pod': 3},
+                'service': 'default-internet', 'gateway': 'gatewaytesta', 'pod': 3},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'testa', 'pod': 4},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytesta', 'pod': 4},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'testa', 'pod': 5}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 5}
         ]
         resetAgents(testbed.devices)
         # reset all pods everywhere
-        resetPods(testbed.devices, 'testa', [1, 2, 3, 4, 5])
-        resetPods(testbed.devices, 'testc', [1, 2, 3, 4, 5])
+        resetPods(testbed.devices, 'gatewaytesta', [1, 2, 3, 4, 5])
+        resetPods(testbed.devices, 'gatewaytestc', [1, 2, 3, 4, 5])
         checkConsulDnsAll(testbed.devices)
 
     @ aetest.test
@@ -558,15 +558,15 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
         # Switch to two cluster and a different set of pods
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'testa', 'pod': 3},
+                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 3},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'testa', 'pod': 1},
+                'service': 'test2-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'default-internet', 'gateway': 'testa', 'pod': 2},
+                'service': 'default-internet', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'testa', 'pod': 5},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytesta', 'pod': 5},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'testa', 'pod': 4}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 4}
         ]
         # Reset agents so they reconnect to new pod assignments, but dont reset pods
         resetAgents(testbed.devices)
@@ -576,15 +576,15 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
         # And now go back to the original configuration of this test case
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'testa', 'pod': 1},
+                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'testa', 'pod': 2},
+                'service': 'test2-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'default-internet', 'gateway': 'testa', 'pod': 3},
+                'service': 'default-internet', 'gateway': 'gatewaytesta', 'pod': 3},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'testa', 'pod': 4},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytesta', 'pod': 4},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'testa', 'pod': 5}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 5}
         ]
         resetAgents(testbed.devices)
         checkConsulDnsAll(testbed.devices)
@@ -600,15 +600,15 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
         # Switch to two cluster and a different set of pods
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'testa', 'pod': 3},
+                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 3},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'testc', 'pod': 1},
+                'service': 'test2-nextensio-net', 'gateway': 'gatewaytestc', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'default-internet', 'gateway': 'testa', 'pod': 2},
+                'service': 'default-internet', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'testc', 'pod': 5},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 5},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'testa', 'pod': 4}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 4}
         ]
         # Reset agents so they reconnect to new pod assignments, but dont reset pods
         resetAgents(testbed.devices)
@@ -618,15 +618,15 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
         # And now go back to the original configuration of this test case
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'testa', 'pod': 1},
+                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'testa', 'pod': 2},
+                'service': 'test2-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'default-internet', 'gateway': 'testa', 'pod': 3},
+                'service': 'default-internet', 'gateway': 'gatewaytesta', 'pod': 3},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'testa', 'pod': 4},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytesta', 'pod': 4},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'testa', 'pod': 5}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 5}
         ]
         resetAgents(testbed.devices)
         checkConsulDnsAll(testbed.devices)
@@ -639,26 +639,26 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
 
 class Agent1PodsConnector1PodsClusters1(aetest.Testcase):
     '''Agent1 and Agent2 in the same pod, default, kismis.v1 and kismisv2 in
-    the same pod (different from agent pod), and agent and connector in the same cluster (testa)
+    the same pod (different from agent pod), and agent and connector in the same cluster (gatewaytesta)
     '''
     @ aetest.setup
     def setup(self, testbed):
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'testa', 'pod': 1},
+                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'testa', 'pod': 1},
+                'service': 'test2-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'default-internet', 'gateway': 'testa', 'pod': 2},
+                'service': 'default-internet', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'testa', 'pod': 2},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'testa', 'pod': 2}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 2}
         ]
         resetAgents(testbed.devices)
         # reset all pods everywhere
-        resetPods(testbed.devices, 'testa', [1, 2, 3, 4, 5])
-        resetPods(testbed.devices, 'testc', [1, 2, 3, 4, 5])
+        resetPods(testbed.devices, 'gatewaytesta', [1, 2, 3, 4, 5])
+        resetPods(testbed.devices, 'gatewaytestc', [1, 2, 3, 4, 5])
         checkConsulDnsAll(testbed.devices)
 
     @ aetest.test
@@ -668,26 +668,26 @@ class Agent1PodsConnector1PodsClusters1(aetest.Testcase):
 
 class AgentConnector1PodsClusters1(aetest.Testcase):
     '''Agent1 and Agent2 in the same pod, default, kismis.v1 and kismisv2 in
-    the same pod, the same as agent pod, and agent and connector in the same cluster (testa)
+    the same pod, the same as agent pod, and agent and connector in the same cluster (gatewaytesta)
     '''
     @ aetest.setup
     def setup(self, testbed):
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'testa', 'pod': 1},
+                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'testa', 'pod': 1},
+                'service': 'test2-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'default-internet', 'gateway': 'testa', 'pod': 1},
+                'service': 'default-internet', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'testa', 'pod': 1},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'testa', 'pod': 1}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 1}
         ]
         resetAgents(testbed.devices)
         # reset all pods everywhere
-        resetPods(testbed.devices, 'testa', [1, 2, 3, 4, 5])
-        resetPods(testbed.devices, 'testc', [1, 2, 3, 4, 5])
+        resetPods(testbed.devices, 'gatewaytesta', [1, 2, 3, 4, 5])
+        resetPods(testbed.devices, 'gatewaytestc', [1, 2, 3, 4, 5])
         checkConsulDnsAll(testbed.devices)
 
     @ aetest.test

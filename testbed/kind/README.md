@@ -30,7 +30,7 @@ container, pretty neat and useful !
 
 The beauty of the kind based setup is that even if there is some screwup where the wrong kubernetes
 rules are installed or some messup happens, we just need to delete the kind clusters by saying 
-kind delete cluster --name testa; kind delete cluster --name testc; kind delete cluster --name controller
+kind delete cluster --name gatewaytesta; kind delete cluster --name gatewaytestc; kind delete cluster --name controller
 and we are back to normal - there is NOTHING changed on the host ubuntu, so there is no messup that 
 cannot be recovered by deleting the kind clusters !
 
@@ -84,7 +84,7 @@ Kube APIs instead
 
 Very simple, type the below
 
-kind delete cluster --name testa; kind delete cluster --name testc; kind delete cluster --name controller
+kind delete cluster --name gatewaytesta; kind delete cluster --name gatewaytestc; kind delete cluster --name controller
 
 ### What actually gets created
 
@@ -124,8 +124,8 @@ agent2 to kismis-TWO, both showing different data for the same website URL !
 
 * How do I see details of each cluster ?
 
-To see a cluster, first set the kubernetes context by saying 'kubectl config use-context kind-testa' or
-'kubectl config use-context kind-testc' or 'kubectl config use-context kind-controller' - testa and testc
+To see a cluster, first set the kubernetes context by saying 'kubectl config use-context kind-gatewaytesta' or
+'kubectl config use-context kind-gatewaytestc' or 'kubectl config use-context kind-controller' - gatewaytesta and gatewaytestc
 are the two Nextensio POPs and the kind-controller is the controller cluster
 
 After you do the use-context command, then you can say 'kubect get pods --all-namespaces' or run any
@@ -156,8 +156,8 @@ it will use your new image.
 Now if its a minion pod you want to debug, minions are launched by the clustermgr - because the controller
 is what decides how many pods each tenant needs etc.., so clustermgr reads that config and launches as many
 pods as required. So those yamls are not in /tmp/nextensio-kind. As before, the first step is to create
-your docker image, tag it as latest and kind load docker-image to both testa and testc clusters. Then lets 
-say you are going to upgrade testa first, so you say 'kubectl config use-context kind-testa' and then find 
+your docker image, tag it as latest and kind load docker-image to both gatewaytesta and gatewaytestc clusters. Then lets 
+say you are going to upgrade gatewaytesta first, so you say 'kubectl config use-context kind-gatewaytesta' and then find 
 the pod names 'clustermgr' and get a shell to that pod (kubectl exec -it ... -- /bin/sh) and then check for 
 yamls in /tmp/ in that pod. You will find the Deployment yamls and do the same delete and apply again.
 

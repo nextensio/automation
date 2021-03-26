@@ -463,7 +463,7 @@ class CommonCleanup(aetest.CommonCleanup):
 
 
 def placeAgent(spec):
-    gateway = 'gateway' + spec['gateway'] + '.nextensio.net'
+    gateway = spec['gateway'] + '.nextensio.net'
     if spec['agent'] == True:
         config_user(spec['name'], spec['service'], gateway,  spec['pod'])
     else:

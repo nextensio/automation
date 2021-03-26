@@ -7,6 +7,7 @@ import re
 import argparse
 import os
 import sys
+import yaml
 from shutil import copyfile
 import socket
 
@@ -119,11 +120,42 @@ def download_utils():
 
     return True
 
+# Two modifications
+# 1. Use CoreDNS instead of default KubeDNS
+# 2. Do not create NAT gateways for the private subnets, we have our own transit gateway+NAT gateway,
+#    So just set egress to External which will prevent NAT gateway creation
+def yaml_modify():
+    f = open("%s/kops_orig.yaml" % tmpdir, "r")
+    docs = list(yaml.load_all(f, Loader=yaml.FullLoader))
+    f.close()
+    for doc in docs:
+        for k, v in doc.items():
+            if k == 'kind' and v == 'Cluster':
+                doc['spec']['kubeDNS'] = {'provider': 'CoreDNS'}
+                for subnet in doc['spec']['subnets']:
+                    if subnet['type'] == 'Private':
+                        subnet['egress'] = 'External'
+                f = open("%s/kops.yaml" % tmpdir, "w")
+                yaml.dump_all(docs, f)
+                f.close()
+                return
 
 def terraform_cluster(cluster):
     try:
-        check_call("terraform init %s/%s/out/terraform/" % (scriptdir, cluster))
-        check_call("terraform apply %s/%s/out/terraform/" % (scriptdir, cluster))
+        spec = scriptdir + '/%s/spec.json' % cluster
+        with open(spec) as json_file:
+            data = json.load(json_file)
+        cmd = "kops create cluster --master-size %s --node-size %s --zones=%s %s.kops.nextensio.net \
+              --network-cidr=%s --state s3://clusters.kops.nextensio.net --topology private --networking calico \
+              --dry-run -oyaml > %s/kops_orig.yaml" % \
+            (data["master-size"], data["node-size"], data["zone"], data["cluster"], data["cidr"], tmpdir)
+        check_call(cmd)
+        yaml_modify()
+        check_call("kops replace -f %s/kops.yaml --state s3://clusters.kops.nextensio.net --name %s --force" % (tmpdir, cluster))
+        check_call("kops create secret --name %s.kops.nextensio.net sshpublickey admin -i ~/.ssh/id_rsa.pub --state s3://clusters.kops.nextensio.net" % cluster)
+        check_call("kops update cluster --target terraform --state s3://clusters.kops.nextensio.net --name %s.kops.nextensio.net" % cluster)
+        check_call("terraform init %s/out/terraform/" % tmpdir)
+        check_call("terraform apply %s/out/terraform/" % tmpdir)
         # Only after we configure the transit gateway stuff will the cluster have internet access
         # It will take a while for the cluster loadbalancers to detect the api gateway port 443
         # after this point, so kubectl calls can fail for a few minutes before it succeeds

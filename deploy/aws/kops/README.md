@@ -72,33 +72,10 @@ before hand
 This is well documented on the kops page. What we need is 
 
 1. An s3 bucket where kops stores config state of a cluster - we have a bucket clusters.kops.nextensio.net
-
-   
+ 
 2. A SEPERATE HOSTED ZONE in route53 for kops - we have create a hosted zone named kops.nextensio.net 
    and added NS records in the parent zone nextensio.net pointing to this hosted zone. There is enough
    documentation on internet on how to do that
-
-## Kops terraform config creation
-
-Each cluster has its own directory with a small spec.json file. The kops terraform configs are created 
-by doing a "cd <cluster-directory>; ../kops.py" .. This will generate the terraform configs in 
-out/terraform/kubernetes.tf. Note that if we already have generated the configs before, kops will store
-that in the s3 bucket mentioned in the "kops prerequisite" section, so make sure to delete that before
-attempting to regenerate the config - kops will complain and refuse to generate the configs otherwise 
-and that will be a clue to check in s3
-
-By default Kops generates NAT gateway for the cluster, and since we have
-our own NAT gateway described before, we do the following to remove the NAT gateway from the terraform
-file - again this should be automated too.
-
-a. Remove the resource "aws_nat" section in the kubernetes.tf file
-b. Remove the resource "aws_route" "private-xyz" - if you look at that route, it refers to the nat gateway
-   above. We remove this route, the create.py scripts will add a route pointing to our shared NAT gateway
-   later when we create the cluster
-c. Remove the "aws_eip" (elastic ip) section - the elastic IP was created for nat gateway, and we dont
-   need it since we have our own NAT gateway
-
-Now save the kubernetes.tf file and thats what we will use to create the cluster
 
 ## Creating cluster
 
@@ -108,9 +85,13 @@ Now save the kubernetes.tf file and thats what we will use to create the cluster
 1. First let terraform create the basic kubernetes cluster with no nextensio stuff in it, to do that 
    say "<git-repo-root>/automation/deploy/aws/kops/create.py  -terraform <cluster>"
 
+   Note: if the cluster was created before, kops will complain that the s3 configs for the cluster already
+   exists, so go to the s3 bucket and delete the folder corresponding to the cluster and then proceed
+
    This will take approx 5 minutes and generate a file terraform.tfstate - MAKE SURE TO SAVE THIS FILE -
    if we want to destroy the cluster, we need this file, or else we will have to destroy many things
-   by hand and is painful
+   by hand and is painful. Terraform will wait for user input before creating stuff, answer 'yes'
+   when terraform prompts us
 
 2. Wait a good 10 minutes after step1. A good test on when to start is to say 
    "KUBECONFIG=./kubeconfig kubectl get pods --all-namespaces" - if that gives an output without 
@@ -132,4 +113,5 @@ Again go to the ~/deployments/<cluster>/ directory used for creating the cluster
 
 2. Then say "terraform destroy" - if we dont do step 1, then terraform will not be able to destroy the 
    cluster because of dependent resources not cleaned up. This will take 5 minutes and the cluster will
-   be destroyed. 
+   be destroyed. Terraform will wait for a user input, answer 'yes' when terraform asks so we give permission
+   to delete the stuff created by terraform

@@ -104,6 +104,11 @@ This is well documented on the kops page. What we need is
    after -docker - if you dont have one, figure out how to configure docker to download nextensio software
    without passwords from gitlab docker repo
 
+3. Finally when all the required gateways are created, we need to form a full-mesh connection of
+   all the consuls on all the gateways, so go to the directory where you have all the other gateway
+   directories, in my case ~/deployments, and say "create.py -consul gatewayuswest2 gatewayuseast1" -
+   basically space seperated list of gateways after the -consul parameter
+
 ## Deleting cluster
 
 Again go to the ~/deployments/<cluster>/ directory used for creating the cluster

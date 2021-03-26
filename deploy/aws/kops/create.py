@@ -146,7 +146,7 @@ def terraform_cluster(cluster):
         with open(spec) as json_file:
             data = json.load(json_file)
         cmd = "kops create cluster --master-size %s --node-size %s --zones=%s %s.kops.nextensio.net \
-              --network-cidr=%s --state s3://clusters.kops.nextensio.net --topology private --networking calico \
+              --network-cidr=%s --state s3://clusters.kops.nextensio.net --topology private --networking amazonvpc \
               --dry-run -oyaml > %s/kops_orig.yaml" % \
             (data["master-size"], data["node-size"], data["zone"], data["cluster"], data["cidr"], tmpdir)
         check_call(cmd)

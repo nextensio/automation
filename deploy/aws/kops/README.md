@@ -115,3 +115,11 @@ Again go to the ~/deployments/<cluster>/ directory used for creating the cluster
    cluster because of dependent resources not cleaned up. This will take 5 minutes and the cluster will
    be destroyed. Terraform will wait for a user input, answer 'yes' when terraform asks so we give permission
    to delete the stuff created by terraform
+
+## Creating bastion
+
+See the below link for information on creating a bastion to login to master and worker nodes
+
+https://medium.com/andcloudio/kubernetes-kops-cluster-on-aws-f55d197d8304
+
+The bastion and master/worker node user name is ubuntu and NOT admin as is mentioned in the link.

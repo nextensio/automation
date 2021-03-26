@@ -159,44 +159,10 @@ def terraform_cluster(cluster):
 
 
 def controller_ux_keys():
-    try:
-        check_call("""openssl req -out %s/ux.csr -newkey rsa:2048 -nodes -keyout %s/ux.key -subj "/CN=controller.nextensio.net/O=Nextensio Controller" """ %
-                   (tmpdir, tmpdir))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
-    try:
-        extfile = "%s/ux.extfile.conf" % tmpdir
-        check_call("""echo "subjectAltName = DNS:controller.nextensio.net" > %s""" % extfile)
-        check_call("""openssl x509 -req -days 365 -CA %s/nextensio.crt -CAkey %s/nextensio.key -set_serial 0 -in %s/ux.csr -out %s/ux.crt -extfile %s -passin pass:Nextensio123""" %
-                   (rootca, rootca, tmpdir, tmpdir, extfile))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
-    
-    tls_secret("ux-cert", "%s/ux.key" % tmpdir, "%s/ux.crt" % tmpdir)
+    tls_secret("ux-cert", "%s/nextensio.key" % rootca, "%s/nextensio.crt" % rootca)
 
 def controller_server_keys():
-    try:
-        check_call("""openssl req -out %s/server.csr -newkey rsa:2048 -nodes -keyout %s/server.key -subj "/CN=server.nextensio.net/O=Nextensio Server" """ %
-                   (tmpdir, tmpdir))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
-    try:
-        extfile = "%s/server.extfile.conf" % tmpdir
-        check_call("""echo "subjectAltName = DNS:server.nextensio.net" > %s""" % extfile)
-        check_call("""openssl x509 -req -days 365 -CA %s/nextensio.crt -CAkey %s/nextensio.key -set_serial 0 -in %s/server.csr -out %s/server.crt -extfile %s -passin pass:Nextensio123""" %
-                   (rootca, rootca, tmpdir, tmpdir, extfile))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
-
-    tls_secret("server-cert", "%s/server.key" % tmpdir, "%s/server.crt" % tmpdir)
+    tls_secret("server-cert", "%s/nextensio.key" % rootca, "%s/nextensio.crt" % rootca)
 
 def bootstrap_controller():
     # Setup the TLS cert and keys
@@ -529,7 +495,7 @@ def gateway_route53(cluster):
     if len(loads) != 1:
         return False
     aws_pgm_route53(
-        "UPSERT", "gateway.%s.nextensio.net" % cluster, loads[0]['domain'])
+        "UPSERT", "%s.nextensio.net" % cluster, loads[0]['domain'])
 
     return True
 
@@ -695,7 +661,7 @@ def bootstrap_gateway(cluster):
                (istioctl, kubeconfig, istiocfg))
 
     try:
-        check_call("""openssl req -out %s/gw.csr -newkey rsa:2048 -nodes -keyout %s/gw.key -subj "/CN=gateway.%s.nextensio.net/O=Nextensio Gateway %s" """ %
+        check_call("""openssl req -out %s/gw.csr -newkey rsa:2048 -nodes -keyout %s/gw.key -subj "/CN=%s.nextensio.net/O=Nextensio Gateway %s" """ %
                    (tmpdir, tmpdir, cluster, cluster))
     except subprocess.CalledProcessError as e:
         print(e.output)
@@ -703,7 +669,7 @@ def bootstrap_gateway(cluster):
         pass
     try:
         extfile = "%s/extfile.conf" % tmpdir
-        check_call("""echo "subjectAltName = DNS:gateway.%s.nextensio.net" > %s""" % (cluster, extfile))
+        check_call("""echo "subjectAltName = DNS:%s.nextensio.net" > %s""" % (cluster, extfile))
         check_call("""openssl x509 -req -days 365 -CA %s/nextensio.crt -CAkey %s/nextensio.key -set_serial 0 -in %s/gw.csr -out %s/gw.crt -extfile %s -passin pass:Nextensio123""" %
                    (rootca, rootca, tmpdir, tmpdir, extfile))
     except subprocess.CalledProcessError as e:
@@ -908,8 +874,7 @@ if __name__ == "__main__":
             print("Please provide path to docker config file with -docker <path> option")
             sys.exit(1)
         dockercfg = args.docker[0]
-        # TODO: This will go away once we have proper certificates
-        rootca = scriptdir + "/../../../testCert/"
+        rootca = scriptdir + "/../../letsencrypt/"
         create_cluster(args.create[0])
         with open('cluster_%s_state.json' % args.create[0], 'w') as f:
             json.dump(outputState, f)

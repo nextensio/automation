@@ -72,12 +72,11 @@ def kubectl_permissive_rbac():
     kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
     check_output("%s create clusterrolebinding permissive-binding --clusterrole=cluster-admin --user=admin --user=kubelet --group=system:serviceaccounts" % kubeconfig)
 
-
+# The gw-credential is used in the clustermgr files/yaml/ingress_gw.yaml
 def kubectl_create_gw_cred():
     kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
     check_output(
-        "%s create -n istio-system secret tls gw-credential --key=%s/gw.key --cert=%s/gw.crt" % (kubeconfig, tmpdir, tmpdir))
-
+        "%s create -n istio-system secret tls gw-credential --key=%s/nextensio.key --cert=%s/nextensio.crt" % (kubeconfig, rootca, rootca))
 
 def kubectl_create_namespace(namespace):
     kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
@@ -659,23 +658,6 @@ def bootstrap_gateway(cluster):
     kubeconfig = tmpdir + "/kubeconfig"
     check_call("%s manifest apply --kubeconfig %s -f %s" %
                (istioctl, kubeconfig, istiocfg))
-
-    try:
-        check_call("""openssl req -out %s/gw.csr -newkey rsa:2048 -nodes -keyout %s/gw.key -subj "/CN=%s.nextensio.net/O=Nextensio Gateway %s" """ %
-                   (tmpdir, tmpdir, cluster, cluster))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
-    try:
-        extfile = "%s/extfile.conf" % tmpdir
-        check_call("""echo "subjectAltName = DNS:%s.nextensio.net" > %s""" % (cluster, extfile))
-        check_call("""openssl x509 -req -days 365 -CA %s/nextensio.crt -CAkey %s/nextensio.key -set_serial 0 -in %s/gw.csr -out %s/gw.crt -extfile %s -passin pass:Nextensio123""" %
-                   (rootca, rootca, tmpdir, tmpdir, extfile))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
 
     try:
         kubectl_create_gw_cred()

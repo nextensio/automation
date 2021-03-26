@@ -95,10 +95,10 @@ function create_cluster {
     kind load docker-image registry.gitlab.com/nextensio/clustermgr/mel:latest --name $cluster
 
     EXTFILE="$tmpdir/$cluster-extfile.conf"
-    echo "subjectAltName = DNS:gateway$cluster.nextensio.net" > "${EXTFILE}"
+    echo "subjectAltName = DNS:$cluster.nextensio.net" > "${EXTFILE}"
     # Create ssl keys/certificates for agents/connectors to establish secure websocket
     openssl req -out $tmpdir/$cluster-gw.csr -newkey rsa:2048 -nodes -keyout $tmpdir/$cluster-gw.key \
-        -subj "/CN=gateway$cluster.nextensio.net/O=Nextensio Gateway $cluster"
+        -subj "/CN=$cluster.nextensio.net/O=Nextensio Gateway $cluster"
     openssl x509 -req -days 365 -CA ../../testCert/nextensio.crt -CAkey ../../testCert/nextensio.key -set_serial 0 \
         -in $tmpdir/$cluster-gw.csr -out $tmpdir/$cluster-gw.crt -extfile "${EXTFILE}" -passin pass:Nextensio123
 }

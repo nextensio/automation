@@ -33,8 +33,10 @@ spec:
             value: "true"
           - name: IGNORE_AUTH
             value: "true"
-          - name: AGENT_CLIENT_ID
+          - name: AGENT_SPA_CLIENT_ID
             value: "0oaz5lndczD0DSUeh4x6"
+          - name: AGENT_MOB_CLIENT_ID
+            value: "0oa2ncngj2cVUdS6b4x7"
           - name: API_CLIENT_ID
             value: "0oa24hr70oNBZW0b64x7"
           - name: IDP_URI

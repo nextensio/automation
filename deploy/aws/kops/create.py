@@ -7,6 +7,7 @@ import re
 import argparse
 import os
 import sys
+import yaml
 from shutil import copyfile
 import socket
 
@@ -73,10 +74,11 @@ def kubectl_permissive_rbac():
     check_output("%s create clusterrolebinding permissive-binding --clusterrole=cluster-admin --user=admin --user=kubelet --group=system:serviceaccounts" % kubeconfig)
 
 
+# The gw-credential is used in the clustermgr files/yaml/ingress_gw.yaml
 def kubectl_create_gw_cred():
     kubeconfig = "KUBECONFIG=" + tmpdir + "/kubeconfig " + kubectl
     check_output(
-        "%s create -n istio-system secret tls gw-credential --key=%s/gw.key --cert=%s/gw.crt" % (kubeconfig, tmpdir, tmpdir))
+        "%s create -n istio-system secret tls gw-credential --key=%s/nextensio.key --cert=%s/nextensio.crt" % (kubeconfig, rootca, rootca))
 
 
 def kubectl_create_namespace(namespace):
@@ -119,84 +121,58 @@ def download_utils():
 
     return True
 
-
-def terraform_config(cluster):
-    copyfile(scriptdir + "/" + cluster + "/spec.tf", tmpdir + "/spec.tf")
-    f = open(tmpdir + "/spec.tf", "r+")
-    spec = f.read()
-    # Copy the spec to the tmpdir, modify the source to point back to the original source dir
-    spec = re.sub(r'\n\s*source\s*=\s*\".+\"\s*\n',
-                  "\n  source = \"%s\"\n" % (scriptdir+"/common"), spec)
-    # Generate a key-pair for bastion access
-    check_call("rm -rf %s/bastion*" % tmpdir)
-    check_call(
-        """ssh-keygen -t rsa  -C "support@nextensio.net" -q -N "" -f %s/bastion""" % tmpdir)
-    with open("%s/bastion.pub" % tmpdir) as b:
-        pubkey = b.read().strip()
-    spec = re.sub(r'\n\s*ec2-key-public-key\s*=\s*\".+\"\s*\n',
-                  "\n  ec2-key-public-key = \"%s\"\n" % pubkey, spec)
-
-    f.seek(0)
-    f.write(spec)
-    f.truncate()
+# Two modifications
+# 1. Use CoreDNS instead of default KubeDNS
+# 2. Do not create NAT gateways for the private subnets, we have our own transit gateway+NAT gateway,
+#    So just set egress to External which will prevent NAT gateway creation
+def yaml_modify():
+    f = open("%s/kops_orig.yaml" % tmpdir, "r")
+    docs = list(yaml.load_all(f, Loader=yaml.FullLoader))
     f.close()
-
+    for doc in docs:
+        for k, v in doc.items():
+            if k == 'kind' and v == 'Cluster':
+                doc['spec']['kubeDNS'] = {'provider': 'CoreDNS'}
+                for subnet in doc['spec']['subnets']:
+                    if subnet['type'] == 'Private':
+                        subnet['egress'] = 'External'
+                f = open("%s/kops.yaml" % tmpdir, "w")
+                yaml.dump_all(docs, f)
+                f.close()
+                return
 
 def terraform_cluster(cluster):
-    terraform_config(cluster)
     try:
-        check_call("terraform init %s/" % tmpdir)
-        check_call("terraform apply %s/" % tmpdir)
-        check_call(
-            "terraform output -state=%s/terraform.tfstate kubeconfig > %s/kubeconfig" % (tmpdir, tmpdir))
+        spec = scriptdir + '/%s/spec.json' % cluster
+        with open(spec) as json_file:
+            data = json.load(json_file)
+        cmd = "kops create cluster --master-size %s --node-size %s --zones=%s %s.kops.nextensio.net \
+              --network-cidr=%s --state s3://clusters.kops.nextensio.net --topology private --networking amazonvpc \
+              --dry-run -oyaml > %s/kops_orig.yaml" % \
+            (data["master-size"], data["node-size"], data["zone"], data["cluster"], data["cidr"], tmpdir)
+        check_call(cmd)
+        yaml_modify()
+        check_call("kops replace -f %s/kops.yaml --state s3://clusters.kops.nextensio.net --name %s --force" % (tmpdir, cluster))
+        check_call("kops create secret --name %s.kops.nextensio.net sshpublickey admin -i ~/.ssh/id_rsa.pub --state s3://clusters.kops.nextensio.net" % cluster)
+        check_call("kops update cluster --target terraform --state s3://clusters.kops.nextensio.net --name %s.kops.nextensio.net" % cluster)
+        check_call("terraform init %s/out/terraform/" % tmpdir)
+        check_call("terraform apply %s/out/terraform/" % tmpdir)
+        # Only after we configure the transit gateway stuff will the cluster have internet access
+        # It will take a while for the cluster loadbalancers to detect the api gateway port 443
+        # after this point, so kubectl calls can fail for a few minutes before it succeeds
+        setup_transit_gw(cluster)
+        check_call("KUBECONFIG=%s/kubeconfig kops export kubecfg %s.kops.nextensio.net --state s3://clusters.kops.nextensio.net  --admin" % (tmpdir, cluster));
         check_call("chmod 600 %s/kubeconfig" % tmpdir)
     except subprocess.CalledProcessError as e:
         pass
-        print(e.output)
-        return False
-
-    return True
-
+        print("Terraform failed [%s]" % e.output)
+        return
 
 def controller_ux_keys():
-    try:
-        check_call("""openssl req -out %s/ux.csr -newkey rsa:2048 -nodes -keyout %s/ux.key -subj "/CN=controller.nextensio.net/O=Nextensio Controller" """ %
-                   (tmpdir, tmpdir))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
-    try:
-        extfile = "%s/ux.extfile.conf" % tmpdir
-        check_call("""echo "subjectAltName = DNS:controller.nextensio.net" > %s""" % extfile)
-        check_call("""openssl x509 -req -days 365 -CA %s/nextensio.crt -CAkey %s/nextensio.key -set_serial 0 -in %s/ux.csr -out %s/ux.crt -extfile %s -passin pass:Nextensio123""" %
-                   (rootca, rootca, tmpdir, tmpdir, extfile))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
-    
-    tls_secret("ux-cert", "%s/ux.key" % tmpdir, "%s/ux.crt" % tmpdir)
+    tls_secret("ux-cert", "%s/nextensio.key" % rootca, "%s/nextensio.crt" % rootca)
 
 def controller_server_keys():
-    try:
-        check_call("""openssl req -out %s/server.csr -newkey rsa:2048 -nodes -keyout %s/server.key -subj "/CN=server.nextensio.net/O=Nextensio Server" """ %
-                   (tmpdir, tmpdir))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
-    try:
-        extfile = "%s/server.extfile.conf" % tmpdir
-        check_call("""echo "subjectAltName = DNS:server.nextensio.net" > %s""" % extfile)
-        check_call("""openssl x509 -req -days 365 -CA %s/nextensio.crt -CAkey %s/nextensio.key -set_serial 0 -in %s/server.csr -out %s/server.crt -extfile %s -passin pass:Nextensio123""" %
-                   (rootca, rootca, tmpdir, tmpdir, extfile))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
-
-    tls_secret("server-cert", "%s/server.key" % tmpdir, "%s/server.crt" % tmpdir)
+    tls_secret("server-cert", "%s/nextensio.key" % rootca, "%s/nextensio.crt" % rootca)
 
 def bootstrap_controller():
     # Setup the TLS cert and keys
@@ -204,7 +180,7 @@ def bootstrap_controller():
     controller_server_keys()
 
     try:
-        kube_scriptdir_apply('controller', 'controller.yaml')
+        kube_scriptdir_apply('../', 'controller.yaml')
         return True
     except subprocess.CalledProcessError as e:
         pass
@@ -213,6 +189,176 @@ def bootstrap_controller():
 
     return True
 
+def aws_get_vpc(region, cluster):
+    try:
+        out = check_output(
+            "aws ec2 describe-vpcs --no-paginate --region %s" % region)
+        o = json.loads(out)
+        for vpc in o["Vpcs"]:
+            for t in vpc["Tags"]:
+                if t['Key'] == 'Name' and t['Value'] == "%s.kops.nextensio.net" % cluster:
+                    return vpc['VpcId']
+    except subprocess.CalledProcessError as e:
+        pass
+        print(e.output)
+        return None
+
+    return None
+
+def aws_get_pvt_subnet(region, vpcid):
+    try:
+        out = check_output(
+            "aws ec2 describe-subnets --no-paginate --region %s --filters Name=vpc-id,Values=%s" % (region, vpcid))
+        o = json.loads(out)
+        for sub in o["Subnets"]:
+            for t in sub["Tags"]:
+                if t['Key'] == 'SubnetType' and t['Value'] == "Private":
+                    return sub['SubnetId']
+    except subprocess.CalledProcessError as e:
+        pass
+        print(e.output)
+        return None
+
+    return None
+
+def aws_get_pvt_route_table(region, vpcid):
+    try:
+        out = check_output(
+            "aws ec2 describe-route-tables --no-paginate --region %s --filters Name=vpc-id,Values=%s" % (region, vpcid))
+        o = json.loads(out)
+        for rt in o["RouteTables"]:
+            if rt['Associations'][0]['Main'] == True:
+                return rt['RouteTableId']
+    except subprocess.CalledProcessError as e:
+        pass
+        print(e.output)
+        return None
+
+    return None
+
+def aws_add_pvt_transit_route(region, vpcid, tgwid):
+    rt = aws_get_pvt_route_table(region, vpcid)
+    if rt == None:
+        return False
+
+    try:
+        out = check_output(
+            "aws ec2 create-route --region %s --route-table-id %s --destination-cidr-block 0.0.0.0/0 --transit-gateway-id %s" % (region, rt, tgwid))
+        return True
+    except subprocess.CalledProcessError as e:
+        pass
+        print(e.output)
+        return False
+ 
+def aws_get_transit_gwid(region):
+    try:
+        out = check_output(
+            "aws ec2 describe-transit-gateways --no-paginate --region %s" % region)
+        o = json.loads(out)
+        for gw in o["TransitGateways"]:
+            for t in gw["Tags"]:
+                if t['Key'] == 'Nextensio-Transit':
+                    return gw['TransitGatewayId']
+    except subprocess.CalledProcessError as e:
+        pass
+        print(e.output)
+        return None
+
+    return None
+
+def aws_get_transit_attachment(region, cluster, tgwid):
+    try:
+        out = check_output(
+            "aws ec2 describe-transit-gateway-attachments --no-paginate --region %s" % region)
+        o = json.loads(out)
+        for gw in o["TransitGatewayAttachments"]:
+            if gw['TransitGatewayId'] == tgwid and gw['State'] != "deleted":
+                for t in gw["Tags"]:
+                    if t['Key'] == cluster:
+                        return gw['TransitGatewayAttachmentId']
+    except subprocess.CalledProcessError as e:
+        pass
+        print(e.output)
+        return None
+
+    return None
+
+def aws_add_transit_attachment(region, cluster, vpcid, tgwid):
+    subnetid = aws_get_pvt_subnet(region, vpcid)
+    if subnetid == None:
+        return False
+
+    try:
+        out = check_output(
+            "aws ec2 create-transit-gateway-vpc-attachment --region %s --transit-gateway-id %s --vpc-id %s --subnet-ids %s \
+            --tag-specifications ResourceType=transit-gateway-attachment,Tags=[{Key=%s,Value=true}]" % \
+            (region, tgwid, vpcid, subnetid, cluster))
+        return True
+    except subprocess.CalledProcessError as e:
+        pass
+        print(e.output)
+        return False
+
+def aws_del_transit_attachment(region, cluster, tgwid):
+    attachment = aws_get_transit_attachment(region, cluster, tgwid)
+    if attachment == None:
+        return False
+
+    try:
+        out = check_output(
+            "aws ec2 delete-transit-gateway-vpc-attachment --region %s --transit-gateway-attachment-id %s" % (region, attachment))
+        return True
+    except subprocess.CalledProcessError as e:
+        pass
+        print(e.output)
+        return False
+
+def aws_get_transit_route_table(region, tgwid):
+    try:
+        out = check_output(
+            "aws ec2 describe-transit-gateway-route-tables --no-paginate --region %s" % region)
+        o = json.loads(out)
+        for gw in o["TransitGatewayRouteTables"]:
+            if gw['TransitGatewayId'] == tgwid:
+                return gw['TransitGatewayRouteTableId']
+    except subprocess.CalledProcessError as e:
+        pass
+        print(e.output)
+        return None
+
+    return None
+
+def aws_del_transit_route(region, tgwid, cidr):
+    tableid = aws_get_transit_route_table(region, tgwid)
+    if tableid == None:
+        return False
+
+    try:
+        out = check_output(
+            "aws ec2 delete-transit-gateway-route --region %s --transit-gateway-route-table-id %s --destination-cidr-block %s" % (region, tableid, cidr))
+        return True
+    except subprocess.CalledProcessError as e:
+        pass
+        print(e.output)
+        return False
+
+def aws_add_transit_route(region, cluster, tgwid, cidr):
+    attachment = aws_get_transit_attachment(region, cluster, tgwid)
+    if attachment == None:
+        return False
+    tableid = aws_get_transit_route_table(region, tgwid)
+    if tableid == None:
+        return False
+
+    try:
+        out = check_output(
+            "aws ec2 create-transit-gateway-route --region %s --transit-gateway-route-table-id %s --destination-cidr-block %s --transit-gateway-attachment-id %s" % \
+                           (region, tableid, cidr, attachment))
+        return True
+    except subprocess.CalledProcessError as e:
+        pass
+        print(e.output)
+        return False
 
 def aws_cli_route53(fname):
     try:
@@ -288,7 +434,7 @@ def aws_get_cluster_loadbalancers(cluster, region):
         tags = aws_get_loadbalancer_tags(region, l['LoadBalancerName'])
         match = False
         for t in tags:
-            if t['Key'] == 'kubernetes.io/cluster/%s' % cluster:
+            if t['Key'] == 'kubernetes.io/cluster/%s.kops.nextensio.net' % cluster:
                 match = True
         if match:
             for t in tags:
@@ -340,7 +486,7 @@ def aws_get_cluster_loadbalancersv2(cluster, region):
         tags = aws_get_loadbalancerv2_tags(region, l['LoadBalancerArn'])
         match = False
         for t in tags:
-            if t['Key'] == 'kubernetes.io/cluster/%s' % cluster:
+            if t['Key'] == 'kubernetes.io/cluster/%s.kops.nextensio.net' % cluster:
                 match = True
         if match:
             for t in tags:
@@ -362,7 +508,7 @@ def aws_check_target_attributes(target, cluster, region):
     o = json.loads(out)
     tags = o['TagDescriptions'][0]['Tags']
     for t in tags:
-        if t['Key'] == "kubernetes.io/cluster/%s" % cluster:
+        if t['Key'] == "kubernetes.io/cluster/%s.kops.nextensio.net" % cluster:
             return True
     return False
 
@@ -402,10 +548,9 @@ def aws_get_asg(cluster, region):
             "aws autoscaling describe-auto-scaling-groups --region %s" % region)
         o = json.loads(out)['AutoScalingGroups']
         for group in o:
-            tags = group['Tags']
-            for t in tags:
-                if t['Key'] == 'eks:cluster-name' and t['Value'] == cluster:
-                    asgs.append(group)
+            name = group['AutoScalingGroupName']
+            if ('%s.kops.nextensio.net' % cluster in name) and ('nodes' in name):
+                asgs.append(group)
     except subprocess.CalledProcessError as e:
         pass
         print(e.output)
@@ -424,7 +569,7 @@ def create_target_group(cluster, region, name, proto, port, vpc, healthport):
         out = check_output("""aws elbv2 create-target-group --name %s \
                --protocol %s --port %s --vpc-id %s \
                --health-check-protocol TCP --health-check-port %s --target-type instance \
-                --tags Key="kubernetes.io/cluster/%s",Value=owned --region %s""" % (name, proto, port, vpc, healthport, cluster, region))
+                --tags Key="kubernetes.io/cluster/%s.kops.nextensio.net",Value=owned --region %s""" % (name, proto, port, vpc, healthport, cluster, region))
         o = json.loads(out)
         return o['TargetGroups'][0]
     except Exception as e:
@@ -447,10 +592,11 @@ def add_consul_listeners(region, loadbalancer, consul_svr, consul_serf):
 def get_cluster_security_group(cluster, region):
     try:
         out = check_output(
-            "aws eks describe-cluster --name %s --region %s" % (cluster, region))
+            "aws ec2 describe-security-groups --region %s" % region)
         o = json.loads(out)
-        cluster = o['cluster']
-        return cluster['resourcesVpcConfig']['clusterSecurityGroupId']
+        for s in o['SecurityGroups']:
+            if s['GroupName'] == 'nodes.%s.kops.nextensio.net' % cluster:
+                return s['GroupId']
     except:
         pass
         return None
@@ -466,17 +612,22 @@ def add_consul_security_rules(region, sgid):
 
 
 def get_cluster_region(cluster):
-    spec = tmpdir + '/spec.tf'
-    file = open(spec)
-    data = file.read()
-    file.close()
-    m = re.search(r'\n\s*aws-region\s*=\s*\"(.+)\"\s*\n', data)
-    if not m:
-        return None
-    region = m[1]
+    spec = scriptdir + '/%s/spec.json' % cluster
+    with open(spec) as json_file:
+        data = json.load(json_file)
+        return data['region']
 
-    return region
+def get_cluster_zone(cluster):
+    spec = scriptdir + '/%s/spec.json' % cluster
+    with open(spec) as json_file:
+        data = json.load(json_file)
+        return data['zone']
 
+def get_cluster_cidr(cluster):
+    spec = scriptdir + '/%s/spec.json' % cluster
+    with open(spec) as json_file:
+        data = json.load(json_file)
+        return data['cidr']
 
 def controller_route53():
     region = get_cluster_region('controller')
@@ -520,7 +671,6 @@ def delete_all_controller():
 
     return True
 
-
 def gateway_route53(cluster):
     region = get_cluster_region(cluster)
     if region == None:
@@ -529,7 +679,7 @@ def gateway_route53(cluster):
     if len(loads) != 1:
         return False
     aws_pgm_route53(
-        "UPSERT", "gateway.%s.nextensio.net" % cluster, loads[0]['domain'])
+        "UPSERT", "%s.nextensio.net" % cluster, loads[0]['domain'])
 
     return True
 
@@ -559,7 +709,7 @@ def create_gateway_mgr(cluster):
               loads[0]['domain'])
         pass
         return False
-    copyfile(scriptdir + "/mel.yaml", tmpdir + "/mel.yaml")
+    copyfile(scriptdir + "/../mel.yaml", tmpdir + "/mel.yaml")
     f = open(tmpdir + "/mel.yaml", "r+")
     mel = f.read()
     mel = re.sub(r'REPLACE_CLUSTER', cluster, mel)
@@ -586,7 +736,7 @@ def create_consul_dns(cluster):
         print(e.output)
         return False
 
-    copyfile(scriptdir + "/coredns.yaml", tmpdir + "/coredns.yaml")
+    copyfile(scriptdir + "/../coredns.yaml", tmpdir + "/coredns.yaml")
     f = open(tmpdir + "/coredns.yaml", "r+")
     dns = f.read()
     dns = re.sub(r'REPLACE_CONSUL_DNS', consul_dns, dns)
@@ -615,13 +765,13 @@ def configure_gateway_loadbalancers(cluster):
     if len(loads) != 1:
         return False
 
-    print("Enabling cross zone loadbalancing")
-    try:
-        aws_loadbalancerv2_enable_cross_zone(region, loads[0]['loadbalancer'])
-    except subprocess.CalledProcessError as e:
-        pass
-        print(e.output)
-        return False
+    #print("Enabling cross zone loadbalancing")
+    #try:
+        #aws_loadbalancerv2_enable_cross_zone(region, loads[0]['loadbalancer'])
+    #except subprocess.CalledProcessError as e:
+        #pass
+        #print(e.output)
+        #return False
 
     print("Creating consul target groups")
     vpc = loads[0]['vpc']
@@ -689,27 +839,10 @@ def bootstrap_gateway(cluster):
         if not "already exists" in str(e.output):
             return False
 
-    istiocfg = scriptdir + "/istio.yaml"
+    istiocfg = scriptdir + "/../istio.yaml"
     kubeconfig = tmpdir + "/kubeconfig"
     check_call("%s manifest apply --kubeconfig %s -f %s" %
                (istioctl, kubeconfig, istiocfg))
-
-    try:
-        check_call("""openssl req -out %s/gw.csr -newkey rsa:2048 -nodes -keyout %s/gw.key -subj "/CN=gateway.%s.nextensio.net/O=Nextensio Gateway %s" """ %
-                   (tmpdir, tmpdir, cluster, cluster))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
-    try:
-        extfile = "%s/extfile.conf" % tmpdir
-        check_call("""echo "subjectAltName = DNS:gateway.%s.nextensio.net" > %s""" % (cluster, extfile))
-        check_call("""openssl x509 -req -days 365 -CA %s/nextensio.crt -CAkey %s/nextensio.key -set_serial 0 -in %s/gw.csr -out %s/gw.crt -extfile %s -passin pass:Nextensio123""" %
-                   (rootca, rootca, tmpdir, tmpdir, extfile))
-    except subprocess.CalledProcessError as e:
-        print(e.output)
-        # openssl returns non-zero exit values!
-        pass
 
     try:
         kubectl_create_gw_cred()
@@ -854,6 +987,49 @@ def delete_all_gateway(cluster):
     return True
 
 
+def setup_transit_gw(cluster):
+    region = get_cluster_region(cluster)
+    while region == None:
+        print("Unable to get region, retrying..")
+        time.sleep(1)
+        region = get_cluster_region(cluster)
+
+    tgwid = aws_get_transit_gwid(region)
+    while tgwid == None:
+        print("Unable to get transit gateway, retrying")
+        time.sleep(1)
+        tgwid = aws_get_transit_gwid(region)
+
+    vpcid = aws_get_vpc(region, cluster)
+    while vpcid == None:
+        print("Unable to get vpc, retrying")
+        time.sleep(1)
+        vpcid = aws_get_vpc(region, cluster)
+
+    while aws_add_transit_attachment(region, cluster, vpcid, tgwid) == False:
+        print("Unable to attach vpc to transit gateway, retrying")  
+        time.sleep(1)
+    while aws_add_transit_route(region, cluster, tgwid, get_cluster_cidr(cluster)) == False:
+        print("Unable to add vpc route to transit gateway, retrying")  
+        time.sleep(1)
+    while aws_add_pvt_transit_route(region, vpcid, tgwid) == False:
+        print("Unable to add default route to vpc, retrying")  
+        time.sleep(1)
+
+def teardown_transit_gw(cluster):
+    region = get_cluster_region(cluster)
+    if region == None:
+        return False
+    tgwid = aws_get_transit_gwid(region)
+    if tgwid == None:
+        return False
+    if aws_del_transit_route(region, tgwid, get_cluster_cidr(cluster)) == False:
+        return False
+    if aws_del_transit_attachment(region, cluster, tgwid) == False:
+        return False
+
+    return True
+
 def create_cluster(cluster):
     while download_utils() != True:
         print("Download utils failed, retrying")
@@ -867,6 +1043,11 @@ def create_cluster(cluster):
 
 
 def delete_cluster(cluster):
+    while teardown_transit_gw(cluster) != True:
+        print("Teardown transit gateway failed, retrying")
+        time.sleep(1)
+    print("Transit gateway teardown succeeded")
+
     if cluster == "controller":
         delete_all_controller()
     else:
@@ -908,8 +1089,7 @@ if __name__ == "__main__":
             print("Please provide path to docker config file with -docker <path> option")
             sys.exit(1)
         dockercfg = args.docker[0]
-        # TODO: This will go away once we have proper certificates
-        rootca = scriptdir + "/../../testCert/"
+        rootca = scriptdir + "/../../letsencrypt/"
         create_cluster(args.create[0])
         with open('cluster_%s_state.json' % args.create[0], 'w') as f:
             json.dump(outputState, f)

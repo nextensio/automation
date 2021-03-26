@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 # The routines in this file sets up a kind (kubernetes in docker) based
-# topology with a controller, testa gateway cluster and testc gateway cluster
+# topology with a controller, gatewaytesta gateway cluster and gatewaytestc gateway cluster
 # The script does the necessary things to ensure that the clusters are
 # connected to each other and the controller is programmed with a sample
-# user(agent) and app(connector), the Agent connecting to testa and connector
-# connecting to testc cluster
+# user(agent) and app(connector), the Agent connecting to gatewaytesta and connector
+# connecting to gatewaytestc cluster
 
 tmpdir=/tmp/nextensio-kind
 kubectl=$tmpdir/kubectl
@@ -18,7 +18,8 @@ function download_images {
     docker pull registry.gitlab.com/nextensio/controller/controller:latest
     docker pull registry.gitlab.com/nextensio/cluster/minion:latest
     docker pull registry.gitlab.com/nextensio/clustermgr/mel:latest
-    docker pull registry.gitlab.com/nextensio/agent/agent:latest
+    docker pull registry.gitlab.com/nextensio/agent/go-agent:latest
+    docker pull registry.gitlab.com/nextensio/agent/rust-agent:latest
 }
 
 # Create a controller
@@ -195,7 +196,7 @@ function bootstrap_monitoring {
     config_gateway_monitoring testc $my_ip 30393
 }
 
-# Create kind clusters for testa and testc
+# Create kind clusters for gatewaytesta and gatewaytestc
 function create_cluster {
     cluster=$1
 
@@ -228,10 +229,10 @@ function create_cluster {
     kind load docker-image registry.gitlab.com/nextensio/clustermgr/mel:latest --name $cluster
 
     EXTFILE="$tmpdir/$cluster-extfile.conf"
-    echo "subjectAltName = DNS:gateway$cluster.nextensio.net" > "${EXTFILE}"
+    echo "subjectAltName = DNS:$cluster.nextensio.net" > "${EXTFILE}"
     # Create ssl keys/certificates for agents/connectors to establish secure websocket
     openssl req -out $tmpdir/$cluster-gw.csr -newkey rsa:2048 -nodes -keyout $tmpdir/$cluster-gw.key \
-        -subj "/CN=gateway$cluster.nextensio.net/O=Nextensio Gateway $cluster"
+        -subj "/CN=$cluster.nextensio.net/O=Nextensio Gateway $cluster"
     openssl x509 -req -days 365 -CA ../../testCert/nextensio.crt -CAkey ../../testCert/nextensio.key -set_serial 0 \
         -in $tmpdir/$cluster-gw.csr -out $tmpdir/$cluster-gw.crt -extfile "${EXTFILE}" -passin pass:Nextensio123
 }
@@ -299,7 +300,7 @@ function consul_query_config {
     "Service": "\${name.full}",
     "Failover": {
       "NearestN": 3,
-      "Datacenters": ["testc", "testa"]
+      "Datacenters": ["gatewaytestc", "gatewaytesta"]
     }
   }
 }
@@ -309,23 +310,23 @@ EOF
 }
 
 function consul_join {
-    $kubectl config use-context kind-testa
+    $kubectl config use-context kind-gatewaytesta
     consul=`$kubectl get pods -n consul-system | grep consul-server | grep Running`;
     while [ -z "$consul" ]; do
-      echo "Waiting for testa consul pod";
+      echo "Waiting for gatewaytesta consul pod";
       consul=`$kubectl get pods -n consul-system | grep consul-server | grep Running`;
       sleep 5;
     done
-    $kubectl config use-context kind-testc
+    $kubectl config use-context kind-gatewaytestc
     consul=`$kubectl get pods -n consul-system | grep consul-server | grep Running`;
     while [ -z "$consul" ]; do
-      echo "Waiting for testc consul pod";
+      echo "Waiting for gatewaytestc consul pod";
       consul=`$kubectl get pods -n consul-system | grep consul-server | grep Running`;
       sleep 5;
     done
     # TODO: Again, if consul crashes, will it remember this join config and automatically
     # rejoin, or we have to monitor and rejoin ourselves ?
-    $kubectl exec -it testc-consul-server-0 -n consul-system -- consul join -wan $testa_ip
+    $kubectl exec -it gatewaytestc-consul-server-0 -n consul-system -- consul join -wan $gatewaytesta_ip
 }
 
 function create_agent {
@@ -337,19 +338,37 @@ function create_agent {
     services=$6
 
     docker run -d -it --user 0:0 --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun \
-        -e NXT_GW_1_IP=$testa_ip -e NXT_GW_1_NAME=gatewaytesta.nextensio.net \
-        -e NXT_GW_2_IP=$testc_ip -e NXT_GW_2_NAME=gatewaytestc.nextensio.net \
+        -e NXT_GW_1_IP=$gatewaytesta_ip -e NXT_GW_1_NAME=gatewaytesta.nextensio.net \
+        -e NXT_GW_2_IP=$gatewaytestc_ip -e NXT_GW_2_NAME=gatewaytestc.nextensio.net \
         -e NXT_GW_3_IP=$etchost_ip -e NXT_GW_3_NAME=$etchost_name \
         -e NXT_USERNAME=$username -e NXT_PWD=LetMeIn123 \
         -e NXT_AGENT=$agent -e NXT_CONTROLLER=$ctrl_ip:8080 \
         -e NXT_AGENT_NAME=$name -e NXT_SERVICES=$services \
-        --network kind --name $name registry.gitlab.com/nextensio/agent/agent:latest
+        --network kind --name $name registry.gitlab.com/nextensio/agent/rust-agent:latest
+}
+
+function create_connector {
+    name=$1
+    agent=$2
+    username=$3
+    etchost_ip=$4
+    etchost_name=$5
+    services=$6
+
+    docker run -d -it --user 0:0 --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun \
+        -e NXT_GW_1_IP=$gatewaytesta_ip -e NXT_GW_1_NAME=gatewaytesta.nextensio.net \
+        -e NXT_GW_2_IP=$gatewaytestc_ip -e NXT_GW_2_NAME=gatewaytestc.nextensio.net \
+        -e NXT_GW_3_IP=$etchost_ip -e NXT_GW_3_NAME=$etchost_name \
+        -e NXT_USERNAME=$username -e NXT_PWD=LetMeIn123 \
+        -e NXT_AGENT=$agent -e NXT_CONTROLLER=$ctrl_ip:8080 \
+        -e NXT_AGENT_NAME=$name -e NXT_SERVICES=$services \
+        --network kind --name $name registry.gitlab.com/nextensio/agent/go-agent:latest
 }
 
 function create_all {
     # delete existing clusters
-    kind delete cluster --name testa
-    kind delete cluster --name testc
+    kind delete cluster --name gatewaytesta
+    kind delete cluster --name gatewaytestc
     kind delete cluster --name controller
     kind delete cluster --name monitoring
 
@@ -358,32 +377,32 @@ function create_all {
     ctrl_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' controller-control-plane`
     bootstrap_controller $ctrl_ip
 
-    create_cluster testa
-    create_cluster testc
-    # Find out ip addresses of testa cluster and testc cluster
-    testa_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' testa-control-plane`
-    testc_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' testc-control-plane`
+    create_cluster gatewaytesta
+    create_cluster gatewaytestc
+    # Find out ip addresses of gatewaytesta cluster and gatewaytestc cluster
+    gatewaytesta_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' gatewaytesta-control-plane`
+    gatewaytestc_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' gatewaytestc-control-plane`
 
     # Create dns entries inside kubernetes (coredns) for the gateway hostnames
     tmpf=$tmpdir/coredns.yaml
     cp coredns.yaml $tmpf
-    sed -i "s/REPLACE_NODE1_IP/$testa_ip/g" $tmpf
+    sed -i "s/REPLACE_NODE1_IP/$gatewaytesta_ip/g" $tmpf
     sed -i "s/REPLACE_NODE1_NAME/gatewaytesta.nextensio.net/g" $tmpf
-    sed -i "s/REPLACE_NODE2_IP/$testc_ip/g" $tmpf
+    sed -i "s/REPLACE_NODE2_IP/$gatewaytestc_ip/g" $tmpf
     sed -i "s/REPLACE_NODE2_NAME/gatewaytestc.nextensio.net/g" $tmpf
 
     # Configure the basic infrastructure elements in the cluster - like the loadbalancer,
     # coredns for DNS entries and the cluster manager itself
-    bootstrap_cluster testa $testa_ip $ctrl_ip
-    bootstrap_cluster testc $testc_ip $ctrl_ip
+    bootstrap_cluster gatewaytesta $gatewaytesta_ip $ctrl_ip
+    bootstrap_cluster gatewaytestc $gatewaytestc_ip $ctrl_ip
 
     # Finally, join the consuls in both clusters after ensuring their pods are Running
     consul_join
 
     # Configure consul in one cluster to query the remote cluster if local service lookup fails
     # Not sure if this needs to be done on both DCs, doing it anyways
-    consul_query_config testa
-    consul_query_config testc
+    consul_query_config gatewaytesta
+    consul_query_config gatewaytestc
 
     $kubectl config use-context kind-controller
     ctrlpod=`$kubectl get pods -n default | grep nextensio-controller | grep Running`;
@@ -405,9 +424,9 @@ function create_all {
     docker container prune -f
     create_agent nxt_agent1 true test1@nextensio.net
     create_agent nxt_agent2 true test2@nextensio.net
-    create_agent nxt_default false default@nextensio.net 127.0.0.1 foobar.com default-internet
-    create_agent nxt_kismis_ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org v1-kismis-org
-    create_agent nxt_kismis_TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org v2-kismis-org
+    create_connector nxt_default false default@nextensio.net 127.0.0.1 foobar.com default-internet
+    create_connector nxt_kismis_ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org v1-kismis-org
+    create_connector nxt_kismis_TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org v2-kismis-org
     nxt_agent1=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent1`
     nxt_agent2=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent2`
 
@@ -432,8 +451,8 @@ function save_env {
     echo "######You can access Alert Mgr UI at http://$monitoring_ip/9093  ############"
 
     envf=$tmpdir/environment
-    echo "testa_ip=$testa_ip" > $envf
-    echo "testc_ip=$testc_ip" >> $envf
+    echo "gatewaytesta_ip=$gatewaytesta_ip" > $envf
+    echo "gatewaytestc_ip=$gatewaytestc_ip" >> $envf
     echo "ctrl_ip=$ctrl_ip" >> $envf
     echo "monitoring_ip=$monitoring_ip" >> $envf
     echo "nxt_agent1=$nxt_agent1" >> $envf
@@ -503,9 +522,9 @@ case "$options" in
     docker kill nxt_kismis_ONE; docker rm nxt_kismis_ONE
     docker kill nxt_kismis_TWO; docker rm nxt_kismis_TWO
     docker container prune -f
-    create_agent nxt_default false default@nextensio.net 127.0.0.1 foobar.com default-internet
-    create_agent nxt_kismis_ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org v1-kismis-org
-    create_agent nxt_kismis_TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org v2-kismis-org
+    create_connector nxt_default false default@nextensio.net 127.0.0.1 foobar.com default-internet
+    create_connector nxt_kismis_ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org v1-kismis-org
+    create_connector nxt_kismis_TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org v2-kismis-org
     ;;
 *)
     echo "Unknown option $options"  

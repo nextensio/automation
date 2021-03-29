@@ -33,3 +33,7 @@ cmd = "../tools/bin/kops create cluster --master-size %s --node-size %s --zones=
       (data["master-size"], data["node-size"], data["zone"], data["cluster"], buck)
 print(cmd)
 check_call(cmd)
+cmd = "../tools/bin/kops update cluster --name %s.kops.kismis.org --yes --admin --state %s" % \
+      (data["cluster"], buck)
+print(cmd)
+check_call(cmd)

@@ -5,6 +5,7 @@ OS=linux
 ARCH=x86_64
 GSDK=google-cloud-sdk-${GVER}-${OS}-${ARCH}.tar.gz
 GURL=https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GSDK}
+GPROJECT=nextensio-308919
 
 if [ -f .ginstalled ]; then
     echo "gloud already installed"
@@ -18,6 +19,10 @@ else
     cd google-cloud-sdk
     ./install.sh --quiet
     bin/gcloud auth activate-service-account --key-file ~/.google/key.json
+    bin/gcloud services enable cloudresourcemanager.googleapis.com --project=${PROJECT}
+    bin/gcloud services enable dns.googleapis.com --project=${PROJECT}
+    bin/gcloud services enable compute.googleapis.com --project=${PROJECT}
+    bin/gcloud config set project ${PROJECT}
     cd ..
     touch .ginstalled
     echo "gcloud installed"

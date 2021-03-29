@@ -5,7 +5,7 @@ OS=linux
 ARCH=x86_64
 GSDK=google-cloud-sdk-${GVER}-${OS}-${ARCH}.tar.gz
 GURL=https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GSDK}
-GPROJECT=nextensio-308919
+GPROJECT=$1
 
 if [ -f .ginstalled ]; then
     echo "gloud already installed"

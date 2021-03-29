@@ -9,9 +9,9 @@ CURPATH=`pwd`
 export PATH=$PATH:$CURPATH/tools/bin:$CURPATH/tools/google-cloud-sdk/bin
 
 cd tools
-./init.sh
+./init.sh $PROJECT
 cd ..
 
 cd kops
-./cluster.py
+./cluster.py $@ gatewayuswest1
 cd ..

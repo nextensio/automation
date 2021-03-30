@@ -7,7 +7,8 @@ import sys
 import argparse
 
 tmpdir = os.getcwd()
-scriptdir = ""
+SCRIPTDIR = ""
+DNSPREFIX = "k8s.local"
 
 def check_call(command):
     return subprocess.check_call(command, stderr=subprocess.STDOUT, shell=True)
@@ -26,26 +27,26 @@ def create_cluster(cluster):
         print("creating bucket")
         check_call("../tools/google-cloud-sdk/bin/gsutil mb gs://kubernetes-clusters-" + project + "/")
 
-    spec = scriptdir + '/%s/spec.json' % cluster
+    spec = SCRIPTDIR + '/%s/spec.json' % cluster
     with open(spec) as json_file:
         data = json.load(json_file)
-    cmd = "../tools/bin/kops create cluster --master-size %s --node-size %s --zones=%s %s.kops.kismis.org \
+    cmd = "../tools/bin/kops create cluster --master-size %s --node-size %s --zones=%s %s.%s \
           --state %s --networking weave" % \
-          (data["master-size"], data["node-size"], data["zone"], data["cluster"], buck)
+          (data["master-size"], data["node-size"], data["zone"], data["cluster"], DNSPREFIX, buck)
     print(cmd)
     check_call(cmd)
-    cmd = "../tools/bin/kops update cluster --name %s.kops.kismis.org --yes --admin --state %s" % \
-          (data["cluster"], buck)
+    cmd = "../tools/bin/kops update cluster --name %s.%s --yes --admin --state %s" % \
+          (data["cluster"], DNSPREFIX, buck)
     print(cmd)
     check_call(cmd)
 
 def delete_cluster(cluster):
     project=check_output("../tools/google-cloud-sdk/bin/gcloud config get-value project").strip()
     buck=check_output("../tools/google-cloud-sdk/bin/gsutil ls").strip()
-    spec = scriptdir + '/%s/spec.json' % cluster
+    spec = SCRIPTDIR + '/%s/spec.json' % cluster
     with open(spec) as json_file:
         data = json.load(json_file)
-    cmd = "kops delete cluster --name=%s.kops.kismis.org --state %s --yes" % (data["cluster"], buck)
+    cmd = "kops delete cluster --name=%s.%s --state %s --yes" % (data["cluster"], DNSPREFIX, buck)
     print(cmd)
     check_call(cmd)
 
@@ -60,11 +61,11 @@ def parser_init():
     return args
 
 if __name__ == "__main__":
-    scriptdir = os.path.dirname(sys.argv[0])
+    SCRIPTDIR = os.path.dirname(sys.argv[0])
     args = parser_init()
 
     if args.create:
-        create_cluster(args.delete[0])
+        create_cluster(args.create[0])
         sys.exit(0)
 
     if args.delete:

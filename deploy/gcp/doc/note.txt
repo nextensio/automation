@@ -1,0 +1,17 @@
+gcloud config list
+gcloud config set project nextensio
+gcloud config get-value project
+gcloud beta compute ssh --zone "us-west1-b" "nodes-us-west1-b-635h" --project "nextensio-308919"
+
+           |-----|       |------------|     |------------|
+       --->|  LB |-------| k8s master |     |  k8s node  |
+           |-----|       |------------|     |------------|
+          LB IP               |                  |
+                              |                  |
+                          -------------------------------
+                                   local network
+
+kube config:
+server: https://<LB IP>
+name: <cluster>.k8s.local
+

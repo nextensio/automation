@@ -2,7 +2,7 @@
     "cluster": "gatewayuswest1",
     "master-size": "e2-medium",
     "node-size": "e2-medium",
+    "node-count": "2",
     "region": "us-west1",
-    "zone": "us-west1-b",
-    "cidr": "10.1.0.0/16"
+    "zone": "us-west1-b"
 }

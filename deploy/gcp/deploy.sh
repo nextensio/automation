@@ -6,7 +6,7 @@ export GOOGLE_APPLICATION_CREDENTIALS=~/.google/key.json
 PROJECT=nextensio-308919
 CURPATH=`pwd`
 
-export PATH=$PATH:$CURPATH/tools/bin:$CURPATH/tools/google-cloud-sdk/bin
+export PATH=$PATH:$CURPATH/tools/bin:$CURPATH/tools/google-cloud-sdk/bin:$CURPATH/tools/istio/bin
 
 allClusters=( gatewayuswest1 gatewayuscentral1 )
 

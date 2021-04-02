@@ -1,0 +1,34 @@
+davi@nuc5:~/work/automation/deploy/gcp/doc$ kubectl get nodes
+NAME                     STATUS   ROLES    AGE   VERSION
+master-us-west1-b-l0sp   Ready    master   15m   v1.19.9
+nodes-us-west1-b-ggcq    Ready    node     14m   v1.19.9
+nodes-us-west1-b-zlww    Ready    node     14m   v1.19.9
+
+davi@nuc5:~/work/automation/deploy/gcp$ kubectl get pods --all-namespaces
+NAMESPACE      NAME                                             READY   STATUS    RESTARTS   AGE
+istio-system   istio-ingressgateway-78d7b9b7db-qvfmr            1/1     Running   0          4m
+istio-system   istiod-85c8645bbc-6t95g                          1/1     Running   0          4m14s
+kube-system    dns-controller-5b77fb7f84-z6rxh                  1/1     Running   0          14m
+kube-system    etcd-manager-events-master-us-west1-b-l0sp       1/1     Running   0          13m
+kube-system    etcd-manager-main-master-us-west1-b-l0sp         1/1     Running   0          13m
+kube-system    kops-controller-hvh6k                            1/1     Running   0          14m
+kube-system    kube-apiserver-master-us-west1-b-l0sp            2/2     Running   0          15m
+kube-system    kube-controller-manager-master-us-west1-b-l0sp   1/1     Running   0          15m
+kube-system    kube-dns-696cb84c7-7hqzx                         3/3     Running   0          13m
+kube-system    kube-dns-696cb84c7-k97mm                         3/3     Running   0          14m
+kube-system    kube-dns-autoscaler-55f8f75459-798km             1/1     Running   0          14m
+kube-system    kube-proxy-master-us-west1-b-l0sp                1/1     Running   0          14m
+kube-system    kube-proxy-nodes-us-west1-b-ggcq                 1/1     Running   0          13m
+kube-system    kube-proxy-nodes-us-west1-b-zlww                 1/1     Running   0          14m
+kube-system    kube-scheduler-master-us-west1-b-l0sp            1/1     Running   0          14m
+kube-system    metadata-proxy-v0.12-7drw4                       2/2     Running   0          14m
+kube-system    metadata-proxy-v0.12-7g8hv                       2/2     Running   0          14m
+kube-system    metadata-proxy-v0.12-ql48j                       2/2     Running   0          14m
+kube-system    weave-net-6zglj                                  2/2     Running   1          14m
+kube-system    weave-net-djxtm                                  2/2     Running   0          14m
+kube-system    weave-net-tbgbs                                  2/2     Running   0          14m
+
+davi@nuc5:~/work/automation/deploy/gcp/doc$ kubectl get svc -n istio-system
+NAME                   TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)                                                                      AGE
+istio-ingressgateway   LoadBalancer   100.65.206.217   35.203.146.118   15021:32259/TCP,80:30888/TCP,443:30207/TCP,15012:30612/TCP,15443:31649/TCP   5m11s
+istiod                 ClusterIP      100.67.201.183   <none>           15010/TCP,15012/TCP,443/TCP,15014/TCP                                        5m2`

@@ -6,6 +6,7 @@ ARCH=x86_64
 GSDK=google-cloud-sdk-${GVER}-${OS}-${ARCH}.tar.gz
 GURL=https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${GSDK}
 GPROJECT=$1
+ISTIO_VERSION=1.9.2
 
 if [ -f .ginstalled ]; then
     echo "gloud already installed"
@@ -42,6 +43,15 @@ else
     touch .kinstalled
     echo "kops installed"
     echo "kubectl installed"
+fi
+
+if [ -f .istio_installed ]; then
+    echo "istio already installed"
+else
+    curl -L https://istio.io/downloadIstio | ISTIO_VERSION=$ISTIO_VERSION TARGET_ARCH=$ARCH sh -
+    ln -s istio-$ISTIO_VERSION istio
+    touch .istio_installed
+    echo "istio installed"
 fi
 
 exit 0

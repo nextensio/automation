@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import argparse
+import time
 
 tmpdir = os.getcwd()
 SCRIPTDIR = ""
@@ -15,6 +16,14 @@ def check_call(command):
 
 def check_output(command):
     return subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True).decode()
+
+def bootstrap_istio(cluster):
+    check_call("../tools/istio/bin/istioctl install --set profile=default -y")
+    check_call("../tools/bin/kubectl label namespace default istio-injection=enabled")
+
+def bringup_nextensio(cluster):
+    print("Bringing up istio...")
+    bootstrap_istio(cluster)
 
 def create_cluster(cluster):
     project=check_output("../tools/google-cloud-sdk/bin/gcloud config get-value project").strip()
@@ -31,14 +40,18 @@ def create_cluster(cluster):
     with open(spec) as json_file:
         data = json.load(json_file)
     cmd = "../tools/bin/kops create cluster --master-size %s --node-size %s --zones=%s %s.%s \
-          --state %s --networking weave" % \
-          (data["master-size"], data["node-size"], data["zone"], data["cluster"], DNSPREFIX, buck)
+          --node-count=%s --state %s --networking weave" % \
+          (data["master-size"], data["node-size"], data["zone"], data["cluster"], DNSPREFIX, data["node-count"], buck)
     print(cmd)
     check_call(cmd)
     cmd = "../tools/bin/kops update cluster --name %s.%s --yes --admin --state %s" % \
           (data["cluster"], DNSPREFIX, buck)
     print(cmd)
     check_call(cmd)
+    # sleep for 5 minutes for cluster formation
+    time.sleep(5*60)
+    # now check it
+    check_call("../tools/bin/kop validate cluster --wait 5m --state gs://kubernetes-clusters-" + project + "/")
 
 def delete_cluster(cluster):
     project=check_output("../tools/google-cloud-sdk/bin/gcloud config get-value project").strip()

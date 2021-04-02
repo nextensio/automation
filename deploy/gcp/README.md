@@ -8,5 +8,6 @@ Before running deploy.sh, some step needs to be performed in GCP.
 3. Add key - select Service Account created in above step and Add Key
 4. Download the key and name it key.json and keep it in ~/.google
 
-To create a cluster - ./deploy.sh -create
-To delete a cluster - ./deploy.sh -delete
+- To create a cluster - ./deploy.sh --create
+- To delete a cluster - ./deploy.sh --delete
+

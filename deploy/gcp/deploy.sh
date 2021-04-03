@@ -8,7 +8,8 @@ CURPATH=`pwd`
 
 export PATH=$PATH:$CURPATH/tools/bin:$CURPATH/tools/google-cloud-sdk/bin:$CURPATH/tools/istio/bin
 
-allClusters=( gatewayuswest1 gatewayuscentral1 )
+#allClusters=( gatewayuswest1 gatewayuscentral1 )
+allClusters=( gatewayuswest1 )
 
 usage()
 {

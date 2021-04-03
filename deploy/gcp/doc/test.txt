@@ -32,3 +32,54 @@ davi@nuc5:~/work/automation/deploy/gcp/doc$ kubectl get svc -n istio-system
 NAME                   TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)                                                                      AGE
 istio-ingressgateway   LoadBalancer   100.65.206.217   35.203.146.118   15021:32259/TCP,80:30888/TCP,443:30207/TCP,15012:30612/TCP,15443:31649/TCP   5m11s
 istiod                 ClusterIP      100.67.201.183   <none>           15010/TCP,15012/TCP,443/TCP,15014/TCP                                        5m2`
+
+============================
+
+davi@nuc5:~/work/automation/deploy/gcp/doc$ kubectl get nodes
+NAME                     STATUS   ROLES    AGE     VERSION
+master-us-west1-b-hn3h   Ready    master   9m22s   v1.19.9
+nodes-us-west1-b-0428    Ready    node     8m15s   v1.19.9
+nodes-us-west1-b-m7w1    Ready    node     8m14s   v1.19.9
+
+davi@nuc5:~/work/automation/deploy/gcp/kops$ kubectl get pods -n kube-system
+NAME                                             READY   STATUS    RESTARTS   AGE
+calico-kube-controllers-d579cbc9c-vt688          1/1     Running   0          7m
+calico-node-557kf                                1/1     Running   0          6m36s
+calico-node-8s86t                                1/1     Running   0          7m
+calico-node-hlvj9                                1/1     Running   1          6m34s
+dns-controller-5b77fb7f84-9p8fx                  1/1     Running   0          7m4s
+etcd-manager-events-master-us-west1-b-hn3h       1/1     Running   0          5m54s
+etcd-manager-main-master-us-west1-b-hn3h         1/1     Running   0          6m2s
+kops-controller-7rklx                            1/1     Running   0          6m22s
+kube-apiserver-master-us-west1-b-hn3h            2/2     Running   0          7m21s
+kube-controller-manager-master-us-west1-b-hn3h   1/1     Running   0          7m20s
+kube-dns-696cb84c7-cggrm                         3/3     Running   0          7m6s
+kube-dns-696cb84c7-vk2t8                         3/3     Running   0          5m35s
+kube-dns-autoscaler-55f8f75459-kdz75             1/1     Running   0          7m5s
+kube-proxy-master-us-west1-b-hn3h                1/1     Running   0          7m20s
+kube-proxy-nodes-us-west1-b-0428                 1/1     Running   0          4m59s
+kube-proxy-nodes-us-west1-b-m7w1                 1/1     Running   0          4m44s
+kube-scheduler-master-us-west1-b-hn3h            1/1     Running   0          6m22s
+metadata-proxy-v0.12-4xnhw                       2/2     Running   0          6m5s
+metadata-proxy-v0.12-7j7zt                       2/2     Running   0          6m4s
+metadata-proxy-v0.12-tk6bs                       2/2     Running   0          6m16s
+
+davi@nuc5:~/work/automation/deploy/gcp/doc$ kubectl get pods -n istio-system
+NAME                                    READY   STATUS    RESTARTS   AGE
+grafana-784c89f4cf-vx75p                1/1     Running   0          4m48s
+istio-ingressgateway-78d7b9b7db-5nnlr   1/1     Running   0          5m4s
+istiod-85c8645bbc-gkfr8                 1/1     Running   0          5m23s
+jaeger-7f78b6fb65-jfjfl                 1/1     Running   0          4m47s
+kiali-dc84967d9-phszl                   1/1     Running   0          4m31s
+prometheus-7bfddb8dbf-hqjd6             2/2     Running   0          3m29s
+
+davi@nuc5:~/work/automation/deploy/gcp/doc$ kubectl get svc -n istio-system
+NAME                   TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                                                                      AGE
+grafana                ClusterIP      100.69.169.8     <none>          3000/TCP                                                                     5m16s
+istio-ingressgateway   LoadBalancer   100.65.195.183   35.197.100.92   15021:32518/TCP,80:32393/TCP,443:31022/TCP,15012:30161/TCP,15443:30634/TCP   5m25s
+istiod                 ClusterIP      100.64.57.64     <none>          15010/TCP,15012/TCP,443/TCP,15014/TCP                                        5m51s
+jaeger-collector       ClusterIP      100.66.242.236   <none>          14268/TCP,14250/TCP                                                          5m15s
+kiali                  ClusterIP      100.64.197.215   <none>          20001/TCP,9090/TCP                                                           4m59s
+prometheus             ClusterIP      100.70.96.218    <none>          9090/TCP                                                                     3m57s
+tracing                ClusterIP      100.65.81.88     <none>          80/TCP                                                                       5m15s
+zipkin                 ClusterIP      100.67.80.33     <none>          9411/TCP                                                                     5m15s

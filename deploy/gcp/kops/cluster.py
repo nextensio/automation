@@ -6,6 +6,7 @@ import os
 import sys
 import argparse
 import time
+import yaml
 
 tmpdir = os.getcwd()
 SCRIPTDIR = ""
@@ -17,9 +18,33 @@ def check_call(command):
 def check_output(command):
     return subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True).decode()
 
+def yaml_modify():
+    f = open("kops_orig.yaml", "r")
+    docs = list(yaml.load_all(f, Loader=yaml.FullLoader))
+    f.close()
+    for doc in docs:
+        for k, v in doc.items():
+            if k == 'kind' and v == 'Cluster':
+                doc['spec']['networking']['calico']['encapsulationMode'] = 'vxlan'
+                break
+    f = open("kops_mod.yaml", "w")
+    yaml.dump_all(docs, f)
+    f.close()
+
+def install_addons():
+    check_call("../tools/bin/kubectl apply -f ../tools/istio/samples/addons/grafana.yaml")
+    sleep(10)
+    check_call("../tools/bin/kubectl apply -f ../tools/istio/samples/addons/jaeger.yaml")
+    sleep(10)
+    check_call("../tools/bin/kubectl apply -f ../tools/istio/samples/addons/prometheus.yaml")
+    sleep(10)
+    check_call("../tools/bin/kubectl apply -f ../tools/istio/samples/addons/kiali.yaml")
+    sleep(10)
+
 def bootstrap_istio(cluster):
     check_call("../tools/istio/bin/istioctl install --set profile=default -y")
     check_call("../tools/bin/kubectl label namespace default istio-injection=enabled")
+    install_addons()
 
 def bringup_nextensio(cluster):
     print("Bringing up istio...")
@@ -39,19 +64,24 @@ def create_cluster(cluster):
     spec = SCRIPTDIR + '/%s/spec.json' % cluster
     with open(spec) as json_file:
         data = json.load(json_file)
-    cmd = "../tools/bin/kops create cluster --master-size %s --node-size %s --zones=%s %s.%s \
-          --node-count=%s --state %s --networking weave" % \
-          (data["master-size"], data["node-size"], data["zone"], data["cluster"], DNSPREFIX, data["node-count"], buck)
-    print(cmd)
+    account='account@nextensio-308919.iam.gserviceaccount.com'
+    name=data["cluster"] + '.' + DNSPREFIX
+    cmd = "../tools/bin/kops create cluster --master-size %s --node-size %s --zones=%s %s \
+          --node-count=%s --state %s --networking calico --dry-run -oyaml > kops_orig.yaml" % \
+          (data["master-size"], data["node-size"], data["zone"], name, data["node-count"], buck)
+    #print(cmd)
     check_call(cmd)
-    cmd = "../tools/bin/kops update cluster --name %s.%s --yes --admin --state %s" % \
-          (data["cluster"], DNSPREFIX, buck)
-    print(cmd)
-    check_call(cmd)
+    yaml_modify()
+    check_call("../tools/bin/kops replace -f kops_mod.yaml --state %s --name %s --force" % (buck, name))
+    check_call("rm kops_orig.yaml")
+    check_call("rm kops_mod.yaml")
+    check_call("../tools/bin/kops update cluster --name %s --yes --admin --state %s" % (name, buck))
+    print("please wait for 10mins ...")
     # sleep for 5 minutes for cluster formation
-    time.sleep(5*60)
+    time.sleep(8*60)
     # now check it
-    check_call("../tools/bin/kop validate cluster --wait 5m --state gs://kubernetes-clusters-" + project + "/")
+    check_call("../tools/bin/kops validate cluster --wait 5m --state %s" % (buck))
+    bringup_nextensio(cluster)
 
 def delete_cluster(cluster):
     project=check_output("../tools/google-cloud-sdk/bin/gcloud config get-value project").strip()

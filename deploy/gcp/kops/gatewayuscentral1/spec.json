@@ -4,5 +4,5 @@
     "node-size": "e2-medium",
     "node-count": "2",
     "region": "us-central1",
-    "zone": "us-central-1a"
+    "zone": "us-central1-a"
 }

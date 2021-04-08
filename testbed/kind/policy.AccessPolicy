@@ -6,7 +6,6 @@ default is_allowed = false
 
 is_allowed {
 	   some i
-	   input.tenant == data.bundles[i].tenant
 	   input.bid == data.bundles[i].bid
 	   input.maj_ver == data.bundles[i].maj_ver
 	   data.bundles[i].IC != ""
@@ -19,7 +18,6 @@ is_allowed {
 
 is_allowed  {
 	    some i
-	    input.tenant == data.bundles[i].tenant
 	    input.bid == data.bundles[i].bid
 	    input.maj_ver == data.bundles[i].maj_ver
 	    data.bundles[i].IC != ""
@@ -32,7 +30,6 @@ is_allowed  {
 
 is_allowed  {
 	    some i
-	    input.tenant == data.bundles[i].tenant
 	    input.bid == data.bundles[i].bid
 	    input.maj_ver == data.bundles[i].maj_ver
 	    data.bundles[i].manager != ""
@@ -45,7 +42,6 @@ is_allowed  {
 
 is_allowed  {
 	    some i
-	    input.tenant == data.bundles[i].tenant
 	    input.bid == data.bundles[i].bid
 	    input.maj_ver == data.bundles[i].maj_ver
 	    data.bundles[i].manager != ""
@@ -58,7 +54,6 @@ is_allowed  {
 
 is_allowed  {
 	    some i
-	    input.tenant == data.bundles[i].tenant
 	    input.bid == data.bundles[i].bid
 	    input.maj_ver == data.bundles[i].maj_ver
 	    data.bundles[i].nonemployee == "allow"
@@ -69,7 +64,6 @@ is_allowed  {
 
 is_allowed  {
 	    some i
-	    input.tenant == data.bundles[i].tenant
 	    input.bid == data.bundles[i].bid
 	    input.maj_ver == data.bundles[i].maj_ver
 	    data.bundles[i].nonemployee == "allow"

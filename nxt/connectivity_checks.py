@@ -262,7 +262,7 @@ def config_policy():
 
         
 def config_routes(tag1, tag2):
-    routejson = { "host": "kismis.org", "tenant":tenant,
+    routejson = { "host": "kismis.org", 
                       "routeattrs": [
 		      {"tag": tag1, "team": ["engineering","sales"], "dept": ["ABU","BBU"],
                        "category":["employee","nonemployee"], "type":["IC"] },
@@ -270,61 +270,61 @@ def config_routes(tag1, tag2):
                        "category":["employee"], "type":["manager"] }
 		      ]
                 }
-    ok = create_host_attr(url, routejson)
+    ok = create_host_attr(url, tenant, routejson)
     while not ok:
         logger.info('Route creation failed, retrying ...')
         time.sleep(1)
-        ok = create_host_attr(url, routejson)
+        ok = create_host_attr(url, tenant, routejson)
 
 
 def config_user_attr(level1, level2):
-    user1attrjson = {"uid":"test1@nextensio.net", "tenant":tenant, "category":"employee",
+    user1attrjson = {"uid":"test1@nextensio.net", "category":"employee",
                      "type":"IC", "level":level1, "dept":["ABU","BBU"], "team":["engineering","sales"] }
-    user2attrjson = {"uid":"test2@nextensio.net", "tenant":tenant, "category":"employee",
+    user2attrjson = {"uid":"test2@nextensio.net", "category":"employee",
                      "type":"manager", "level":level2, "dept":["ABU","BBU"], "team":["engineering","sales"] }
-    ok = create_user_attr(url, user1attrjson)
+    ok = create_user_attr(url, tenant, user1attrjson)
     while not ok:
         logger.info('UserAttr test1 config failed, retrying ...')
         time.sleep(1)
-        ok = create_user_attr(url, user1attrjson)
+        ok = create_user_attr(url, tenant, user1attrjson)
 
-    ok = create_user_attr(url, user2attrjson)
+    ok = create_user_attr(url, tenant, user2attrjson)
     while not ok:
         logger.info('UserAttr test2 config failed, retrying ...')
         time.sleep(1)
-        ok = create_user_attr(url, user2attrjson)
+        ok = create_user_attr(url, tenant, user2attrjson)
 
 
 def config_user(user, service, gateway, pod):
     usernm = 'Test User %s' % user
-    userjson = {"uid":user, "tenant":tenant, "name":usernm, "email":user,
+    userjson = {"uid":user, "name":usernm, "email":user,
                  "services":[service], "gateway":gateway, "pod":pod}
-    ok = create_user(url, userjson)
+    ok = create_user(url, tenant, userjson)
     while not ok:
         logger.info('User %s updation failed, retrying ...' % user)
         time.sleep(1)
-        ok = create_user(url, userjson)
+        ok = create_user(url, tenant, userjson)
 
 
 def config_bundle(bundle, service, gateway, pod):
     bundlenm = 'Bundle %s' % bundle
-    bundlejson = {"bid":bundle, "tenant":tenant, "name":bundlenm,
+    bundlejson = {"bid":bundle, "name":bundlenm,
                    "services":[service], "gateway":gateway, "pod":pod}
-    ok = create_bundle(url, bundlejson)
+    ok = create_bundle(url, tenant, bundlejson)
     while not ok:
         logger.info('Bundle %s updation failed, retrying ...' % bundle)
         time.sleep(1)
-        ok = create_bundle(url, bundlejson)
+        ok = create_bundle(url, tenant, bundlejson)
 
 
 def config_default_bundle_attr(depts, teams):
-    bundleattrjson = {"bid":"default@nextensio.net", "tenant":tenant, "dept":depts,
+    bundleattrjson = {"bid":"default@nextensio.net", "dept":depts,
                        "team":teams, "IC":10, "manager":10, "nonemployee":"allow"}
-    ok = create_bundle_attr(url, bundleattrjson)
+    ok = create_bundle_attr(url, tenant, bundleattrjson)
     while not ok:
         logger.info('BundleAttr bundle default config failed, retrying ...')
         time.sleep(1)
-        ok = create_bundle_attr(url, bundleattrjson)
+        ok = create_bundle_attr(url, tenant, bundleattrjson)
 
 
 def resetPods(devices, cluster, pods):
@@ -414,7 +414,7 @@ class CommonSetup(aetest.CommonSetup):
 
         # Load the testbed information variables as environment variables
         load_dotenv(dotenv_path='/tmp/nextensio-kind/environment')
-        url = "https://" + os.getenv('ctrl_ip') + ":8080/api/v1/"
+        url = "https://" + os.getenv('ctrl_ip') + ":8080"
         ok, tenants = get_tenants(url)
         while not ok:
             logger.info('Tenant fetch %s failed, retrying ...' % url)

@@ -5,7 +5,6 @@ default route_tag = ""
 route_tag = rtag {
     some i
     app := data.hosts[i]
-    input.user.tenant == app.tenant
     input.user.maj_ver == app.maj_ver
     input.host == app.host
     some n

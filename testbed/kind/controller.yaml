@@ -41,6 +41,10 @@ spec:
             value: "0oa24hr70oNBZW0b64x7"
           - name: IDP_URI
             value: "https://dev-635657.okta.com/oauth2/default"
+          - name: IDP_API
+            value: "https://dev-635657.okta.com"
+          - name: API_TOKEN
+            value: "00-_AyqWaxS0p5N98EtNhYDcuUYWraLtSoyR6qKZ3m"
           - name: MONGO_URI
             value: "mongodb://mongodb-0-service:27017,mongodb-1-service:27018,mongodb-2-service:27019"
           - name: TLS_KEY

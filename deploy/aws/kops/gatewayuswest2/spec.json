@@ -1,6 +1,6 @@
 {
     "cluster": "gatewayuswest2",
-    "master-size": "t2.small",
+    "master-size": "t2.medium",
     "node-size": "t2.medium",
     "region": "us-west-2",
     "zone": "us-west-2a",

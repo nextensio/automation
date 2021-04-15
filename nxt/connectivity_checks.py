@@ -507,9 +507,6 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
-        # reset all pods everywhere
-        resetPods(testbed.devices, 'gatewaytesta', [1, 2, 3, 4, 5])
-        resetPods(testbed.devices, 'gatewaytestc', [1, 2, 3, 4, 5])
         checkConsulDnsAll(testbed.devices)
 
     @ aetest.test
@@ -539,10 +536,8 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 5}
         ]
+        placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
-        # reset all pods everywhere
-        resetPods(testbed.devices, 'gatewaytesta', [1, 2, 3, 4, 5])
-        resetPods(testbed.devices, 'gatewaytestc', [1, 2, 3, 4, 5])
         checkConsulDnsAll(testbed.devices)
 
     @ aetest.test
@@ -568,6 +563,7 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 4}
         ]
+        placeAndVerifyAgents(specs)
         # Reset agents so they reconnect to new pod assignments, but dont reset pods
         resetAgents(testbed.devices)
         # wait for all consul entries to be populated, which means all connections are fine
@@ -586,6 +582,7 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 5}
         ]
+        placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
         checkConsulDnsAll(testbed.devices)
         basicAccessSanity(testbed.devices)
@@ -610,6 +607,7 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 4}
         ]
+        placeAndVerifyAgents(specs)
         # Reset agents so they reconnect to new pod assignments, but dont reset pods
         resetAgents(testbed.devices)
         # wait for all consul entries to be populated, which means all connections are fine
@@ -628,6 +626,7 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 5}
         ]
+        placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
         checkConsulDnsAll(testbed.devices)
         basicAccessSanity(testbed.devices)
@@ -655,10 +654,8 @@ class Agent1PodsConnector1PodsClusters1(aetest.Testcase):
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 2}
         ]
+        placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
-        # reset all pods everywhere
-        resetPods(testbed.devices, 'gatewaytesta', [1, 2, 3, 4, 5])
-        resetPods(testbed.devices, 'gatewaytestc', [1, 2, 3, 4, 5])
         checkConsulDnsAll(testbed.devices)
 
     @ aetest.test
@@ -684,10 +681,8 @@ class AgentConnector1PodsClusters1(aetest.Testcase):
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 1}
         ]
+        placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
-        # reset all pods everywhere
-        resetPods(testbed.devices, 'gatewaytesta', [1, 2, 3, 4, 5])
-        resetPods(testbed.devices, 'gatewaytestc', [1, 2, 3, 4, 5])
         checkConsulDnsAll(testbed.devices)
 
     @ aetest.test

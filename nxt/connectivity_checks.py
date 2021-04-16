@@ -128,8 +128,8 @@ def checkConsulDns(devices, cluster, username):
 def checkConsulDnsAll(devices):
     # TODO: These list of names should be derived by reading the controller itself, or
     # maybe from some testcase data file ?
-    usernames = ['test1@nextensio.net', 'test2@nextensio.net', 'default@nextensio.net',
-                 'v1.kismis@nextensio.net', 'v2.kismis@nextensio.net', 'default-internet',
+    usernames = ['nextensio-test1@nextensio.net', 'nextensio-test2@nextensio.net', 'nextensio-default@nextensio.net',
+                 'nextensio-v1.kismis@nextensio.net', 'nextensio-v2.kismis@nextensio.net', 'default-internet',
                  'v1-kismis-org', 'v2-kismis-org']
     for cluster in clusters:
         for username in usernames:
@@ -495,9 +495,9 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
     def setup(self, testbed):
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 2},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
                 'service': 'default-internet', 'gateway': 'gatewaytestc', 'pod': 3},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
@@ -526,9 +526,9 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
     def setup(self, testbed):
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 2},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
                 'service': 'default-internet', 'gateway': 'gatewaytesta', 'pod': 3},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
@@ -553,9 +553,9 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
         # Switch to two cluster and a different set of pods
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 3},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 3},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
                 'service': 'default-internet', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
@@ -572,9 +572,9 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
         # And now go back to the original configuration of this test case
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 2},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
                 'service': 'default-internet', 'gateway': 'gatewaytesta', 'pod': 3},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
@@ -597,9 +597,9 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
         # Switch to two cluster and a different set of pods
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 3},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 3},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'gatewaytestc', 'pod': 1},
+                'service': '', 'gateway': 'gatewaytestc', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
                 'service': 'default-internet', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
@@ -616,9 +616,9 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
         # And now go back to the original configuration of this test case
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 2},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
                 'service': 'default-internet', 'gateway': 'gatewaytesta', 'pod': 3},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
@@ -644,9 +644,9 @@ class Agent1PodsConnector1PodsClusters1(aetest.Testcase):
     def setup(self, testbed):
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
                 'service': 'default-internet', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
@@ -671,9 +671,9 @@ class AgentConnector1PodsClusters1(aetest.Testcase):
     def setup(self, testbed):
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': 'test1-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': 'test2-nextensio-net', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
                 'service': 'default-internet', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,

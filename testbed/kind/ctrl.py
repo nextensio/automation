@@ -31,7 +31,7 @@ if __name__ == '__main__':
         time.sleep(1)
         ok = create_gateway(url, gw2json)
 
-    tenantjson = {"name":"Test", "gateways":["gatewaytesta.nextensio.net","gatewaytestc.nextensio.net"],
+    tenantjson = {"_id":"nextensio", "gateways":["gatewaytesta.nextensio.net","gatewaytestc.nextensio.net"],
                   "domains": ["kismis.org"], "image":"registry.gitlab.com/nextensio/cluster/minion:latest",
                   "pods":5, "curid":""}
     
@@ -52,9 +52,9 @@ if __name__ == '__main__':
     tenant = tenants[0]['_id']
 
     user1json = {"uid":"test1@nextensio.net", "name":"User1", "email":"test1@nextensio.net",
-                 "services":["test1-nextensio-net"], "gateway":"gatewaytesta.nextensio.net", "pod":1}
+                 "services":[], "gateway":"gatewaytesta.nextensio.net", "pod":1}
     user2json = {"uid":"test2@nextensio.net", "name":"User2", "email":"test2@nextensio.net",
-                 "services":["test2-nextensio-net"], "gateway":"gatewaytesta.nextensio.net", "pod":2}
+                 "services":[], "gateway":"gatewaytesta.nextensio.net", "pod":2}
 
     user1attrjson = {"uid":"test1@nextensio.net", "category":"employee",
                      "type":"IC", "level":50, "dept":["ABU","BBU"], "team":["engineering"] }

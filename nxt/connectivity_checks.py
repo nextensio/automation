@@ -30,6 +30,7 @@ tenant = None
 clusters = []
 agents = []
 numPods = 0
+token = ""
 
 # In nextensio, all services are words seperated by dashes, all dots and @ symbols
 # are converted to dashes
@@ -244,24 +245,28 @@ def publicFail():
 
     
 def config_policy():
+    global token
+
     with open('policy.AccessPolicy','r') as file:
         rego = file.read()
-    ok = create_policy(url, tenant, 'AccessPolicy', rego)
+    ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
     while not ok:
         logger.info('Access Policy creation failed, retrying ...')
         time.sleep(1)
-        ok = create_policy(url, tenant, 'AccessPolicy', rego)
+        ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
         
     with open('policy.RoutePolicy','r') as file:
         rego = file.read()
-    ok = create_policy(url, tenant, 'RoutePolicy', rego)
+    ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
     while not ok:
         logger.info('Route Policy creation failed, retrying ...')
         time.sleep(1)
-        ok = create_policy(url, tenant, 'RoutePolicy', rego)
+        ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
 
         
 def config_routes(tag1, tag2):
+    global token
+
     routejson = { "host": "kismis.org", 
                       "routeattrs": [
 		      {"tag": tag1, "team": ["engineering","sales"], "dept": ["ABU","BBU"],
@@ -270,61 +275,69 @@ def config_routes(tag1, tag2):
                        "category":["employee"], "type":["manager"] }
 		      ]
                 }
-    ok = create_host_attr(url, tenant, routejson)
+    ok = create_host_attr(url, tenant, routejson, token)
     while not ok:
         logger.info('Route creation failed, retrying ...')
         time.sleep(1)
-        ok = create_host_attr(url, tenant, routejson)
+        ok = create_host_attr(url, tenant, routejson, token)
 
 
 def config_user_attr(level1, level2):
+    global token
+
     user1attrjson = {"uid":"test1@nextensio.net", "category":"employee",
                      "type":"IC", "level":level1, "dept":["ABU","BBU"], "team":["engineering","sales"] }
     user2attrjson = {"uid":"test2@nextensio.net", "category":"employee",
                      "type":"manager", "level":level2, "dept":["ABU","BBU"], "team":["engineering","sales"] }
-    ok = create_user_attr(url, tenant, user1attrjson)
+    ok = create_user_attr(url, tenant, user1attrjson, token)
     while not ok:
         logger.info('UserAttr test1 config failed, retrying ...')
         time.sleep(1)
-        ok = create_user_attr(url, tenant, user1attrjson)
+        ok = create_user_attr(url, tenant, user1attrjson, token)
 
-    ok = create_user_attr(url, tenant, user2attrjson)
+    ok = create_user_attr(url, tenant, user2attrjson, token)
     while not ok:
         logger.info('UserAttr test2 config failed, retrying ...')
         time.sleep(1)
-        ok = create_user_attr(url, tenant, user2attrjson)
+        ok = create_user_attr(url, tenant, user2attrjson, token)
 
 
 def config_user(user, service, gateway, pod):
+    global token
+
     usernm = 'Test User %s' % user
     userjson = {"uid":user, "name":usernm, "email":user,
                  "services":[service], "gateway":gateway, "pod":pod}
-    ok = create_user(url, tenant, userjson)
+    ok = create_user(url, tenant, userjson, token)
     while not ok:
         logger.info('User %s updation failed, retrying ...' % user)
         time.sleep(1)
-        ok = create_user(url, tenant, userjson)
+        ok = create_user(url, tenant, userjson, token)
 
 
 def config_bundle(bundle, service, gateway, pod):
+    global token
+
     bundlenm = 'Bundle %s' % bundle
     bundlejson = {"bid":bundle, "name":bundlenm,
                    "services":[service], "gateway":gateway, "pod":pod}
-    ok = create_bundle(url, tenant, bundlejson)
+    ok = create_bundle(url, tenant, bundlejson, token)
     while not ok:
         logger.info('Bundle %s updation failed, retrying ...' % bundle)
         time.sleep(1)
-        ok = create_bundle(url, tenant, bundlejson)
+        ok = create_bundle(url, tenant, bundlejson, token)
 
 
 def config_default_bundle_attr(depts, teams):
+    global token
+
     bundleattrjson = {"bid":"default@nextensio.net", "dept":depts,
                        "team":teams, "IC":10, "manager":10, "nonemployee":"allow"}
-    ok = create_bundle_attr(url, tenant, bundleattrjson)
+    ok = create_bundle_attr(url, tenant, bundleattrjson, token)
     while not ok:
         logger.info('BundleAttr bundle default config failed, retrying ...')
         time.sleep(1)
-        ok = create_bundle_attr(url, tenant, bundleattrjson)
+        ok = create_bundle_attr(url, tenant, bundleattrjson, token)
 
 
 def resetPods(devices, cluster, pods):
@@ -411,15 +424,21 @@ class CommonSetup(aetest.CommonSetup):
     def loadEnv(self):
         global url
         global tenant
+        global token
+
+        token = runCmd("go run ../pkce.go https://dev-635657.okta.com").strip()
+        if token == "":
+            print('Cannot get access token, exiting')
+            exit(1)
 
         # Load the testbed information variables as environment variables
         load_dotenv(dotenv_path='/tmp/nextensio-kind/environment')
         url = "https://" + os.getenv('ctrl_ip') + ":8080"
-        ok, tenants = get_tenants(url)
+        ok, tenants = get_tenants(url, token)
         while not ok:
             logger.info('Tenant fetch %s failed, retrying ...' % url)
             time.sleep(1)
-            ok, tenants = get_tenants(url)
+            ok, tenants = get_tenants(url, token)
         # The test setup is assumed to be created with just one tenant, if we need more we just need
         # to search for the right tenant name or something inside the returned list of tenants
         tenant = tenants[0]['_id']
@@ -699,5 +718,10 @@ if __name__ == '__main__':
                         type=loader.load)
 
     args, unknown = parser.parse_known_args()
+
+    token = runCmd("go run ../pkce.go https://dev-635657.okta.com").strip()
+    if token == "":
+        print('Cannot get access token, exiting')
+        exit(1)
 
     aetest.main(**vars(args))

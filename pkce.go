@@ -15,8 +15,6 @@ import (
 	"time"
 )
 
-var IDP string
-
 type CodeVerifier struct {
 	Value string
 }
@@ -70,7 +68,7 @@ type accessIdTokens struct {
 	IdToken     string `bson:"id_token" json:"id_token"`
 }
 
-func authenticate() *accessIdTokens {
+func authenticate(IDP string) *accessIdTokens {
 
 	auth := Authenticate{
 		Username: "admin@nextensio.net",
@@ -162,8 +160,7 @@ func authenticate() *accessIdTokens {
 }
 
 func main() {
-	IDP = os.Args[1]
-	tokens := authenticate()
+	tokens := authenticate(os.Args[1])
 	if tokens == nil {
 		os.Exit(1)
 	}

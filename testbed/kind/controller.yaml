@@ -29,8 +29,6 @@ spec:
         env:
           - name: NXT_READONLY
             value: "false"
-          - name: IGNORE_AUTH
-            value: "true"
           - name: AGENT_SPA_CLIENT_ID
             value: "0oaz5lndczD0DSUeh4x6"
           - name: AGENT_MOB_CLIENT_ID

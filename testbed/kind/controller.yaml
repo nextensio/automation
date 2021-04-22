@@ -81,8 +81,6 @@ spec:
         ports:
         - containerPort: 443
         env:
-          - name: REACT_APP_IGNORE_AUTH
-            value: "true"
           - name: REACT_APP_API_URL
             value: "https://REPLACE_CONTROLLER_IP:8080"
           - name: REACT_APP_CLIENT_ID

@@ -500,6 +500,7 @@ def placeAndVerifyAgents(specs):
         placeAgent(spec)
     for spec in specs:
         verifyIstio(spec)
+    time.sleep(10)
 
 # The aetest.setup section in this class is executed BEFORE the aetest.test sections,
 # so this is like a big-test with a setup, and then a set of test cases and then a teardown,
@@ -525,7 +526,6 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 5}
         ]
         placeAndVerifyAgents(specs)
-        resetAgents(testbed.devices)
         checkConsulDnsAll(testbed.devices)
 
     @ aetest.test
@@ -556,7 +556,6 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 5}
         ]
         placeAndVerifyAgents(specs)
-        resetAgents(testbed.devices)
         checkConsulDnsAll(testbed.devices)
 
     @ aetest.test
@@ -584,7 +583,6 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
         ]
         placeAndVerifyAgents(specs)
         # Reset agents so they reconnect to new pod assignments, but dont reset pods
-        resetAgents(testbed.devices)
         # wait for all consul entries to be populated, which means all connections are fine
         checkConsulDnsAll(testbed.devices)
         basicAccessSanity(testbed.devices)
@@ -602,7 +600,6 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 5}
         ]
         placeAndVerifyAgents(specs)
-        resetAgents(testbed.devices)
         checkConsulDnsAll(testbed.devices)
         basicAccessSanity(testbed.devices)
 
@@ -628,7 +625,6 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
         ]
         placeAndVerifyAgents(specs)
         # Reset agents so they reconnect to new pod assignments, but dont reset pods
-        resetAgents(testbed.devices)
         # wait for all consul entries to be populated, which means all connections are fine
         checkConsulDnsAll(testbed.devices)
         basicAccessSanity(testbed.devices)
@@ -646,7 +642,6 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 5}
         ]
         placeAndVerifyAgents(specs)
-        resetAgents(testbed.devices)
         checkConsulDnsAll(testbed.devices)
         basicAccessSanity(testbed.devices)
 
@@ -674,7 +669,6 @@ class Agent1PodsConnector1PodsClusters1(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 2}
         ]
         placeAndVerifyAgents(specs)
-        resetAgents(testbed.devices)
         checkConsulDnsAll(testbed.devices)
 
     @ aetest.test
@@ -701,7 +695,6 @@ class AgentConnector1PodsClusters1(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 1}
         ]
         placeAndVerifyAgents(specs)
-        resetAgents(testbed.devices)
         checkConsulDnsAll(testbed.devices)
 
     @ aetest.test

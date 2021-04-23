@@ -406,7 +406,6 @@ function create_agent {
     username=$3
     etchost_ip=$4
     etchost_name=$5
-    services=$6
 
     docker run -d -it --user 0:0 --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun \
         -e NXT_GW_1_IP=$gatewaytesta_ip -e NXT_GW_1_NAME=gatewaytesta.nextensio.net \
@@ -414,7 +413,7 @@ function create_agent {
         -e NXT_GW_3_IP=$etchost_ip -e NXT_GW_3_NAME=$etchost_name \
         -e NXT_USERNAME=$username -e NXT_PWD=LetMeIn123 \
         -e NXT_AGENT=$agent -e NXT_CONTROLLER=$ctrl_ip:8080 \
-        -e NXT_AGENT_NAME=$name -e NXT_SERVICES=$services \
+        -e NXT_AGENT_NAME=$name \
         --network kind --name $name registry.gitlab.com/nextensio/agent/rust-agent:latest
 }
 
@@ -424,7 +423,6 @@ function create_connector {
     username=$3
     etchost_ip=$4
     etchost_name=$5
-    services=$6
 
     docker run -d -it --user 0:0 --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun \
         -e NXT_GW_1_IP=$gatewaytesta_ip -e NXT_GW_1_NAME=gatewaytesta.nextensio.net \
@@ -432,7 +430,7 @@ function create_connector {
         -e NXT_GW_3_IP=$etchost_ip -e NXT_GW_3_NAME=$etchost_name \
         -e NXT_USERNAME=$username -e NXT_PWD=LetMeIn123 \
         -e NXT_AGENT=$agent -e NXT_CONTROLLER=$ctrl_ip:8080 \
-        -e NXT_AGENT_NAME=$name -e NXT_SERVICES=$services \
+        -e NXT_AGENT_NAME=$name  \
         --network kind --name $name registry.gitlab.com/nextensio/agent/go-agent:latest
 }
 
@@ -495,9 +493,9 @@ function create_all {
     docker container prune -f
     create_agent nxt_agent1 true test1@nextensio.net
     create_agent nxt_agent2 true test2@nextensio.net
-    create_connector nxt_default false default@nextensio.net 127.0.0.1 foobar.com default-internet
-    create_connector nxt_kismis_ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org v1-kismis-org
-    create_connector nxt_kismis_TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org v2-kismis-org
+    create_connector nxt_default false default@nextensio.net 127.0.0.1 foobar.com
+    create_connector nxt_kismis_ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org
+    create_connector nxt_kismis_TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org
     nxt_agent1=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent1`
     nxt_agent2=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent2`
 
@@ -632,9 +630,9 @@ case "$options" in
     docker kill nxt_kismis_ONE; docker rm nxt_kismis_ONE
     docker kill nxt_kismis_TWO; docker rm nxt_kismis_TWO
     docker container prune -f
-    create_connector nxt_default false default@nextensio.net 127.0.0.1 foobar.com default-internet
-    create_connector nxt_kismis_ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org v1-kismis-org
-    create_connector nxt_kismis_TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org v2-kismis-org
+    create_connector nxt_default false default@nextensio.net 127.0.0.1 foobar.com
+    create_connector nxt_kismis_ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org
+    create_connector nxt_kismis_TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org
     ;;
 *)
     echo "Unknown option $options"  

@@ -23,27 +23,63 @@ function download_nextensio_images {
 }
 
 function download_infra_images {
-    docker pull gopakumarce/mongodb-replica-set:20200330-stable-1
-    docker pull kindest/node:v1.19.1
-    docker pull docker.io/metallb/controller:v0.9.3
-    docker pull docker.io/metallb/speaker:v0.9.3
-    docker pull docker.io/kindest/kindnetd:v20200725-4d6bea59
-    docker pull docker.io/rancher/local-path-provisioner:v0.0.14
-    docker pull docker.io/istio/pilot:1.6.4
-    docker pull docker.io/istio/proxyv2:1.6.4
-    docker pull docker.io/jaegertracing/all-in-one:1.16
-    docker pull docker.io/library/consul:1.4.2
-    docker pull docker.io/prom/prometheus:v2.15.1
-    docker pull k8s.gcr.io/build-image/debian-base:v2.1.0
-    docker pull k8s.gcr.io/coredns:1.7.0
-    docker pull k8s.gcr.io/etcd:3.4.13-0
-    docker pull k8s.gcr.io/kube-apiserver:v1.19.1
-    docker pull k8s.gcr.io/kube-controller-manager:v1.19.1
-    docker pull k8s.gcr.io/kube-proxy:v1.19.1
-    docker pull k8s.gcr.io/kube-scheduler:v1.19.1
-    docker pull k8s.gcr.io/pause:3.2
-    docker pull k8s.gcr.io/pause:3.3
-    docker pull quay.io/kiali/kiali:v1.18
+    image1="gopakumarce/mongodb-replica-set:20200330-stable-1"
+    image2="kindest/node:v1.19.1"
+    image3="docker.io/metallb/controller:v0.9.3"
+    image4="docker.io/metallb/speaker:v0.9.3"
+    image5="docker.io/kindest/kindnetd:v20200725-4d6bea59"
+    image6="docker.io/rancher/local-path-provisioner:v0.0.14"
+    image7="docker.io/istio/pilot:1.6.4"
+    image8="docker.io/istio/proxyv2:1.6.4"
+    image9="docker.io/jaegertracing/all-in-one:1.16"
+    image10="docker.io/library/consul:1.4.2"
+    image11="docker.io/prom/prometheus:v2.15.1"
+    image12="k8s.gcr.io/build-image/debian-base:v2.1.0"
+    image13="k8s.gcr.io/coredns:1.7.0"
+    image14="k8s.gcr.io/etcd:3.4.13-0"
+    image15="k8s.gcr.io/kube-apiserver:v1.19.1"
+    image16="k8s.gcr.io/kube-controller-manager:v1.19.1"
+    image17="k8s.gcr.io/kube-proxy:v1.19.1"
+    image18="k8s.gcr.io/kube-scheduler:v1.19.1"
+    image19="k8s.gcr.io/pause:3.2"
+    image20="k8s.gcr.io/pause:3.3"
+    image21="quay.io/kiali/kiali:v1.18"
+    image22="docker.io/prom/alertmanager:v0.15.3"
+    image23="docker.io/prom/node-exporter:v0.16.0"
+    image24="k8s.gcr.io/addon-resizer:1.8.3"
+    image25="quay.io/rimusz/hostpath-provisioner:v0.2.3"
+    image26="quay.io/mxinden/kube-state-metrics:v1.4.0-gzip.3"
+    image27="quay.io/thanos/thanos:v0.12.2"
+    image28="docker.io/grafana/grafana:7.1.1"
+    
+    docker image inspect ${image1} > /dev/null || docker pull ${image1}
+    docker image inspect ${image2} > /dev/null || docker pull ${image2}
+    docker image inspect ${image3} > /dev/null || docker pull ${image3}
+    docker image inspect ${image4} > /dev/null || docker pull ${image4}
+    docker image inspect ${image5} > /dev/null || docker pull ${image5}
+    docker image inspect ${image6} > /dev/null || docker pull ${image6}
+    docker image inspect ${image7} > /dev/null || docker pull ${image7}
+    docker image inspect ${image8} > /dev/null || docker pull ${image8}
+    docker image inspect ${image9} > /dev/null || docker pull ${image9}
+    docker image inspect ${image10} > /dev/null || docker pull ${image10}
+    docker image inspect ${image11} > /dev/null || docker pull ${image11}
+    docker image inspect ${image12} > /dev/null || docker pull ${image12}
+    docker image inspect ${image13} > /dev/null || docker pull ${image13}
+    docker image inspect ${image14} > /dev/null || docker pull ${image14}
+    docker image inspect ${image15} > /dev/null || docker pull ${image15}
+    docker image inspect ${image16} > /dev/null || docker pull ${image16}
+    docker image inspect ${image17} > /dev/null || docker pull ${image17}
+    docker image inspect ${image18} > /dev/null || docker pull ${image18}
+    docker image inspect ${image19} > /dev/null || docker pull ${image19}
+    docker image inspect ${image20} > /dev/null || docker pull ${image20}
+    docker image inspect ${image21} > /dev/null || docker pull ${image21}
+    docker image inspect ${image22} > /dev/null || docker pull ${image22}
+    docker image inspect ${image23} > /dev/null || docker pull ${image23}
+    docker image inspect ${image24} > /dev/null || docker pull ${image24}
+    docker image inspect ${image25} > /dev/null || docker pull ${image25}
+    docker image inspect ${image26} > /dev/null || docker pull ${image26}
+    docker image inspect ${image27} > /dev/null || docker pull ${image27}
+    docker image inspect ${image28} > /dev/null || docker pull ${image28}
 }
 
 # Create a controller
@@ -58,6 +94,8 @@ function create_controller {
     kind load docker-image docker.io/metallb/controller:v0.9.3 --name controller
     kind load docker-image docker.io/metallb/speaker:v0.9.3 --name controller
     kind load docker-image docker.io/rancher/local-path-provisioner:v0.0.14 --name controller
+    kind load docker-image docker.io/prom/prometheus:v2.15.1 --name controller
+    kind load docker-image docker.io/prom/node-exporter:v0.16.0 --name controller
     kind load docker-image k8s.gcr.io/build-image/debian-base:v2.1.0 --name controller
     kind load docker-image k8s.gcr.io/coredns:1.7.0 --name controller
     kind load docker-image k8s.gcr.io/etcd:3.4.13-0 --name controller
@@ -66,6 +104,8 @@ function create_controller {
     kind load docker-image k8s.gcr.io/kube-proxy:v1.19.1 --name controller
     kind load docker-image k8s.gcr.io/kube-scheduler:v1.19.1 --name controller
     kind load docker-image k8s.gcr.io/pause:3.3 --name controller
+    kind load docker-image quay.io/rimusz/hostpath-provisioner:v0.2.3 --name controller
+    kind load docker-image quay.io/mxinden/kube-state-metrics:v1.4.0-gzip.3 --name controller
 
     # metallb as a loadbalancer to map services to externally accessible IPs
     $kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
@@ -111,6 +151,10 @@ function create_monitoring {
     kind load docker-image docker.io/metallb/controller:v0.9.3 --name monitoring
     kind load docker-image docker.io/metallb/speaker:v0.9.3 --name monitoring
     kind load docker-image docker.io/rancher/local-path-provisioner:v0.0.14 --name monitoring
+    kind load docker-image docker.io/prom/alertmanager:v0.15.3 --name monitoring
+    kind load docker-image docker.io/prom/node-exporter:v0.16.0 --name monitoring
+    kind load docker-image docker.io/prom/prometheus:v2.15.1 --name monitoring
+    kind load docker-image docker.io/grafana/grafana:7.1.1 --name monitoring
     kind load docker-image k8s.gcr.io/build-image/debian-base:v2.1.0 --name monitoring
     kind load docker-image k8s.gcr.io/coredns:1.7.0 --name monitoring
     kind load docker-image k8s.gcr.io/etcd:3.4.13-0 --name monitoring
@@ -120,6 +164,8 @@ function create_monitoring {
     kind load docker-image k8s.gcr.io/kube-scheduler:v1.19.1 --name monitoring
     kind load docker-image k8s.gcr.io/pause:3.2 --name monitoring
     kind load docker-image k8s.gcr.io/pause:3.3 --name monitoring
+    kind load docker-image quay.io/mxinden/kube-state-metrics:v1.4.0-gzip.3 --name monitoring
+    kind load docker-image quay.io/thanos/thanos:v0.12.2 --name monitoring
 
     # metallb as a loadbalancer to map services to externally accessible IPs
     $kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
@@ -267,6 +313,7 @@ function create_cluster {
     kind load docker-image docker.io/metallb/controller:v0.9.3 --name $cluster
     kind load docker-image docker.io/metallb/speaker:v0.9.3 --name $cluster
     kind load docker-image docker.io/prom/prometheus:v2.15.1 --name $cluster
+    kind load docker-image docker.io/prom/node-exporter:v0.16.0 --name $cluster
     kind load docker-image docker.io/rancher/local-path-provisioner:v0.0.14 --name $cluster
     kind load docker-image k8s.gcr.io/build-image/debian-base:v2.1.0 --name $cluster
     kind load docker-image k8s.gcr.io/coredns:1.7.0 --name $cluster
@@ -277,6 +324,7 @@ function create_cluster {
     kind load docker-image k8s.gcr.io/kube-scheduler:v1.19.1 --name $cluster
     kind load docker-image k8s.gcr.io/pause:3.3 --name $cluster
     kind load docker-image quay.io/kiali/kiali:v1.18 --name $cluster
+    kind load docker-image quay.io/mxinden/kube-state-metrics:v1.4.0-gzip.3 --name $cluster
 
     # We should have done a docker login to be able to download images from the gitlab registry
     $kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
@@ -604,13 +652,13 @@ function usage {
 options=$1
 case "$options" in
 "")
-    main remote
+    time main remote
     ;;
 *usage)
     usage
     ;;
 *local-image)
-    main local
+    time main local
     ;;
 *reset-agent)
     source $tmpdir/environment

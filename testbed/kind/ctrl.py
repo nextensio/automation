@@ -34,8 +34,8 @@ if __name__ == '__main__':
         print('Controller not up, waiting ...')
         time.sleep(5)
 
-    gw1json = {"name":"gatewaytesta.nextensio.net"}
-    gw2json = {"name":"gatewaytestc.nextensio.net"}
+    gw1json = {"name":"gatewaytesta.nextensio.net", "cluster": "gatewaytesta"}
+    gw2json = {"name":"gatewaytestc.nextensio.net", "cluster": "gatewaytestc"}
     
     ok = create_gateway(url, gw1json, token)
     while not ok:
@@ -49,9 +49,12 @@ if __name__ == '__main__':
         time.sleep(1)
         ok = create_gateway(url, gw2json, token)
 
-    tenantjson = {"_id":"nextensio", "gateways":["gatewaytesta.nextensio.net","gatewaytestc.nextensio.net"],
-                  "domains": ["kismis.org"], "image":"registry.gitlab.com/nextensio/cluster/minion:latest",
-                  "pods":5, "curid":""}
+    tenantjson = {"_id":"nextensio",
+                  "gateways":["gatewaytesta.nextensio.net","gatewaytestc.nextensio.net"],
+                  "domains": ["kismis.org"],
+                  "image":"registry.gitlab.com/nextensio/cluster/minion:latest",
+                  "pods":5,
+                  "curid":""}
     
     ok = create_tenant(url, tenantjson, token)
     while not ok:
@@ -70,9 +73,11 @@ if __name__ == '__main__':
     tenant = tenants[0]['_id']
 
     user1json = {"uid":"test1@nextensio.net", "name":"User1", "email":"test1@nextensio.net",
-                 "services":[], "gateway":"gatewaytesta.nextensio.net", "pod":1}
+                 "services":[], "gateway":"gatewaytesta.nextensio.net",
+                 "cluster": "gatewaytesta", "pod":1}
     user2json = {"uid":"test2@nextensio.net", "name":"User2", "email":"test2@nextensio.net",
-                 "services":[], "gateway":"gatewaytesta.nextensio.net", "pod":2}
+                 "services":[], "gateway":"gatewaytesta.nextensio.net",
+                 "cluster": "gatewaytesta", "pod":2}
 
     user1attrjson = {"uid":"test1@nextensio.net", "category":"employee",
                      "type":"IC", "level":50, "dept":["ABU","BBU"], "team":["engineering"] }
@@ -80,11 +85,14 @@ if __name__ == '__main__':
                      "type":"IC", "level":50, "dept":["ABU","BBU"], "team":["sales"] }
     
     bundle1json = {"bid":"default@nextensio.net", "name":"Default Internet",
-                   "services":["default-internet"], "gateway":"gatewaytestc.nextensio.net", "pod":3}
+                   "services":["default-internet"], "gateway":"gatewaytestc.nextensio.net",
+                   "cluster": "gatewaytestc", "pod":3}
     bundle2json = {"bid":"v1.kismis@nextensio.net", "name":"Kismis ONE",
-                   "services":["v1.kismis.org"], "gateway":"gatewaytestc.nextensio.net", "pod":4}
+                   "services":["v1.kismis.org"], "gateway":"gatewaytestc.nextensio.net",
+                   "cluster": "gatewaytestc", "pod":4}
     bundle3json = {"bid":"v2.kismis@nextensio.net", "name":"Kismis TWO",
-                   "services":["v2.kismis.org"], "gateway":"gatewaytestc.nextensio.net", "pod":5}
+                   "services":["v2.kismis.org"], "gateway":"gatewaytestc.nextensio.net",
+                   "cluster": "gatewaytestc", "pod":5}
 
     bundle1attrjson = {"bid":"default@nextensio.net", "dept":["ABU","BBU"],
                        "team":["engineering","sales"], "IC":1, "manager":1, "nonemployee":"allow"}

@@ -340,12 +340,12 @@ def config_user_attr(level1, level2):
         ok = create_user_attr(url, tenant, user2attrjson, token)
 
 
-def config_user(user, service, gateway, pod):
+def config_user(user, service, cluster, gateway, pod):
     global token
 
     usernm = 'Test User %s' % user
     userjson = {"uid":user, "name":usernm, "email":user,
-                 "services":[service], "gateway":gateway, "pod":pod}
+                 "services":[service], "cluster":cluster, "gateway":gateway, "pod":pod}
     ok = create_user(url, tenant, userjson, token)
     while not ok:
         logger.info('User %s updation failed, retrying ...' % user)
@@ -353,12 +353,12 @@ def config_user(user, service, gateway, pod):
         ok = create_user(url, tenant, userjson, token)
 
 
-def config_bundle(bundle, service, gateway, pod):
+def config_bundle(bundle, service, cluster, gateway, pod):
     global token
 
     bundlenm = 'Bundle %s' % bundle
     bundlejson = {"bid":bundle, "name":bundlenm,
-                   "services":[service], "gateway":gateway, "pod":pod}
+                   "services":[service], "cluster":cluster, "gateway":gateway, "pod":pod}
     ok = create_bundle(url, tenant, bundlejson, token)
     while not ok:
         logger.info('Bundle %s updation failed, retrying ...' % bundle)
@@ -522,9 +522,9 @@ class CommonCleanup(aetest.CommonCleanup):
 def placeAgent(spec):
     gateway = spec['gateway'] + '.nextensio.net'
     if spec['agent'] == True:
-        config_user(spec['name'], spec['service'], gateway,  spec['pod'])
+        config_user(spec['name'], spec['service'], spec['gateway'], gateway,  spec['pod'])
     else:
-        config_bundle(spec['name'], spec['service'], gateway, spec['pod'])
+        config_bundle(spec['name'], spec['service'], spec['gateway'], gateway, spec['pod'])
 
 
 #TODO: After we moved around the external-service / egress-gateway rules to be

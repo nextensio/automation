@@ -47,7 +47,9 @@ on your host.
 
 ### Pre Requisites 
 
-* controller apis - get the controller git repo from gitlab, "cd controller/apis/python; pip3 install ."
+* install golang compiler
+
+* controller apis - get the controller git repo from gitlab, "cd controller/python; pip3 install ."
 
 * install docker - plenty of docs on internet to do that
 

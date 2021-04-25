@@ -123,22 +123,13 @@ def checkConsulKV(devices, cluster, svc, pod):
         sys.exit(1)
 
     m = re.search(r'.*:(pod[0-9]+)', value)
-    while not m:
+    while m == None or m[1] != 'pod%s' % pod:
         time.sleep(1)
-        logger.info('Cluster %s, waiting for consul kv %s in pod %s' %
-                    (cluster, service, pod))
-        value = devices[device].shell.execute('consul kv get -recurse ' + service).strip()
-        lines = value.splitlines()
-        if len(lines) > 1:
-            print(value)
-            print("Cluster %s service %s has more than one registration!" % (cluster, service))
-            sys.exit(1)
-        m = re.search(r'.*:(pod[0-9]+)', value)
-
-    while m[1] != 'pod%s' % pod:
-        time.sleep(1)
+        cur = "None"
+        if m != None:
+            cur = m[1]
         logger.info('Cluster %s, waiting for consul kv %s in pod%s, current %s' %
-                    (cluster, service, pod, m[1]))
+                    (cluster, service, pod, cur))
         value = devices[device].shell.execute('consul kv get -recurse ' + service).strip()
         if len(lines) > 1:
             print(value)

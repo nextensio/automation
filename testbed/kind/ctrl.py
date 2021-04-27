@@ -72,6 +72,23 @@ if __name__ == '__main__':
     # to search for the right tenant name or something inside the returned list of tenants
     tenant = tenants[0]['_id']
 
+    tenantclusterjson1 = {"tenant":tenant, "cluster":"gatewaytesta", "image":"",
+                          "pods":5}
+    tenantclusterjson2 = {"tenant":tenant, "cluster":"gatewaytestc", "image":"",
+                          "pods":5}
+
+    ok = create_tenant_cluster(url, tenant, tenantclusterjson1, token)
+    while not ok:
+        print('Tenant cluster creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_tenant_cluster(url, tenant, tenantclusterjson1, token)
+
+    ok = create_tenant_cluster(url, tenant, tenantclusterjson2, token)
+    while not ok:
+        print('Tenant cluster creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_tenant_cluster(url, tenant, tenantclusterjson2, token)
+
     user1json = {"uid":"test1@nextensio.net", "name":"User1", "email":"test1@nextensio.net",
                  "services":[], "gateway":"gatewaytesta.nextensio.net",
                  "cluster": "gatewaytesta", "pod":1}

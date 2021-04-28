@@ -73,9 +73,9 @@ if __name__ == '__main__':
     tenant = tenants[0]['_id']
 
     tenantclusterjson1 = {"tenant":tenant, "cluster":"gatewaytesta", "image":"",
-                          "pods":5}
+                          "apods":2, "cpods":3}
     tenantclusterjson2 = {"tenant":tenant, "cluster":"gatewaytestc", "image":"",
-                          "pods":5}
+                          "apods":2, "cpods":3}
 
     ok = create_tenant_cluster(url, tenant, tenantclusterjson1, token)
     while not ok:
@@ -103,13 +103,13 @@ if __name__ == '__main__':
     
     bundle1json = {"bid":"default@nextensio.net", "name":"Default Internet",
                    "services":["default-internet"], "gateway":"gatewaytestc.nextensio.net",
-                   "cluster": "gatewaytestc", "pod":3}
+                   "cluster": "gatewaytestc", "pod":1}
     bundle2json = {"bid":"v1.kismis@nextensio.net", "name":"Kismis ONE",
                    "services":["v1.kismis.org"], "gateway":"gatewaytestc.nextensio.net",
-                   "cluster": "gatewaytestc", "pod":4}
+                   "cluster": "gatewaytestc", "pod":2}
     bundle3json = {"bid":"v2.kismis@nextensio.net", "name":"Kismis TWO",
                    "services":["v2.kismis.org"], "gateway":"gatewaytestc.nextensio.net",
-                   "cluster": "gatewaytestc", "pod":5}
+                   "cluster": "gatewaytestc", "pod":3}
 
     bundle1attrjson = {"bid":"default@nextensio.net", "dept":["ABU","BBU"],
                        "team":["engineering","sales"], "IC":1, "manager":1, "nonemployee":"allow"}

@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     tenantjson = {"_id":"nextensio",
                   "gateways":["gatewaytesta.nextensio.net","gatewaytestc.nextensio.net"],
-                  "domains": ["kismis.org"],
+                  "domains": ["kismis.org", "nextensio-default-internet"],
                   "image":"registry.gitlab.com/nextensio/cluster/minion:latest",
                   "pods":5,
                   "curid":""}
@@ -102,7 +102,7 @@ if __name__ == '__main__':
                      "type":"IC", "level":50, "dept":["ABU","BBU"], "team":["sales"] }
     
     bundle1json = {"bid":"default@nextensio.net", "name":"Default Internet",
-                   "services":["default-internet"], "gateway":"gatewaytestc.nextensio.net",
+                   "services":["nextensio-default-internet"], "gateway":"gatewaytestc.nextensio.net",
                    "cluster": "gatewaytestc", "pod":3}
     bundle2json = {"bid":"v1.kismis@nextensio.net", "name":"Kismis ONE",
                    "services":["v1.kismis.org"], "gateway":"gatewaytestc.nextensio.net",

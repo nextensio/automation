@@ -29,7 +29,7 @@ if __name__ == '__main__':
         ok = create_gateway(url, "gateway.awsuseast1.nextensio.net")
 
     ok = create_tenant(url, "Test", ["gateway.uswest2.nextensio.net","gateway.awsuseast1.nextensio.net"], 
-                       ["kismis.org"], "registry.gitlab.com/nextensio/cluster/minion:latest", 5)
+                       ["kismis.org", "nextensio-default-internet"], "registry.gitlab.com/nextensio/cluster/minion:latest", 5)
     while not ok:
         print('Tenant creation failed, retrying ...')
         time.sleep(1)
@@ -70,11 +70,11 @@ if __name__ == '__main__':
         time.sleep(1)
         ok = create_user_attr(url, 'test2@nextensio.net', tenant, 'employee', 'IC', 50, ['ABU,BBU'], ['engineering','sales'])
 
-    ok = create_bundle(url, 'default@nextensio.net', tenant, 'Default Internet Route', ['default-internet'], 'gateway.awsuseast1.nextensio.net', 3)
+    ok = create_bundle(url, 'default@nextensio.net', tenant, 'Default Internet Route', ['nextensio-default-internet'], 'gateway.awsuseast1.nextensio.net', 3)
     while not ok:
         print('Bundle creation failed, retrying ...')
         time.sleep(1)
-        ok = create_bundle(url, 'default@nextensio.net', tenant, 'Default Internet Route', ['default-internet'], 'gateway.awsuseast1.nextensio.net', 3)
+        ok = create_bundle(url, 'default@nextensio.net', tenant, 'Default Internet Route', ['nextensio-default-internet'], 'gateway.awsuseast1.nextensio.net', 3)
 
     ok = create_bundle_attr(url, 'default@nextensio.net', tenant, ['ABU,BBU'], ['engineering','sales'], 1, 1, "allowed")
     while not ok:

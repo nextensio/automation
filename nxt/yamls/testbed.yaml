@@ -41,46 +41,46 @@ devices:
         class: 'containers.DockerConnection'
       container:
         name: nxt_kismis_TWO
-  gatewaytesta_pod1:
+  gatewaytesta_apod1:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytesta:pod1'
-  gatewaytesta_pod2:
+        name: 'kind-gatewaytesta:apod1'
+  gatewaytesta_apod2:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytesta:pod2'
-  gatewaytesta_pod3:
+        name: 'kind-gatewaytesta:apod2'
+  gatewaytesta_cpod1:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytesta:pod3'
-  gatewaytesta_pod4:
+        name: 'kind-gatewaytesta:cpod1'
+  gatewaytesta_cpod2:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytesta:pod4'
-  gatewaytesta_pod5:
+        name: 'kind-gatewaytesta:cpod2'
+  gatewaytesta_cpod3:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytesta:pod5'
+        name: 'kind-gatewaytesta:cpod3'
   gatewaytesta_consul:
     os: linux
     type: kubernetes
@@ -89,46 +89,46 @@ devices:
         class: 'containers.KubernetesConnection'
       container:
         name: 'kind-gatewaytesta:consul-server'
-  gatewaytestc_pod1:
+  gatewaytestc_apod1:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytestc:pod1'
-  gatewaytestc_pod2:
+        name: 'kind-gatewaytestc:apod1'
+  gatewaytestc_apod2:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytestc:pod2'
-  gatewaytestc_pod3:
+        name: 'kind-gatewaytestc:apod2'
+  gatewaytestc_cpod1:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytestc:pod3'
-  gatewaytestc_pod4:
+        name: 'kind-gatewaytestc:cpod1'
+  gatewaytestc_cpod2:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytestc:pod4'
-  gatewaytestc_pod5:
+        name: 'kind-gatewaytestc:cpod2'
+  gatewaytestc_cpod3:
     os: linux
     type: kubernetes
     connections:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytestc:pod5'
+        name: 'kind-gatewaytestc:cpod3'
   gatewaytestc_consul:
     os: linux
     type: kubernetes

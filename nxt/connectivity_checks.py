@@ -166,16 +166,20 @@ def checkConsulDns(devices, cluster, svc):
 
 def checkConsulDnsAndKV(specs, devices):
     services = []
+    cls = []
     for spec in specs:
-        services.append({'name': 'nextensio-' + spec['name'], 'gateway': spec['gateway'], 'pod': spec['pod'], 'agent': spec['agent']})
-        if spec['service'] != '':
-            services.append({'name': spec['service'], 'gateway': spec['gateway'], 'pod': spec['pod'], 'agent': spec['agent']})
-    
-    for service in services:
-        checkConsulKV(devices, service['gateway'], service['name'], service['pod'], service['agent'])
-    for cluster in clusters:
+        if spec['agent'] != True:
+            services.append({'name': 'nextensio-' + spec['name'], 'gateway': spec['gateway'], 'pod': spec['pod']})
+            if spec['service'] != '':
+                services.append({'name': spec['service'], 'gateway': spec['gateway'], 'pod': spec['pod']})
+            if spec['gateway'] not in cls:
+                cls.append(spec['gateway'])
+
+    for cluster in cls:
         for service in services:
-            checkConsulDns(devices, cluster, service['name'])
+            if cluster == service['gateway']:
+                checkConsulKV(devices, cluster, service['name'], service['pod'], False)
+                checkConsulDns(devices, cluster, service['name'])
 
 
 def parseVersions(versions):
@@ -587,6 +591,46 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
     def basicConnectivity(self, testbed, **kwargs):
         basicAccessSanity(testbed.devices)
 
+    @ aetest.test
+    def dynamicSwitchCrossCluster(self, testbed, **kwargs):
+        '''Switch from the current connection model to go to different set of pods in 
+        different clusters, then come back, all without doing pod restarts. This is to 
+        ensure nothing in the pod like agent<-->socket hashtables etc.. remain stale 
+        when agents come and go
+        '''
+        # Switch agents to a different set of pods in different clusters
+        specs = [
+            {'name': 'test1@nextensio.net', 'agent': True,
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
+            {'name': 'test2@nextensio.net', 'agent': True,
+                'service': '', 'gateway': 'gatewaytestc', 'pod': 1},
+            {'name': 'default@nextensio.net', 'agent': False,
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytesta', 'pod': 3},
+            {'name': 'v1.kismis@nextensio.net', 'agent': False,
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 1},
+            {'name': 'v2.kismis@nextensio.net', 'agent': False,
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 2}
+        ]
+        placeAndVerifyAgents(specs)
+        checkConsulDnsAndKV(specs, testbed.devices)
+        basicAccessSanity(testbed.devices)
+        # And now go back to the original configuration of this test case
+        specs = [
+            {'name': 'test1@nextensio.net', 'agent': True,
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
+            {'name': 'test2@nextensio.net', 'agent': True,
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
+            {'name': 'default@nextensio.net', 'agent': False,
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 1},
+            {'name': 'v1.kismis@nextensio.net', 'agent': False,
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 2},
+            {'name': 'v2.kismis@nextensio.net', 'agent': False,
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3}
+        ]
+        placeAndVerifyAgents(specs)
+        checkConsulDnsAndKV(specs, testbed.devices)
+        basicAccessSanity(testbed.devices)
+
     @ aetest.cleanup
     def cleanup(self):
         return
@@ -623,18 +667,18 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
         come back, all without doing pod restarts. This is to ensure nothing in the pod 
         like agent<-->socket hashtables etc.. remain stale when agents come and go
         '''
-        # Switch to two cluster and a different set of pods
+        # Switch agents to a different set of pods
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
                 'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'test2@nextensio.net', 'agent': True,
                 'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 1},
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytesta', 'pod': 3},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 2}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 2}
         ]
         placeAndVerifyAgents(specs)
         checkConsulDnsAndKV(specs, testbed.devices)
@@ -666,9 +710,9 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
         # Switch to two cluster and a different set of pods
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
+                'service': '', 'gateway': 'gatewaytestc', 'pod': 2},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': '', 'gateway': 'gatewaytestc', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
                 'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 2},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
@@ -679,18 +723,18 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
         placeAndVerifyAgents(specs)
         checkConsulDnsAndKV(specs, testbed.devices)
         basicAccessSanity(testbed.devices)
-        # And now go back to the original configuration of this test case
+        # And now go back to similar original configuration of this test case but in 2nd cluster
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': '', 'gateway': 'gatewaytestc', 'pod': 1},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
+                'service': '', 'gateway': 'gatewaytestc', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 1},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytesta', 'pod': 2},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 2},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 3}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3}
         ]
         placeAndVerifyAgents(specs)
         checkConsulDnsAndKV(specs, testbed.devices)
@@ -713,11 +757,11 @@ class Agent1PodsConnector1PodsClusters1(aetest.Testcase):
             {'name': 'test2@nextensio.net', 'agent': True,
                 'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
                 'service': 'v1.kismis.org', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 3}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 2}
         ]
         placeAndVerifyAgents(specs)
         checkConsulDnsAndKV(specs, testbed.devices)
@@ -735,15 +779,40 @@ class AgentConnector1PodsClusters2(aetest.Testcase):
     def setup(self, testbed):
         specs = [
             {'name': 'test1@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'test2@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
                 'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 3},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3},
+            {'name': 'v2.kismis@nextensio.net', 'agent': False,
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3}
+        ]
+        placeAndVerifyAgents(specs)
+        checkConsulDnsAndKV(specs, testbed.devices)
+
+    @ aetest.test
+    def basicConnectivity(self, testbed, **kwargs):
+        basicAccessSanity(testbed.devices)
+
+class AgentConnectorSquareOne(aetest.Testcase):
+    '''Agent1 and Agent2 in one cluster, default, kismis.v1 and kismisv2 in
+    a different cluster (gatewaytestc)
+    '''
+    @ aetest.setup
+    def setup(self, testbed):
+        specs = [
+            {'name': 'test1@nextensio.net', 'agent': True,
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
+            {'name': 'test2@nextensio.net', 'agent': True,
+                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
+            {'name': 'default@nextensio.net', 'agent': False,
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 1},
+            {'name': 'v1.kismis@nextensio.net', 'agent': False,
                 'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 2},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 1}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3}
         ]
         placeAndVerifyAgents(specs)
         checkConsulDnsAndKV(specs, testbed.devices)

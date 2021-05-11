@@ -101,6 +101,19 @@ if __name__ == '__main__':
     user2attrjson = {"uid":"test2@nextensio.net", "category":"employee",
                      "type":"IC", "level":50, "dept":["ABU","BBU"], "team":["sales"] }
     
+
+    userattrsetjson = [
+        {"name": "category", "appliesTo": "Users", "type": "String"},
+        {"name": "type", "appliesTo": "Users", "type": "String"},
+        {"name": "level", "appliesTo": "Users", "type": "Number"},
+        {"name": "dept", "appliesTo": "Users", "type": "String"},
+        {"name": "team", "appliesTo": "Users", "type": "String"},
+        {"name": "location", "appliesTo": "Users", "type": "String"},
+        {"name": "ostype", "appliesTo": "Users", "type": "String"},
+        {"name": "osver", "appliesTo": "Users", "type": "Number"}
+        ]
+
+
     bundle1json = {"bid":"default@nextensio.net", "name":"Default Internet",
                    "services":["nextensio-default-internet"], "gateway":"gatewaytestc.nextensio.net",
                    "cluster": "gatewaytestc", "pod":1}
@@ -118,6 +131,16 @@ if __name__ == '__main__':
     bundle3attrjson = {"bid":"v2.kismis@nextensio.net", "dept":["ABU","BBU"],
                        "team":["engineering","sales"], "IC":1, "manager":1, "nonemployee":"allow"}
     
+
+    bundleattrsetjson = [
+        {"name": "dept", "appliesTo": "Bundles", "type": "String"},
+        {"name": "team", "appliesTo": "Bundles", "type": "String"},
+        {"name": "IC", "appliesTo": "Bundles", "type": "Number"},
+        {"name": "manager", "appliesTo": "Bundles", "type": "Number"},
+        {"name": "nonemployee", "appliesTo": "Bundles", "type": "String"}
+        ]
+
+
     host1attrjson = { "host": "kismis.org",
                       "routeattrs": [
 		      {"tag": "v2", "team": ["engineering"], "dept": ["ABU","BBU"],
@@ -128,6 +151,20 @@ if __name__ == '__main__':
 		      } ]
 		    }
 
+    # Create user and bundle attr sets
+    ok = create_attrset(url, tenant, userattrsetjson, token)
+    while not ok:
+        print('User attrset creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_attrset(url, tenant, userattrsetjson, token)
+
+    ok = create_attrset(url, tenant, bundleattrsetjson, token)
+    while not ok:
+        print('Bundle attrset creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_attrset(url, tenant, bundleattrsetjson, token)
+
+    # User info and user attributes creation
     ok = create_user(url, tenant, user1json, token)
     while not ok:
         print('User creation failed, retrying ...')
@@ -152,6 +189,7 @@ if __name__ == '__main__':
         time.sleep(1)
         ok = create_user_attr(url, tenant, user2attrjson, token)
 
+    # Bundle info and bundle attributes creation
     ok = create_bundle(url, tenant, bundle1json, token)
     while not ok:
         print('Bundle creation failed, retrying ...')

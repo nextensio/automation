@@ -97,9 +97,11 @@ if __name__ == '__main__':
                  "cluster": "gatewaytesta", "pod":2}
 
     user1attrjson = {"uid":"test1@nextensio.net", "category":"employee",
-                     "type":"IC", "level":50, "dept":["ABU","BBU"], "team":["engineering"] }
+                     "type":"IC", "level":50, "dept":["ABU","BBU"], "team":["engineering"],
+                     "location": "California", "ostype": "Linux", "osver": 20.04 }
     user2attrjson = {"uid":"test2@nextensio.net", "category":"employee",
-                     "type":"IC", "level":50, "dept":["ABU","BBU"], "team":["sales"] }
+                     "type":"IC", "level":50, "dept":["ABU","BBU"], "team":["sales"],
+                     "location": "Massachusets", "ostype": "Windows", "osver": 10.12 }
     
 
     userattrsetjson = [

@@ -153,7 +153,17 @@ if __name__ == '__main__':
 		      } ]
 		    }
 
-    # Create user and bundle attr sets
+    hostattrsetjson = [
+        {"name": "dept", "appliesTo": "Hosts", "type": "String"},
+        {"name": "team", "appliesTo": "Hosts", "type": "String"},
+        {"name": "IClvl", "appliesTo": "Hosts", "type": "Number"},
+        {"name": "mlvl", "appliesTo": "Hosts", "type": "Number"},
+        {"name": "category", "appliesTo": "Hosts", "type": "String"},
+        {"name": "type", "appliesTo": "Hosts", "type": "String"}
+        ]
+
+
+    # Prime some user, bundle and host attr sets for the UI attribute editor
     ok = create_attrset(url, tenant, userattrsetjson, token)
     while not ok:
         print('User attrset creation failed, retrying ...')
@@ -165,6 +175,12 @@ if __name__ == '__main__':
         print('Bundle attrset creation failed, retrying ...')
         time.sleep(1)
         ok = create_attrset(url, tenant, bundleattrsetjson, token)
+
+    ok = create_attrset(url, tenant, hostattrsetjson, token)
+    while not ok:
+        print('Host attrset creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_attrset(url, tenant, hostattrsetjson, token)
 
     # User info and user attributes creation
     ok = create_user(url, tenant, user1json, token)

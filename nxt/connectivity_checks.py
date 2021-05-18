@@ -401,7 +401,7 @@ def config_default_bundle_attr(depts, teams):
 
 
 def proxyGet(agent, url, expected):
-    env = {"https_proxy": "http://" + os.getenv(agent) + ":8080"}
+    env = {"https_proxy": "http://" + os.getenv(agent) + ":8181"}
     try:
         text = docker_run("curl", "curl --silent --connect-timeout 5 --max-time 5 -k %s" % url, environment=env)
     except Exception as e:

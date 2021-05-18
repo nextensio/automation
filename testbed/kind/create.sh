@@ -341,6 +341,8 @@ function create_cluster {
     # Install istio. This is nothing but the demo.yaml in the istio bundle, with addonComponents
     # prometheus, kiali, grafana, tracing all set to false. 
     $istioctl manifest apply -f ./istio.yaml
+    $kubectl create namespace nextensio
+    $kubectl apply -f ./flow_control.yaml
 
     # Install metallb. metallb exposes services inside the cluster via external IP addresses
     $kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
@@ -560,8 +562,8 @@ function create_all {
 function save_env {
     echo "###########################################################################"
     echo "######You can access controller UI at https://$ctrl_ip/  ############"
-    echo "##You can set a broswer proxy to $nxt_agent1:8080 to send traffic via nextensio##"
-    echo "##OR You can set a broswer proxy to $nxt_agent2:8080 to send traffic via nextensio##"
+    echo "##You can set a broswer proxy to $nxt_agent1:8181 to send traffic via nextensio##"
+    echo "##OR You can set a broswer proxy to $nxt_agent2:8181 to send traffic via nextensio##"
     echo "##All the above information is saved in $tmpdir/environment for future reference##"
     echo "######You can access Thanos UI at http://$monitoring_ip/9092  ############"
     echo "######You can access Grafana UI at http://$monitoring_ip/3000  ############"
@@ -669,8 +671,8 @@ case "$options" in
     create_agent nxt_agent2 true test2@nextensio.net
     nxt_agent1=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent1`
     nxt_agent2=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent2`
-    echo "##You can set a broswer proxy to $nxt_agent1:8080 to send traffic via nextensio##"
-    echo "##OR You can set a broswer proxy to $nxt_agent2:8080 to send traffic via nextensio##"
+    echo "##You can set a broswer proxy to $nxt_agent1:8181 to send traffic via nextensio##"
+    echo "##OR You can set a broswer proxy to $nxt_agent2:8181 to send traffic via nextensio##"
     ;;
 *reset-conn)
     source $tmpdir/environment

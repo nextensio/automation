@@ -1,0 +1,65 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: envoy-filter-for-nextensio-global
+  namespace: istio-system
+spec:
+  configPatches:
+    - applyTo: CLUSTER
+      patch:
+        operation: MERGE
+        value:
+          per_connection_buffer_limit_bytes: 65536
+    - applyTo: NETWORK_FILTER
+      match:
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.http_connection_manager"
+      patch:
+        operation: MERGE
+        value:
+          typed_config:
+            "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager"
+            http2_protocol_options:
+              max_concurrent_streams: 100
+              initial_stream_window_size: 65536
+              initial_connection_window_size: 65536
+    - applyTo: LISTENER
+      patch:
+        operation: MERGE
+        value:
+          per_connection_buffer_limit_bytes: 65536
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: envoy-filter-for-nextensio-tenant
+  namespace: nextensio
+spec:
+  configPatches:
+    - applyTo: CLUSTER
+      patch:
+        operation: MERGE
+        value:
+          per_connection_buffer_limit_bytes: 65536
+    - applyTo: NETWORK_FILTER
+      match:
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.http_connection_manager"
+      patch:
+        operation: MERGE
+        value:
+          typed_config:
+            "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager"
+            http2_protocol_options:
+              max_concurrent_streams: 100
+              initial_stream_window_size: 65536
+              initial_connection_window_size: 65536
+    - applyTo: LISTENER
+      patch:
+        operation: MERGE
+        value:
+          per_connection_buffer_limit_bytes: 65536

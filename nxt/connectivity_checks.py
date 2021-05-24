@@ -181,6 +181,29 @@ def checkConsulDnsAndKV(specs, devices):
                 checkConsulKV(devices, cluster, service['name'], service['pod'], False)
                 checkConsulDns(devices, cluster, service['name'])
 
+def checkOnboarding(specs):
+    for spec in specs:
+        if spec['agent'] == True:
+            podnm = "apod" + str(spec['pod'])
+        else:
+            podnm = "cpod" + str(spec['pod'])
+        gw = spec['gateway'] + ".nextensio.net"
+        checkUserOnboarding(spec['name'], gw, podnm)
+
+def checkUserOnboarding(uid, gw, podnm):
+    ok, onblog = get_onboard_log(url, tenant, uid, token)
+    while not ok:
+        print('Onboarding log entry fetch failed, retrying ...')
+        time.sleep(1)
+        ok, onblog = get_onboard_log(url, tenant, uid, token)
+    while onblog['gw'] != gw:
+        print('Waiting for %s to get onboarded' % uid)
+        time.sleep(1)
+        ok, onblog = get_onboard_log(url, tenant, uid, token)
+    while onblog['podnm'] != podnm:
+        print('Waiting for %s to get onboarded' % uid)
+        time.sleep(1)
+        ok, onblog = get_onboard_log(url, tenant, uid, token)
 
 def parseVersions(versions):
     m = re.search(r'.*USER=([0-9]+)\.([0-9]+).*', versions)
@@ -222,7 +245,6 @@ def versionOk(current, previous, increments):
 # Figure out from OPA in the pod, whether it has received all the expected configurations
 # from the controller. This goes back to the motto of "deterministic testing" outlined at
 # the beginning of this file
-
 
 def getOpaVersion(devices, d, previous, increments):
     versions = devices[d].shell.execute(
@@ -589,7 +611,8 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3}
         ]
         placeAndVerifyAgents(specs)
-        resetUserAgents(testbed.devices)
+        resetAgents(testbed.devices)
+        checkOnboarding(specs)
         checkConsulDnsAndKV(specs, testbed.devices)
 
     @ aetest.test
@@ -617,7 +640,8 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 2}
         ]
         placeAndVerifyAgents(specs)
-        resetUserAgents(testbed.devices)
+        resetAgents(testbed.devices)
+        checkOnboarding(specs)
         checkConsulDnsAndKV(specs, testbed.devices)
         basicAccessSanity(testbed.devices)
         # And now go back to the original configuration of this test case
@@ -634,7 +658,8 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3}
         ]
         placeAndVerifyAgents(specs)
-        resetUserAgents(testbed.devices)
+        resetAgents(testbed.devices)
+        checkOnboarding(specs)
         checkConsulDnsAndKV(specs, testbed.devices)
         basicAccessSanity(testbed.devices)
 
@@ -662,7 +687,8 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 3}
         ]
         placeAndVerifyAgents(specs)
-        resetUserAgents(testbed.devices)
+        resetAgents(testbed.devices)
+        checkOnboarding(specs)
         checkConsulDnsAndKV(specs, testbed.devices)
 
     @ aetest.test
@@ -689,7 +715,8 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 2}
         ]
         placeAndVerifyAgents(specs)
-        resetUserAgents(testbed.devices)
+        resetAgents(testbed.devices)
+        checkOnboarding(specs)
         checkConsulDnsAndKV(specs, testbed.devices)
         basicAccessSanity(testbed.devices)
         # And now go back to the original configuration of this test case
@@ -706,7 +733,8 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 3}
         ]
         placeAndVerifyAgents(specs)
-        resetUserAgents(testbed.devices)
+        resetAgents(testbed.devices)
+        checkOnboarding(specs)
         checkConsulDnsAndKV(specs, testbed.devices)
         basicAccessSanity(testbed.devices)
 
@@ -731,7 +759,8 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 1}
         ]
         placeAndVerifyAgents(specs)
-        resetUserAgents(testbed.devices)
+        resetAgents(testbed.devices)
+        checkOnboarding(specs)
         checkConsulDnsAndKV(specs, testbed.devices)
         basicAccessSanity(testbed.devices)
         # And now go back to similar original configuration of this test case but in 2nd cluster
@@ -748,7 +777,8 @@ class Agent2PodsConnector3PodsClusters1(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3}
         ]
         placeAndVerifyAgents(specs)
-        resetUserAgents(testbed.devices)
+        resetAgents(testbed.devices)
+        checkOnboarding(specs)
         checkConsulDnsAndKV(specs, testbed.devices)
         basicAccessSanity(testbed.devices)
 
@@ -776,7 +806,8 @@ class Agent1PodsConnector1PodsClusters1(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 2}
         ]
         placeAndVerifyAgents(specs)
-        resetUserAgents(testbed.devices)
+        resetAgents(testbed.devices)
+        checkOnboarding(specs)
         checkConsulDnsAndKV(specs, testbed.devices)
 
     @ aetest.test
@@ -803,7 +834,8 @@ class AgentConnector1PodsClusters2(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3}
         ]
         placeAndVerifyAgents(specs)
-        resetUserAgents(testbed.devices)
+        resetAgents(testbed.devices)
+        checkOnboarding(specs)
         checkConsulDnsAndKV(specs, testbed.devices)
 
     @ aetest.test
@@ -829,7 +861,8 @@ class AgentConnectorSquareOne(aetest.Testcase):
                 'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3}
         ]
         placeAndVerifyAgents(specs)
-        resetUserAgents(testbed.devices)
+        resetAgents(testbed.devices)
+        checkOnboarding(specs)
         checkConsulDnsAndKV(specs, testbed.devices)
 
     @ aetest.test

@@ -73,14 +73,6 @@ devices:
         class: 'containers.KubernetesConnection'
       container:
         name: 'kind-gatewaytesta:cpod2'
-  gatewaytesta_cpod3:
-    os: linux
-    type: kubernetes
-    connections:
-      defaults:
-        class: 'containers.KubernetesConnection'
-      container:
-        name: 'kind-gatewaytesta:cpod3'
   gatewaytesta_consul:
     os: linux
     type: kubernetes
@@ -97,14 +89,6 @@ devices:
         class: 'containers.KubernetesConnection'
       container:
         name: 'kind-gatewaytestc:apod1'
-  gatewaytestc_apod2:
-    os: linux
-    type: kubernetes
-    connections:
-      defaults:
-        class: 'containers.KubernetesConnection'
-      container:
-        name: 'kind-gatewaytestc:apod2'
   gatewaytestc_cpod1:
     os: linux
     type: kubernetes

@@ -39,13 +39,13 @@ if __name__ == '__main__':
     
     ok = create_gateway(url, gw1json, token)
     while not ok:
-        print('Gateway creation failed, retrying ...')
+        print('Gateway1 creation failed, retrying ...')
         time.sleep(1)
         ok = create_gateway(url, gw1json, token)
 
     ok = create_gateway(url, gw2json, token)
     while not ok:
-        print('Gateway creation failed, retrying ...')
+        print('Gateway2 creation failed, retrying ...')
         time.sleep(1)
         ok = create_gateway(url, gw2json, token)
 
@@ -73,19 +73,19 @@ if __name__ == '__main__':
     tenant = tenants[0]['_id']
 
     tenantclusterjson1 = {"tenant":tenant, "cluster":"gatewaytesta", "image":"",
-                          "apods":2, "cpods":3}
+                          "apods":2, "cpods":2}
     tenantclusterjson2 = {"tenant":tenant, "cluster":"gatewaytestc", "image":"",
-                          "apods":2, "cpods":3}
+                          "apods":1, "cpods":3}
 
     ok = create_tenant_cluster(url, tenant, tenantclusterjson1, token)
     while not ok:
-        print('Tenant cluster creation failed, retrying ...')
+        print('Tenant cluster1 creation failed, retrying ...')
         time.sleep(1)
         ok = create_tenant_cluster(url, tenant, tenantclusterjson1, token)
 
     ok = create_tenant_cluster(url, tenant, tenantclusterjson2, token)
     while not ok:
-        print('Tenant cluster creation failed, retrying ...')
+        print('Tenant cluster2 creation failed, retrying ...')
         time.sleep(1)
         ok = create_tenant_cluster(url, tenant, tenantclusterjson2, token)
 
@@ -185,62 +185,62 @@ if __name__ == '__main__':
     # User info and user attributes creation
     ok = create_user(url, tenant, user1json, token)
     while not ok:
-        print('User creation failed, retrying ...')
+        print('User1 creation failed, retrying ...')
         time.sleep(1)
         ok = create_user(url, tenant, user1json, token)
 
     ok = create_user_attr(url, tenant, user1attrjson, token)
     while not ok:
-        print('UserAttr creation failed, retrying ...')
+        print('User1Attr creation failed, retrying ...')
         time.sleep(1)
         ok = create_user_attr(url, tenant, user1attrjson, token)
     
     ok = create_user(url, tenant, user2json, token)
     while not ok:
-        print('User creation failed, retrying ...')
+        print('User2 creation failed, retrying ...')
         time.sleep(1)
         ok = create_user(url, tenant, user2json, token)
     
     ok = create_user_attr(url, tenant, user2attrjson, token)
     while not ok:
-        print('UserAttr creation failed, retrying ...')
+        print('User2Attr creation failed, retrying ...')
         time.sleep(1)
         ok = create_user_attr(url, tenant, user2attrjson, token)
 
     # Bundle info and bundle attributes creation
     ok = create_bundle(url, tenant, bundle1json, token)
     while not ok:
-        print('Bundle creation failed, retrying ...')
+        print('Bundle1 creation failed, retrying ...')
         time.sleep(1)
         ok = create_bundle(url, tenant, bundle1json, token)
 
     ok = create_bundle_attr(url, tenant, bundle1attrjson, token)
     while not ok:
-        print('BundleAttr creation failed, retrying ...')
+        print('Bundle1Attr creation failed, retrying ...')
         time.sleep(1)
         ok = create_bundle_attr(url, tenant, bundle1attrjson, token)
 
     ok = create_bundle(url, tenant, bundle2json, token)
     while not ok:
-        print('Bundle creation failed, retrying ...')
+        print('Bundle2 creation failed, retrying ...')
         time.sleep(1)
         ok = create_bundle(url, tenant, bundle2json, token)
 
     ok = create_bundle_attr(url, tenant, bundle2attrjson, token)
     while not ok:
-        print('BundleAttr creation failed, retrying ...')
+        print('Bundle2Attr creation failed, retrying ...')
         time.sleep(1)
         ok = create_bundle_attr(url, tenant, bundle2attrjson, token)
 
     ok = create_bundle(url, tenant, bundle3json, token)
     while not ok:
-        print('Bundle creation failed, retrying ...')
+        print('Bundle3 creation failed, retrying ...')
         time.sleep(1)
         ok = create_bundle(url, tenant, bundle3json, token)
         
     ok = create_bundle_attr(url, tenant, bundle3attrjson, token)
     while not ok:
-        print('BundleAttr creation failed, retrying ...')
+        print('Bundle3Attr creation failed, retrying ...')
         time.sleep(1)
         ok = create_bundle_attr(url, tenant, bundle3attrjson, token)
 
@@ -250,21 +250,6 @@ if __name__ == '__main__':
         time.sleep(1)
         ok = create_host_attr(url, tenant, host1attrjson, token)
     
-    route1json = {"route":"test1@nextensio.net:kismis.org", "tag":"v1"}
-    route2json = {"route":"test2@nextensio.net:kismis.org", "tag":"v2"}
-    
-    ok = create_route(url, tenant, route1json, token)
-    while not ok:
-        print('Route creation failed, retrying ...')
-        time.sleep(1)
-        ok = create_route(url, tenant, route1json, token)
-        
-    ok = create_route(url, tenant, route2json, token)
-    while not ok:
-        print('Route creation failed, retrying ...')
-        time.sleep(1)
-        ok = create_route(url, tenant, route2json, token)
-
     with open('policy.AccessPolicy','r') as file:
         rego = file.read()
     ok = create_policy(url, tenant, 'AccessPolicy', rego, token)

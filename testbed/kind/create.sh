@@ -478,7 +478,7 @@ function create_connector {
         -e NXT_GW_3_IP=$etchost_ip -e NXT_GW_3_NAME=$etchost_name \
         -e NXT_USERNAME=$username -e NXT_PWD=LetMeIn123 \
         -e NXT_AGENT=$agent -e NXT_CONTROLLER=$ctrl_ip:8080 \
-        -e NXT_AGENT_NAME=$name  \
+        -e NXT_AGENT_NAME=$name -e CLIENT_ID=0oaz5lndczD0DSUeh4x6 -e IDP_URI=https://dev-635657.okta.com \
         --network kind --name $name registry.gitlab.com/nextensio/agent/go-agent:latest
 }
 

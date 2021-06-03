@@ -30,13 +30,17 @@ spec:
           - name: NXT_READONLY
             value: "false"
           - name: AGENT_SPA_CLIENT_ID
-            value: "0oaz5lndczD0DSUeh4x6"
+            value: "0oav0q3hn65I4Zkmr5d6"
           - name: AGENT_MOB_CLIENT_ID
-            value: "0oa2ncngj2cVUdS6b4x7"
+            value: "0oav0rc5g0E3irFto5d6"
           - name: API_CLIENT_ID
-            value: "0oa24hr70oNBZW0b64x7"
+            value: "0oav0qhafWceOAOJb5d6"
           - name: IDP_URI
-            value: "https://dev-635657.okta.com/oauth2/default"
+            value: "https://dev-24743301.okta.com/oauth2/default"
+          - name: IDP_API
+            value: "https://dev-24743301.okta.com"
+          - name: API_TOKEN
+            value: "0033GxEtLu2vBK3JhpqAZK8A2QUAEgfu8-9bQxYa8Z"
           - name: MONGO_URI
             value: "mongodb+srv://nextensio:nextensio238@cluster0.prph0.mongodb.net"
           - name: TLS_KEY
@@ -82,9 +86,9 @@ spec:
           - name: REACT_APP_API_URL
             value: "https://server.nextensio.net:8080"
           - name: REACT_APP_CLIENT_ID
-            value: "0oa24hr70oNBZW0b64x7"
+            value: "0oav0qhafWceOAOJb5d6"
           - name: REACT_APP_IDP_URI
-            value: "https://dev-635657.okta.com"
+            value: "https://dev-24743301.okta.com"
           - name: TLS_KEY
             value: "/etc/nxt-certs/tls.key"
           - name: TLS_CRT

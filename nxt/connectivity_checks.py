@@ -504,7 +504,7 @@ class CommonSetup(aetest.CommonSetup):
         global tenant
         global token
 
-        token = runCmd("go run ../pkce.go https://dev-635657.okta.com").strip()
+        token = runCmd("go run ./pkce.go https://dev-635657.okta.com").strip()
         if token == "":
             print('Cannot get access token, exiting')
             exit(1)
@@ -914,7 +914,7 @@ if __name__ == '__main__':
 
     args, unknown = parser.parse_known_args()
 
-    token = runCmd("go run ../pkce.go https://dev-635657.okta.com").strip()
+    token = runCmd("go run ./pkce.go https://dev-635657.okta.com").strip()
     if token == "":
         print('Cannot get access token, exiting')
         exit(1)

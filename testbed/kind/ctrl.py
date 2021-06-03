@@ -20,7 +20,7 @@ def runCmd(cmd):
         return ""
 
 if __name__ == '__main__':
-    token = runCmd("go run ../../pkce.go https://dev-635657.okta.com").strip()
+    token = runCmd("go run ./pkce.go https://dev-635657.okta.com").strip()
     if token == "":
         print('Cannot get access token, exiting')
         exit(1)

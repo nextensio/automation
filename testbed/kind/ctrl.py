@@ -34,8 +34,8 @@ if __name__ == '__main__':
         print('Controller not up, waiting ...')
         time.sleep(5)
 
-    gw1json = {"name":"gatewaytesta.nextensio.net", "cluster": "gatewaytesta"}
-    gw2json = {"name":"gatewaytestc.nextensio.net", "cluster": "gatewaytestc"}
+    gw1json = {"name":"gatewaytesta.nextensio.net"}
+    gw2json = {"name":"gatewaytestc.nextensio.net"}
     
     ok = create_gateway(url, gw1json, token)
     while not ok:
@@ -50,11 +50,8 @@ if __name__ == '__main__':
         ok = create_gateway(url, gw2json, token)
 
     tenantjson = {"_id":"nextensio",
-                  "gateways":["gatewaytesta.nextensio.net","gatewaytestc.nextensio.net"],
-                  "domains": ["kismis.org", "nextensio-default-internet"],
                   "image":"registry.gitlab.com/nextensio/cluster/minion:latest",
-                  "pods":5,
-                  "curid":""}
+                  }
     
     ok = create_tenant(url, tenantjson, token)
     while not ok:
@@ -72,9 +69,9 @@ if __name__ == '__main__':
     # to search for the right tenant name or something inside the returned list of tenants
     tenant = tenants[0]['_id']
 
-    tenantclusterjson1 = {"tenant":tenant, "cluster":"gatewaytesta", "image":"",
+    tenantclusterjson1 = {"tenant":tenant, "gateway":"gatewaytesta.nextensio.net", "image":"",
                           "apods":2, "cpods":2}
-    tenantclusterjson2 = {"tenant":tenant, "cluster":"gatewaytestc", "image":"",
+    tenantclusterjson2 = {"tenant":tenant, "gateway":"gatewaytestc.nextensio.net", "image":"",
                           "apods":1, "cpods":3}
 
     ok = create_tenant_cluster(url, tenant, tenantclusterjson1, token)
@@ -91,10 +88,10 @@ if __name__ == '__main__':
 
     user1json = {"uid":"test1@nextensio.net", "name":"User1", "email":"test1@nextensio.net",
                  "services":[], "gateway":"gatewaytesta.nextensio.net",
-                 "cluster": "gatewaytesta", "pod":1}
+                 "pod":1}
     user2json = {"uid":"test2@nextensio.net", "name":"User2", "email":"test2@nextensio.net",
                  "services":[], "gateway":"gatewaytesta.nextensio.net",
-                 "cluster": "gatewaytesta", "pod":2}
+                 "pod":2}
 
     user1attrjson = {"uid":"test1@nextensio.net", "category":"employee",
                      "type":"IC", "level":50, "dept":["ABU","BBU"], "team":["engineering"],
@@ -118,13 +115,13 @@ if __name__ == '__main__':
 
     bundle1json = {"bid":"default@nextensio.net", "name":"Default Internet",
                    "services":["nextensio-default-internet"], "gateway":"gatewaytestc.nextensio.net",
-                   "cluster": "gatewaytestc", "pod":1}
+                   "pod":1}
     bundle2json = {"bid":"v1.kismis@nextensio.net", "name":"Kismis ONE",
                    "services":["v1.kismis.org"], "gateway":"gatewaytestc.nextensio.net",
-                   "cluster": "gatewaytestc", "pod":2}
+                   "pod":2}
     bundle3json = {"bid":"v2.kismis@nextensio.net", "name":"Kismis TWO",
                    "services":["v2.kismis.org"], "gateway":"gatewaytestc.nextensio.net",
-                   "cluster": "gatewaytestc", "pod":3}
+                   "pod":3}
 
     bundle1attrjson = {"bid":"default@nextensio.net", "dept":["ABU","BBU"],
                        "team":["engineering","sales"], "IC":1, "manager":1, "nonemployee":"allow"}
@@ -152,6 +149,10 @@ if __name__ == '__main__':
 		        "category": ["employee"], "type": ["manager","IC"], "IClvl": 4, "mlvl": 4
 		      } ]
 		    }
+
+    host2attrjson = { "host": "nextensio-default-internet",
+                      "routeattrs": [{ "tag" : "" }]
+            }
 
     hostattrsetjson = [
         {"name": "dept", "appliesTo": "Hosts", "type": "String"},
@@ -246,9 +247,15 @@ if __name__ == '__main__':
 
     ok = create_host_attr(url, tenant, host1attrjson, token)
     while not ok:
-        print('HostAttr creation failed, retrying ...')
+        print('HostAttr1 creation failed, retrying ...')
         time.sleep(1)
         ok = create_host_attr(url, tenant, host1attrjson, token)
+    
+    ok = create_host_attr(url, tenant, host2attrjson, token)
+    while not ok:
+        print('HostAttr2 creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_host_attr(url, tenant, host2attrjson, token)
     
     with open('policy.AccessPolicy','r') as file:
         rego = file.read()

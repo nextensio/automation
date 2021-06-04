@@ -102,14 +102,22 @@ if __name__ == '__main__':
     
 
     userattrsetjson = [
-        {"name": "category", "appliesTo": "Users", "type": "String"},
-        {"name": "type", "appliesTo": "Users", "type": "String"},
-        {"name": "level", "appliesTo": "Users", "type": "Number"},
-        {"name": "dept", "appliesTo": "Users", "type": "String"},
-        {"name": "team", "appliesTo": "Users", "type": "String"},
-        {"name": "location", "appliesTo": "Users", "type": "String"},
-        {"name": "ostype", "appliesTo": "Users", "type": "String"},
-        {"name": "osver", "appliesTo": "Users", "type": "Number"}
+        {"name": "category", "appliesTo": "Users", "type": "String", "isArray": False,
+         "rangeCheck": "1-16"},
+        {"name": "type", "appliesTo": "Users", "type": "String", "isArray": False,
+         "rangeCheck": "1-16"},
+        {"name": "level", "appliesTo": "Users", "type": "Number", "numType": "int",
+         "isArray": False, "rangeCheck": "1-20"},
+        {"name": "dept", "appliesTo": "Users", "type": "String", "isArray": True,
+         "rangeCheck": "1-16"},
+        {"name": "team", "appliesTo": "Users", "type": "String", "isArray": True,
+         "rangeCheck": "1-16"},
+        {"name": "location", "appliesTo": "Users", "type": "String", "isArray": False,
+         "rangeCheck": "1-16"},
+        {"name": "ostype", "appliesTo": "Users", "type": "String", "isArray": False,
+         "rangeCheck": "1-16"},
+        {"name": "osver", "appliesTo": "Users", "type": "Number", "numType": "float",
+         "isArray": False, "rangeCheck": "1.0-40.0"}
         ]
 
 
@@ -132,11 +140,16 @@ if __name__ == '__main__':
     
 
     bundleattrsetjson = [
-        {"name": "dept", "appliesTo": "Bundles", "type": "String"},
-        {"name": "team", "appliesTo": "Bundles", "type": "String"},
-        {"name": "IC", "appliesTo": "Bundles", "type": "Number"},
-        {"name": "manager", "appliesTo": "Bundles", "type": "Number"},
-        {"name": "nonemployee", "appliesTo": "Bundles", "type": "String"}
+        {"name": "dept", "appliesTo": "Bundles", "type": "String", "isArray": True,
+         "rangeCheck": "1-16"},
+        {"name": "team", "appliesTo": "Bundles", "type": "String", "isArray": True,
+         "rangeCheck": "1-16"},
+        {"name": "IC", "appliesTo": "Bundles", "type": "Number", "numType": "int",
+         "isArray": False, "rangeCheck": "1-20"},
+        {"name": "manager", "appliesTo": "Bundles", "type": "Number", "numType": "int",
+         "isArray": False, "rangeCheck": "1-20"},
+        {"name": "nonemployee", "appliesTo": "Bundles", "type": "String", "isArray": False,
+         "rangeCheck": "1-8"}
         ]
 
 
@@ -155,12 +168,18 @@ if __name__ == '__main__':
             }
 
     hostattrsetjson = [
-        {"name": "dept", "appliesTo": "Hosts", "type": "String"},
-        {"name": "team", "appliesTo": "Hosts", "type": "String"},
-        {"name": "IClvl", "appliesTo": "Hosts", "type": "Number"},
-        {"name": "mlvl", "appliesTo": "Hosts", "type": "Number"},
-        {"name": "category", "appliesTo": "Hosts", "type": "String"},
-        {"name": "type", "appliesTo": "Hosts", "type": "String"}
+        {"name": "dept", "appliesTo": "Hosts", "type": "String", "isArray": True,
+         "rangeCheck": "1-16"},
+        {"name": "team", "appliesTo": "Hosts", "type": "String", "isArray": True,
+         "rangeCheck": "1-16"},
+        {"name": "IClvl", "appliesTo": "Hosts", "type": "Number", "numType": "int",
+         "isArray": False, "rangeCheck": "1-20"},
+        {"name": "mlvl", "appliesTo": "Hosts", "type": "Number", "numType": "int",
+         "isArray": False, "rangeCheck": "1-20"},
+        {"name": "category", "appliesTo": "Hosts", "type": "String", "isArray": True,
+         "rangeCheck": "1-16"},
+        {"name": "type", "appliesTo": "Hosts", "type": "String", "isArray": False,
+         "rangeCheck": "1-16"}
         ]
 
 

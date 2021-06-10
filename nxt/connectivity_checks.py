@@ -127,43 +127,36 @@ def istioChecks(cluster, useragent, podnum, xfor, xconnect):
 # to the cluster and advertised their services via Hello message. So this is the
 # best kind of check we have to ensure that the agents and connectors are "ready"
 def checkConsulKV(devices, cluster, svc, pod):
-    podnm = 'apod1'
     device = clusterPod2Device(cluster, "consul")
     service = nameToService(svc)
 
-    value = devices[device].shell.execute('consul kv get -recurse ' + service).strip()
-    lines = value.splitlines()
-    if len(lines) > 1:
-        print(value)
-        print("Cluster %s service %s has more than one registration!" % (cluster, service))
-        sys.exit(1)
-
-    m = re.search(r'.*:(cpod[0-9]+)', value)
-    podnm = 'cpod%s' % pod
-    while m == None or m[1] != podnm:
-        time.sleep(1)
+    while True:
+        value = devices[device].shell.execute('dig ' + service + '-nextensio' + '.query.consul SRV').strip()
+        lines = value.splitlines()
         cur = "None"
-        if m != None:
-            cur = m[1]
+        for l in lines:
+            m = re.search(r'\"NextensioPod:(.+)\"', l)
+            if m != None and m[1] == pod:
+                print("Found svc %s pod value %s in cluster %s" % (svc, m[0], cluster))
+                return
+            if m != None:
+                cur = m[1]
         logger.info('Cluster %s, waiting for consul kv %s in %s, current %s' %
-                    (cluster, service, podnm, cur))
-        value = devices[device].shell.execute('consul kv get -recurse ' + service).strip()
-        if len(lines) > 1:
-            print(value)
-            print("Cluster %s service %s has more than one registration!" % (cluster, service))
-            sys.exit(1)
-        m = re.search(r'.*:(cpod[0-9]+)', value)
-    print("Found KV value %s in cluster %s" % (value, cluster))
+                    (cluster, service, pod, cur))
+        time.sleep(1)
     
 def checkConsulDns(devices, cluster, svc):
     device = clusterPod2Device(cluster, "consul")
     service = nameToConsul(svc, tenant)
     addr = devices[device].shell.execute('nslookup ' + service)
-    while not "Address 1" in addr:
+    pat = re.compile("Name:.*%s" % nameToService(svc))
+    m = re.search(pat, addr)
+    while not m:
         logger.info('Cluster %s, waiting for consul entry %s' %
                     (cluster, service))
         time.sleep(1)
         addr = devices[device].shell.execute('nslookup ' + service)
+        m = re.search(pat, addr)
     print("Found Consul dns entry for %s in cluster %s" % (svc, cluster))
 
 
@@ -187,9 +180,9 @@ def checkConsulDnsAndKV(specs, devices):
 def checkOnboarding(specs):
     for spec in specs:
         if spec['agent'] == True:
-            podnm = "apod" + str(spec['pod'])
+            podnm = "nextensio-apod" + str(spec['pod'])
         else:
-            podnm = "cpod" + str(spec['pod'])
+            podnm = spec['pod']
         gw = spec['gateway'] + ".nextensio.net"
         checkUserOnboarding(spec['name'], gw, podnm)
 
@@ -200,11 +193,11 @@ def checkUserOnboarding(uid, gw, podnm):
         time.sleep(1)
         ok, onblog = get_onboard_log(url, tenant, uid, token)
     while onblog['gw'] != gw:
-        print('Waiting for %s to get onboarded' % uid)
+        print('Waiting for %s to get onboarded, gw %s / %s' % (uid, gw, onblog['gw']))
         time.sleep(1)
         ok, onblog = get_onboard_log(url, tenant, uid, token)
-    while onblog['podnm'] != podnm:
-        print('Waiting for %s to get onboarded' % uid)
+    while onblog['connectid'] != podnm:
+        print('Waiting for %s to get onboarded pod %s / %s' % (uid, podnm, onblog['connectid']))
         time.sleep(1)
         ok, onblog = get_onboard_log(url, tenant, uid, token)
     print("%s onboarded for cluster %s pod %s" % (uid, gw, podnm))
@@ -403,7 +396,7 @@ def config_bundle(bundle, service, cluster, gateway, pod):
 
     bundlenm = 'Bundle %s' % bundle
     bundlejson = {"bid":bundle, "name":bundlenm,
-                   "services":[service], "cluster":cluster, "gateway":gateway, "pod":pod}
+                   "services":[service], "cluster":cluster, "gateway":gateway, "pod":pod, "cpodrepl": 1}
     ok = create_bundle(url, tenant, bundlejson, token)
     while not ok:
         logger.info('Bundle %s updation failed, retrying ...' % bundle)
@@ -612,11 +605,11 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
             {'name': 'test2@nextensio.net', 'agent': True,
                 'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 1},
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 2},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -640,11 +633,11 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
             {'name': 'test2@nextensio.net', 'agent': True,
                 'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 3},
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 1},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 2}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -658,11 +651,11 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
             {'name': 'test2@nextensio.net', 'agent': True,
                 'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 1},
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 2},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -689,11 +682,11 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': 'test2@nextensio.net', 'agent': True,
                 'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 3},
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 2},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 1}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -717,11 +710,11 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': 'test2@nextensio.net', 'agent': True,
                 'service': '', 'gateway': 'gatewaytestc', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytesta', 'pod': 'nextensio-default-nextensio-net'},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 2}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 'nextensio-v1-kismis-nextensio-net'}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -735,11 +728,11 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': 'test2@nextensio.net', 'agent': True,
                 'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 3},
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 2},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 1}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -761,11 +754,11 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': 'test2@nextensio.net', 'agent': True,
                 'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 1},
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 2}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 'nextensio-v1-kismis-nextensio-net'}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -779,11 +772,11 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': 'test2@nextensio.net', 'agent': True,
                 'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 3},
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 2},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 1}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -810,11 +803,11 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': 'test2@nextensio.net', 'agent': True,
                 'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytesta', 'pod': 2},
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytesta', 'pod': 'nextensio-v1-kismis-nextensio-net'},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 2},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 1}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 'nextensio-default-nextensio-net'}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -836,11 +829,11 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': 'test2@nextensio.net', 'agent': True,
                 'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 3},
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytesta', 'pod': 1},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytesta', 'pod': 'nextensio-default-nextensio-net'},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 2}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -862,11 +855,11 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': 'test2@nextensio.net', 'agent': True,
                 'service': '', 'gateway': 'gatewaytestc', 'pod': 1},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 2},
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 1}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -888,11 +881,11 @@ class AgentConnectorSquareOne(aetest.Testcase):
             {'name': 'test2@nextensio.net', 'agent': True,
                 'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
             {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 1},
+                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'},
             {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 2},
+                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
             {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 3}
+                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)

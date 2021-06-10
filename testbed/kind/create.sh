@@ -32,7 +32,7 @@ function download_infra_images {
     image7="docker.io/istio/pilot:1.6.4"
     image8="docker.io/istio/proxyv2:1.6.4"
     image9="docker.io/jaegertracing/all-in-one:1.16"
-    image10="docker.io/library/consul:1.4.2"
+    image10="gopakumarce/consul:1.9.6"
     image11="docker.io/prom/prometheus:v2.15.1"
     image12="k8s.gcr.io/build-image/debian-base:v2.1.0"
     image13="k8s.gcr.io/coredns:1.7.0"
@@ -309,7 +309,7 @@ function create_cluster {
     kind load docker-image docker.io/istio/proxyv2:1.6.4 --name $cluster
     kind load docker-image docker.io/jaegertracing/all-in-one:1.16 --name $cluster
     kind load docker-image docker.io/kindest/kindnetd:v20200725-4d6bea59 --name $cluster
-    kind load docker-image docker.io/library/consul:1.4.2 --name $cluster
+    kind load docker-image gopakumarce/consul:1.9.6 --name $cluster
     kind load docker-image docker.io/metallb/controller:v0.9.3 --name $cluster
     kind load docker-image docker.io/metallb/speaker:v0.9.3 --name $cluster
     kind load docker-image docker.io/prom/prometheus:v2.15.1 --name $cluster
@@ -520,6 +520,12 @@ function create_all {
     # Not sure if this needs to be done on both DCs, doing it anyways
     consul_query_config gatewaytesta
     consul_query_config gatewaytestc
+
+    # Install bind to do dig and get SRV records
+    $kubectl config use-context kind-gatewaytesta
+    $kubectl exec -it gatewaytesta-consul-server-0 -n consul-system -- apk add bind-tools
+    $kubectl config use-context kind-gatewaytestc
+    $kubectl exec -it gatewaytestc-consul-server-0 -n consul-system -- apk add bind-tools
 
     $kubectl config use-context kind-controller
     ctrlpod=`$kubectl get pods -n default | grep nextensio-controller | grep Running`;

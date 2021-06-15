@@ -123,8 +123,6 @@ Again go to the ~/deployments/<cluster>/ directory used for creating the cluster
 
 ## Creating bastion
 
-See the below link for information on creating a bastion to login to master and worker nodes
-
-https://medium.com/andcloudio/kubernetes-kops-cluster-on-aws-f55d197d8304
-
-The bastion and master/worker node user name is ubuntu and NOT admin as is mentioned in the link.
+Just spin up a small instance in the "utility" subnet, copy the private key that was used when creating the
+kops instances onto this new bastion instance, find out the IP address of the node you want to login to (the
+ip address inside the utility subnet) and just ssh to it using the pvt key (ssh -i <key> ubuntu@IP)

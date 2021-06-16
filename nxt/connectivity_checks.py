@@ -30,15 +30,30 @@ url = None
 tenant = None
 clusters = []
 agents = []
+
+GW1 = "gatewaytesta.nextensio.net"
+GW2 = "gatewaytestc.nextensio.net"
+GW1CLUSTER = "gatewaytesta"
+GW2CLUSTER = "gatewaytestc"
+TENANT = "nextensio"
+USER1 = "test1@nextensio.net"
+USER2 = "test2@nextensio.net"
+CNCTR1 = "v1.kismis@nextensio.net"
+CNCTR2 = "v2.kismis@nextensio.net"
+CNCTR3 = "default@nextensio.net"
+CNCTR1POD = "nextensio-v1-kismis-nextensio-net"
+CNCTR2POD = "nextensio-v2-kismis-nextensio-net"
+CNCTR3POD = "nextensio-default-nextensio-net"
+
 # Don't assume the same number of apods or cpods per cluster. numApods and numCpods will
 # keep count per cluster based on what is defined in yamls/testbed.yaml
 numApods = {
-    'gatewaytesta': 0,
-    'gatewaytestc': 0
+    GW1CLUSTER: 0,
+    GW2CLUSTER: 0
     }
 numCpods = {
-    'gatewaytesta': 0,
-    'gatewaytestc': 0
+    GW1CLUSTER: 0,
+    GW2CLUSTER: 0
     }
 token = ""
 
@@ -165,15 +180,15 @@ def checkConsulDnsAndKV(specs, devices):
     cls = []
     for spec in specs:
         if spec['agent'] != True:
-            services.append({'name': 'nextensio-' + spec['name'], 'gateway': spec['gateway'], 'pod': spec['pod']})
+            services.append({'name': 'nextensio-' + spec['name'], 'cluster': spec['cluster'], 'pod': spec['pod']})
             if spec['service'] != '':
-                services.append({'name': spec['service'], 'gateway': spec['gateway'], 'pod': spec['pod']})
-            if spec['gateway'] not in cls:
-                cls.append(spec['gateway'])
+                services.append({'name': spec['service'], 'cluster': spec['cluster'], 'pod': spec['pod']})
+            if spec['cluster'] not in cls:
+                cls.append(spec['cluster'])
 
     for cluster in cls:
         for service in services:
-            if cluster == service['gateway']:
+            if cluster == service['cluster']:
                 checkConsulKV(devices, cluster, service['name'], service['pod'])
                 checkConsulDns(devices, cluster, service['name'])
 
@@ -183,7 +198,7 @@ def checkOnboarding(specs):
             podnm = "nextensio-apod" + str(spec['pod'])
         else:
             podnm = spec['pod']
-        gw = spec['gateway'] + ".nextensio.net"
+        gw = spec['cluster'] + ".nextensio.net"
         checkUserOnboarding(spec['name'], gw, podnm)
 
 def checkUserOnboarding(uid, gw, podnm):
@@ -361,10 +376,10 @@ def config_routes(tag1, tag2):
 def config_user_attr(level1, level2):
     global token
 
-    user1attrjson = {"uid":"test1@nextensio.net", "category":"employee",
-                     "type":"IC", "level":level1, "dept":["ABU","BBU"], "team":["engineering","sales"] }
-    user2attrjson = {"uid":"test2@nextensio.net", "category":"employee",
-                     "type":"manager", "level":level2, "dept":["ABU","BBU"], "team":["engineering","sales"] }
+    user1attrjson = {"uid":USER1, "category":"employee", "type":"IC", "level":level1,
+                     "dept":["ABU","BBU"], "team":["engineering","sales"] }
+    user2attrjson = {"uid":USER2, "category":"employee", "type":"manager", "level":level2,
+                     "dept":["ABU","BBU"], "team":["engineering","sales"] }
     ok = create_user_attr(url, tenant, user1attrjson, token)
     while not ok:
         logger.info('UserAttr test1 config failed, retrying ...')
@@ -378,12 +393,12 @@ def config_user_attr(level1, level2):
         ok = create_user_attr(url, tenant, user2attrjson, token)
 
 
-def config_user(user, service, cluster, gateway, pod):
+def config_user(user, service, gateway, pod):
     global token
 
     usernm = 'Test User %s' % user
     userjson = {"uid":user, "name":usernm, "email":user,
-                 "services":[service], "cluster":cluster, "gateway":gateway, "pod":pod}
+                 "services":[service], "gateway":gateway, "pod":pod}
     ok = create_user(url, tenant, userjson, token)
     while not ok:
         logger.info('User %s updation failed, retrying ...' % user)
@@ -391,12 +406,12 @@ def config_user(user, service, cluster, gateway, pod):
         ok = create_user(url, tenant, userjson, token)
 
 
-def config_bundle(bundle, service, cluster, gateway, pod):
+def config_bundle(bundle, service, gateway, pod):
     global token
 
     bundlenm = 'Bundle %s' % bundle
     bundlejson = {"bid":bundle, "name":bundlenm,
-                   "services":[service], "cluster":cluster, "gateway":gateway, "pod":pod, "cpodrepl": 1}
+                   "services":[service], "gateway":gateway, "pod":pod, "cpodrepl": 1}
     ok = create_bundle(url, tenant, bundlejson, token)
     while not ok:
         logger.info('Bundle %s updation failed, retrying ...' % bundle)
@@ -407,7 +422,7 @@ def config_bundle(bundle, service, cluster, gateway, pod):
 def config_default_bundle_attr(depts, teams):
     global token
 
-    bundleattrjson = {"bid":"default@nextensio.net", "dept":depts,
+    bundleattrjson = {"bid":CNCTR3, "dept":depts,
                        "team":teams, "IC":10, "manager":10, "nonemployee":"allow"}
     ok = create_bundle_attr(url, tenant, bundleattrjson, token)
     while not ok:
@@ -513,6 +528,10 @@ class CommonSetup(aetest.CommonSetup):
         # The test setup is assumed to be created with just one tenant, if we need more we just need
         # to search for the right tenant name or something inside the returned list of tenants
         tenant = tenants[0]['_id']
+        if tenant != TENANT:
+            print('Tenant mismatch after readback from DB - %s != %s' % (tenant, TENANT))
+            sys.exit(1)
+
 
     def parseTestbed(self, testbed):
         global clusters
@@ -560,11 +579,11 @@ class CommonCleanup(aetest.CommonCleanup):
 
 
 def placeAgent(spec):
-    gateway = spec['gateway'] + '.nextensio.net'
+    gateway = spec['cluster'] + '.nextensio.net'
     if spec['agent'] == True:
-        config_user(spec['name'], spec['service'], spec['gateway'], gateway,  spec['pod'])
+        config_user(spec['name'], spec['service'], gateway,  spec['pod'])
     else:
-        config_bundle(spec['name'], spec['service'], spec['gateway'], gateway, spec['pod'])
+        config_bundle(spec['name'], spec['service'], gateway, spec['pod'])
 
 
 #TODO: After we moved around the external-service / egress-gateway rules to be
@@ -600,16 +619,16 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
     @ aetest.setup
     def setup(self, testbed):
         specs = [
-            {'name': 'test1@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
-            {'name': 'test2@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
-            {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'},
-            {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
-            {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'}
+            {'name': USER1, 'agent': True,
+                'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True,
+                'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': CNCTR3, 'agent': False,
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False,
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False,
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -628,16 +647,16 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
         '''
         # Switch agents to a different set of pods in same clusters
         specs = [
-            {'name': 'test1@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
-            {'name': 'test2@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
-            {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
-            {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'},
-            {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'}
+            {'name': USER1, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': USER2, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': CNCTR3, 'agent': False,
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR1, 'agent': False,
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR2, 'agent': False,
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -646,16 +665,16 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
         basicAccessSanity(testbed.devices)
         # And now go back to the original configuration of this test case
         specs = [
-            {'name': 'test1@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
-            {'name': 'test2@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
-            {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'},
-            {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
-            {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'}
+            {'name': USER1, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': CNCTR3, 'agent': False,
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False,
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False,
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -677,16 +696,16 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
     @ aetest.setup
     def setup(self, testbed):
         specs = [
-            {'name': 'test1@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
-            {'name': 'test2@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
-            {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
-            {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
-            {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'}
+            {'name': USER1, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': CNCTR3, 'agent': False,
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR1, 'agent': False,
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False,
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -705,16 +724,16 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
         '''
         # Mix up agents and connectors to a different set of pods across clusters
         specs = [
-            {'name': 'test1@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
-            {'name': 'test2@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytestc', 'pod': 1},
-            {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytesta', 'pod': 'nextensio-default-nextensio-net'},
-            {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
-            {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 'nextensio-v1-kismis-nextensio-net'}
+            {'name': USER1, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': USER2, 'agent': True,
+             'service': '', 'cluster': GW2CLUSTER, 'pod': 1},
+            {'name': CNCTR3, 'agent': False,
+             'service': 'nextensio-default-internet', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False,
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR2, 'agent': False,
+             'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -723,16 +742,16 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
         basicAccessSanity(testbed.devices)
         # And now go back to the original configuration of this test case
         specs = [
-            {'name': 'test1@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
-            {'name': 'test2@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
-            {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
-            {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
-            {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'}
+            {'name': USER1, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': CNCTR3, 'agent': False,
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR1, 'agent': False,
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False,
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -749,16 +768,16 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
         '''
         # Mix up agents and pods again
         specs = [
-            {'name': 'test1@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytestc', 'pod': 1},
-            {'name': 'test2@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
-            {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'},
-            {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
-            {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 'nextensio-v1-kismis-nextensio-net'}
+            {'name': USER1, 'agent': True,
+             'service': '', 'cluster': GW2CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': CNCTR3, 'agent': False,
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False,
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR2, 'agent': False,
+             'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -767,16 +786,16 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
         basicAccessSanity(testbed.devices)
         # And now go back to original configuration of this test case
         specs = [
-            {'name': 'test1@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
-            {'name': 'test2@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
-            {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
-            {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
-            {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'}
+            {'name': USER1, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': CNCTR3, 'agent': False,
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR1, 'agent': False,
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False,
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -798,16 +817,16 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
     @ aetest.setup
     def setup(self, testbed):
         specs = [
-            {'name': 'test1@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
-            {'name': 'test2@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
-            {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytesta', 'pod': 'nextensio-v1-kismis-nextensio-net'},
-            {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
-            {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytesta', 'pod': 'nextensio-default-nextensio-net'}
+            {'name': USER1, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': CNCTR3, 'agent': False,
+             'service': 'nextensio-default-internet', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR1, 'agent': False,
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False,
+             'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -824,16 +843,16 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
         and kismis.v2 mixed up in different pods in different clusters.
         '''
         specs = [
-            {'name': 'test1@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
-            {'name': 'test2@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
-            {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
-            {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytesta', 'pod': 'nextensio-default-nextensio-net'},
-            {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'}
+            {'name': USER1, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': USER2, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': CNCTR3, 'agent': False,
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR1, 'agent': False,
+             'service': 'v1.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR2, 'agent': False,
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -850,16 +869,16 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
         pods in the same cluster (gatewaytestc)
         '''
         specs = [
-            {'name': 'test1@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytestc', 'pod': 1},
-            {'name': 'test2@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytestc', 'pod': 1},
-            {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
-            {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'},
-            {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'}
+            {'name': USER1, 'agent': True,
+             'service': '', 'cluster': GW2CLUSTER, 'pod': 1},
+            {'name': USER1, 'agent': True,
+             'service': '', 'cluster': GW2CLUSTER, 'pod': 1},
+            {'name': CNCTR3, 'agent': False,
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR1, 'agent': False,
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR2, 'agent': False,
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
@@ -876,16 +895,16 @@ class AgentConnectorSquareOne(aetest.Testcase):
     @ aetest.setup
     def setup(self, testbed):
         specs = [
-            {'name': 'test1@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 1},
-            {'name': 'test2@nextensio.net', 'agent': True,
-                'service': '', 'gateway': 'gatewaytesta', 'pod': 2},
-            {'name': 'default@nextensio.net', 'agent': False,
-                'service': 'nextensio-default-internet', 'gateway': 'gatewaytestc', 'pod': 'nextensio-default-nextensio-net'},
-            {'name': 'v1.kismis@nextensio.net', 'agent': False,
-                'service': 'v1.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v1-kismis-nextensio-net'},
-            {'name': 'v2.kismis@nextensio.net', 'agent': False,
-                'service': 'v2.kismis.org', 'gateway': 'gatewaytestc', 'pod': 'nextensio-v2-kismis-nextensio-net'}
+            {'name': USER1, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True,
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': CNCTR3, 'agent': False,
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False,
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False,
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)

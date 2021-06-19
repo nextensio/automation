@@ -560,7 +560,7 @@ function create_all {
     # Configure monitoring stuff (prometheus, thanos, grafana). This also install 
     # prometheus and thanos sidecar on all the clusters 
     # TODO: check monitoring cluster readiness
-    bootstrap_monitoring $monitoring_ip $ctrl_ip $testa_ip $testc_ip
+    bootstrap_monitoring $monitoring_ip $ctrl_ip $gatewaytesta_ip $gatewaytestc_ip
 }
 
 function save_env {
@@ -569,9 +569,10 @@ function save_env {
     echo "##You can set a broswer proxy to $nxt_agent1:8181 to send traffic via nextensio##"
     echo "##OR You can set a broswer proxy to $nxt_agent2:8181 to send traffic via nextensio##"
     echo "##All the above information is saved in $tmpdir/environment for future reference##"
-    echo "######You can access Thanos UI at http://$monitoring_ip/9092  ############"
-    echo "######You can access Grafana UI at http://$monitoring_ip/3000  ############"
-    echo "######You can access Alert Mgr UI at http://$monitoring_ip/9093  ############"
+    echo "######You can access Thanos UI at http://$monitoring_ip:9092  ############"
+    echo "######You can access Grafana UI at http://$monitoring_ip:3000  ############"
+    echo "######Use http://thanos-querier:9092 as Grafana dashboard datasource ############"
+    echo "######You can access Alert Mgr UI at http://$monitoring_ip:9093  ############"
 
     envf=$tmpdir/environment
     echo "gatewaytesta_ip=$gatewaytesta_ip" > $envf

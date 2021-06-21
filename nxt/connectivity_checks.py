@@ -45,16 +45,6 @@ CNCTR1POD = "nextensio-v1-kismis-nextensio-net"
 CNCTR2POD = "nextensio-v2-kismis-nextensio-net"
 CNCTR3POD = "nextensio-default-nextensio-net"
 
-# Don't assume the same number of apods or cpods per cluster. numApods and numCpods will
-# keep count per cluster based on what is defined in yamls/testbed.yaml
-numApods = {
-    GW1CLUSTER: 0,
-    GW2CLUSTER: 0
-    }
-numCpods = {
-    GW1CLUSTER: 0,
-    GW2CLUSTER: 0
-    }
 token = ""
 
 # In nextensio, all services are words seperated by dashes, all dots and @ symbols
@@ -80,17 +70,8 @@ def nameToConsul(name, tenant):
 # environment shell variables from the /tmp/nextensio-kin/environment file, and
 # hence not using dashes in the names (shell vars cant have dashes)
 
-
 def clusterPod2Device(cluster, pod):
     return cluster + "_" + pod
-
-
-def ApodminionDevice(cluster, pod):
-    return clusterPod2Device(cluster, "apod" + str(pod))
- 
-def CpodminionDevice(cluster, pod):
-    return clusterPod2Device(cluster, "cpod" + str(pod))
-
 
 def runCmd(cmd):
     try:
@@ -135,32 +116,13 @@ def istioChecks(cluster, useragent, podnum, xfor, xconnect):
         time.sleep(1)
         podready = podHasService(cluster, podname, xfor, xconnect)
 
-# First make sure the agent is connected to the right pod, after that do an
+# First make sure the Connector is connected to the right pod, after that do an
 # nslookup inside consul server pod to ensure that all the services of our
-# interest, both local and remote, are reachable. The names will be reachable
-# only if the agents / connectors corresponding to those services have connected
-# to the cluster and advertised their services via Hello message. So this is the
-# best kind of check we have to ensure that the agents and connectors are "ready"
-def checkConsulKV(devices, cluster, svc, pod):
-    device = clusterPod2Device(cluster, "consul")
-    service = nameToService(svc)
-
-    while True:
-        value = devices[device].shell.execute('dig ' + service + '-nextensio' + '.query.consul SRV').strip()
-        lines = value.splitlines()
-        cur = "None"
-        for l in lines:
-            m = re.search(r'\"NextensioPod:(.+)\"', l)
-            if m != None and m[1] == pod:
-                print("Found svc %s pod value %s in cluster %s" % (svc, m[0], cluster))
-                return
-            if m != None:
-                cur = m[1]
-        logger.info('Cluster %s, waiting for consul kv %s in %s, current %s' %
-                    (cluster, service, pod, cur))
-        time.sleep(1)
-    
-def checkConsulDns(devices, cluster, svc):
+# interest are reachable. The names will be reachable only if the connectors
+# corresponding to those services have connected to the cluster and advertised
+# their services via Hello message. So this is the best kind of check we have to
+# ensure that the connectors are "ready"
+def checkConsulDnsEntry(devices, cluster, svc):
     device = clusterPod2Device(cluster, "consul")
     service = nameToConsul(svc, tenant)
     addr = devices[device].shell.execute('nslookup ' + service)
@@ -175,7 +137,7 @@ def checkConsulDns(devices, cluster, svc):
     print("Found Consul dns entry for %s in cluster %s" % (svc, cluster))
 
 
-def checkConsulDnsAndKV(specs, devices):
+def checkConsulDns(specs, devices):
     services = []
     cls = []
     for spec in specs:
@@ -189,8 +151,7 @@ def checkConsulDnsAndKV(specs, devices):
     for cluster in cls:
         for service in services:
             if cluster == service['cluster']:
-                checkConsulKV(devices, cluster, service['name'], service['pod'])
-                checkConsulDns(devices, cluster, service['name'])
+                checkConsulDnsEntry(devices, cluster, service['name'])
 
 def checkOnboarding(specs):
     for spec in specs:
@@ -273,17 +234,12 @@ def getOpaVersion(devices, d, previous, increments):
     return current
 
 
-def getAllOpaVersions(devices, current, increments):
+def getAllOpaVersions(devices, specs, current, increments):
     versions = {}
-    for c in clusters:
-        for p in range(1, numApods[c]+1):
-            d = ApodminionDevice(c, p)
-            parse = getOpaVersion(devices, d, current.get(d), increments)
-            versions[d] = parse
-        for p in range(1, numCpods[c]+1):
-            d = CpodminionDevice(c, p)
-            parse = getOpaVersion(devices, d, current.get(d), increments)
-            versions[d] = parse
+    for spec in specs:
+        d = spec['device']
+        parse = getOpaVersion(devices, d, current, increments)
+        versions['ref'] = parse
     return versions
 
 # TODO: Its hacky to be restarting an entire device using the shell/console object
@@ -299,10 +255,6 @@ def resetAgents(devices):
     devices['nxt_kismis_ONE'].shell.restart()
     devices['nxt_kismis_TWO'].shell.restart()
 
-def resetUserAgents(devices):
-    devices['nxt_agent1'].shell.restart()
-    devices['nxt_agent2'].shell.restart()
-
 
 # Ensure public and private access is successul
 def publicAndPvtPass(agent1, agent2):
@@ -316,11 +268,11 @@ def publicAndPvtPass(agent1, agent2):
         sys.exit(1)
     if proxyGet('nxt_agent1', 'https://kismis.org',
                 "I am Nextensio agent nxt_kismis_" + agent1) != True:
-        print("agent1 kismis fail")
+        print("agent1 kismis_%s fail" % agent1)
         sys.exit(1)
     if proxyGet('nxt_agent2', 'https://kismis.org',
                 "I am Nextensio agent nxt_kismis_" + agent2) != True:
-        print("agent2 kismis fail")
+        print("agent2 kismis_%s fail" % agent2)
         sys.exit(1)
 
 # Ensure public access fails
@@ -453,16 +405,16 @@ def proxyGet(agent, url, expected):
 # and and add the right route version increments whenever we change routes
 
 
-def basicAccessSanity(devices):
+def basicAccessSanity(specs, devices):
     increments = {'user': 0, 'bundle': 0, 'route': 0, 'policy': 0}
     logger.info('STEP1')
-    versions = getAllOpaVersions(devices, {}, increments)
+    versions = getAllOpaVersions(devices, specs, {}, increments)
     config_policy()
     config_routes('v1', 'v2')
     config_user_attr(50, 50)
     config_default_bundle_attr(['ABU,BBU'], ['engineering', 'sales'])
     increments = {'user': 2, 'bundle': 1, 'route': 1, 'policy': 1}
-    versions = getAllOpaVersions(devices, versions, increments)
+    versions = getAllOpaVersions(devices, specs, versions['ref'], increments)
     # Test public and private access via default routing setup
     publicAndPvtPass("ONE", "TWO")
 
@@ -470,35 +422,35 @@ def basicAccessSanity(devices):
     # Switch routes and ensure private route http get has switched
     config_routes('v2', 'v1')
     increments = {'user': 0, 'bundle': 0, 'route': 1, 'policy': 0}
-    versions = getAllOpaVersions(devices, versions, increments)
+    versions = getAllOpaVersions(devices, specs, versions['ref'], increments)
     publicAndPvtPass("TWO", "ONE")
 
     logger.info('STEP3')
     # Reduce the level of the user and ensure user cant access public
     config_user_attr(5, 5)
     increments = {'user': 2, 'bundle': 0, 'route': 0, 'policy': 0}
-    versions = getAllOpaVersions(devices, versions, increments)
+    versions = getAllOpaVersions(devices, specs, versions['ref'], increments)
     publicFail()
 
     logger.info('STEP4')
     # Increase the level of the user and ensure user can again access public
     config_user_attr(50, 50)
     increments = {'user': 2, 'bundle': 0, 'route': 0, 'policy': 0}
-    versions = getAllOpaVersions(devices, versions, increments)
+    versions = getAllOpaVersions(devices, specs, versions['ref'], increments)
     publicAndPvtPass("TWO", "ONE")
 
     logger.info('STEP5')
     # Change the teams of the bundle and ensure that user cant access default internet
     config_default_bundle_attr(['abcd,efgh'], ['abcd', 'efgh'])
     increments = {'user': 0, 'bundle': 1, 'route': 0, 'policy': 0}
-    versions = getAllOpaVersions(devices, versions, increments)
+    versions = getAllOpaVersions(devices, specs, versions['ref'], increments)
     publicFail()
 
     logger.info('STEP6')
     # Restore the bundle attributes and ensure default internet works again
     config_default_bundle_attr(['ABU,BBU'], ['engineering', 'sales'])
     increments = {'user': 0, 'bundle': 1, 'route': 0, 'policy': 0}
-    versions = getAllOpaVersions(devices, versions, increments)
+    versions = getAllOpaVersions(devices, specs, versions['ref'], increments)
     publicAndPvtPass("TWO", "ONE")
 
 
@@ -536,8 +488,6 @@ class CommonSetup(aetest.CommonSetup):
     def parseTestbed(self, testbed):
         global clusters
         global agents
-        global numApods
-        global numCpods
         for d in testbed.devices:
             device = testbed.devices[d]
             if device.type == 'docker':
@@ -547,14 +497,10 @@ class CommonSetup(aetest.CommonSetup):
                 if m:
                     if m[1] not in clusters:
                         clusters.append(m[1])
-                    if int(m[2]) > numApods[m[1]]:
-                        numApods[m[1]] = int(m[2])
                 m = re.search(r'([a-zA-Z]+)_cpod([1-9]+)', d)
                 if m:
                     if m[1] not in clusters:
                         clusters.append(m[1])
-                    if int(m[2]) > numCpods[m[1]]:
-                        numCpods[m[1]] = int(m[2])
 
     @ aetest.subsection
     def verifyTestbed(self,
@@ -619,25 +565,60 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
     @ aetest.setup
     def setup(self, testbed):
         specs = [
-            {'name': USER1, 'agent': True,
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod1",
                 'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
-            {'name': USER2, 'agent': True,
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
                 'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False,
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR1, 'agent': False,
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False,
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
-        checkConsulDnsAndKV(specs, testbed.devices)
+        checkConsulDns(specs, testbed.devices)
 
     @ aetest.test
     def basicConnectivity(self, testbed, **kwargs):
-        basicAccessSanity(testbed.devices)
+        specs = [
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod1",
+                'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
+                'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
+        ]
+        basicAccessSanity(specs, testbed.devices)
+
+    @ aetest.test
+    def basicConnectivity(self, testbed, **kwargs):
+        '''Previous test had all cpods in GW2CLUSTER. Before running through all test cases,
+        first just run through one test with all cpods in GW1CLUSTER as well. 
+        '''
+        specs = [
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod1",
+                'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
+                'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3",
+             'service': 'nextensio-default-internet', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW1CLUSTER+"_cpod1",
+             'service': 'v1.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2",
+             'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR2POD}
+        ]
+        placeAndVerifyAgents(specs)
+        resetAgents(testbed.devices)
+        checkOnboarding(specs)
+        checkConsulDns(specs, testbed.devices)
+        basicAccessSanity(specs, testbed.devices)
 
     @ aetest.test
     def dynamicSwitchPodsWithinSameClusters(self, testbed, **kwargs):
@@ -647,40 +628,40 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
         '''
         # Switch agents to a different set of pods in same clusters
         specs = [
-            {'name': USER1, 'agent': True,
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': USER2, 'agent': True,
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod1",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
-            {'name': CNCTR3, 'agent': False,
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR1, 'agent': False,
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR2, 'agent': False,
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
-        checkConsulDnsAndKV(specs, testbed.devices)
-        basicAccessSanity(testbed.devices)
+        checkConsulDns(specs, testbed.devices)
+        basicAccessSanity(specs, testbed.devices)
         # And now go back to the original configuration of this test case
         specs = [
-            {'name': USER1, 'agent': True,
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod1",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
-            {'name': USER2, 'agent': True,
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False,
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR1, 'agent': False,
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False,
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
-        checkConsulDnsAndKV(specs, testbed.devices)
-        basicAccessSanity(testbed.devices)
+        checkConsulDns(specs, testbed.devices)
+        basicAccessSanity(specs, testbed.devices)
 
     @ aetest.cleanup
     def cleanup(self):
@@ -696,25 +677,37 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
     @ aetest.setup
     def setup(self, testbed):
         specs = [
-            {'name': USER1, 'agent': True,
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod1",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
-            {'name': USER2, 'agent': True,
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False,
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR1, 'agent': False,
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False,
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
-        checkConsulDnsAndKV(specs, testbed.devices)
+        checkConsulDns(specs, testbed.devices)
 
     @ aetest.test
     def basicConnectivity(self, testbed, **kwargs):
-        basicAccessSanity(testbed.devices)
+        specs = [
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod1",
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
+        ]
+        basicAccessSanity(specs, testbed.devices)
 
     @ aetest.test
     def dynamicSwitchApodsCpodsCrossClusterCase1(self, testbed, **kwargs):
@@ -724,40 +717,40 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
         '''
         # Mix up agents and connectors to a different set of pods across clusters
         specs = [
-            {'name': USER1, 'agent': True,
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': USER2, 'agent': True,
+            {'name': USER2, 'agent': True, 'device': GW2CLUSTER+"_apod1",
              'service': '', 'cluster': GW2CLUSTER, 'pod': 1},
-            {'name': CNCTR3, 'agent': False,
+            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3",
              'service': 'nextensio-default-internet', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR1, 'agent': False,
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR2, 'agent': False,
+            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
-        checkConsulDnsAndKV(specs, testbed.devices)
-        basicAccessSanity(testbed.devices)
+        checkConsulDns(specs, testbed.devices)
+        basicAccessSanity(specs, testbed.devices)
         # And now go back to the original configuration of this test case
         specs = [
-            {'name': USER1, 'agent': True,
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod1",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
-            {'name': USER2, 'agent': True,
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False,
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR1, 'agent': False,
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False,
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
-        checkConsulDnsAndKV(specs, testbed.devices)
-        basicAccessSanity(testbed.devices)
+        checkConsulDns(specs, testbed.devices)
+        basicAccessSanity(specs, testbed.devices)
 
     @ aetest.test
     def dynamicSwitchApodsCpodsCrossClusterCase2(self, testbed, **kwargs):
@@ -768,40 +761,41 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
         '''
         # Mix up agents and pods again
         specs = [
-            {'name': USER1, 'agent': True,
+            {'name': USER1, 'agent': True, 'device': GW2CLUSTER+"_apod1",
              'service': '', 'cluster': GW2CLUSTER, 'pod': 1},
-            {'name': USER2, 'agent': True,
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod1",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
-            {'name': CNCTR3, 'agent': False,
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR1, 'agent': False,
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR2, 'agent': False,
+            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
-        checkConsulDnsAndKV(specs, testbed.devices)
-        basicAccessSanity(testbed.devices)
+        checkConsulDns(specs, testbed.devices)
+        basicAccessSanity(specs, testbed.devices)
+
         # And now go back to original configuration of this test case
         specs = [
-            {'name': USER1, 'agent': True,
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod1",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
-            {'name': USER2, 'agent': True,
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False,
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR1, 'agent': False,
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False,
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
-        checkConsulDnsAndKV(specs, testbed.devices)
-        basicAccessSanity(testbed.devices)
+        checkConsulDns(specs, testbed.devices)
+        basicAccessSanity(specs, testbed.devices)
 
     @ aetest.cleanup
     def cleanup(self):
@@ -817,25 +811,37 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
     @ aetest.setup
     def setup(self, testbed):
         specs = [
-            {'name': USER1, 'agent': True,
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod1",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
-            {'name': USER2, 'agent': True,
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod1",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
-            {'name': CNCTR3, 'agent': False,
+            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3",
              'service': 'nextensio-default-internet', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR1, 'agent': False,
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False,
+            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
-        checkConsulDnsAndKV(specs, testbed.devices)
+        checkConsulDns(specs, testbed.devices)
 
     @ aetest.test
     def basicConnectivity(self, testbed, **kwargs):
-        basicAccessSanity(testbed.devices)
+        specs = [
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod1",
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod1",
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3",
+             'service': 'nextensio-default-internet', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2",
+             'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD}
+        ]
+        basicAccessSanity(specs, testbed.devices)
 
     @ aetest.test
     def dynamicSwitchMixedClustersCase1(self, testbed, **kwargs):
@@ -843,25 +849,22 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
         and kismis.v2 mixed up in different pods in different clusters.
         '''
         specs = [
-            {'name': USER1, 'agent': True,
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': USER2, 'agent': True,
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False,
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR1, 'agent': False,
+            {'name': CNCTR1, 'agent': False, 'device': GW1CLUSTER+"_cpod1",
              'service': 'v1.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR2, 'agent': False,
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
-        checkConsulDnsAndKV(specs, testbed.devices)
-
-    @ aetest.test
-    def basicConnectivity(self, testbed, **kwargs):
-        basicAccessSanity(testbed.devices)
+        checkConsulDns(specs, testbed.devices)
+        basicAccessSanity(specs, testbed.devices)
 
     @ aetest.test
     def dynamicSwitchMixedClustersCase2(self, testbed, **kwargs):
@@ -869,25 +872,22 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
         pods in the same cluster (gatewaytestc)
         '''
         specs = [
-            {'name': USER1, 'agent': True,
+            {'name': USER1, 'agent': True, 'device': GW2CLUSTER+"_apod1",
              'service': '', 'cluster': GW2CLUSTER, 'pod': 1},
-            {'name': USER1, 'agent': True,
+            {'name': USER1, 'agent': True, 'device': GW2CLUSTER+"_apod1",
              'service': '', 'cluster': GW2CLUSTER, 'pod': 1},
-            {'name': CNCTR3, 'agent': False,
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR1, 'agent': False,
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR2, 'agent': False,
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
-        checkConsulDnsAndKV(specs, testbed.devices)
-
-    @ aetest.test
-    def basicConnectivity(self, testbed, **kwargs):
-        basicAccessSanity(testbed.devices)
+        checkConsulDns(specs, testbed.devices)
+        basicAccessSanity(specs, testbed.devices)
 
 class AgentConnectorSquareOne(aetest.Testcase):
     '''Agents and connectors back to their very first placement.
@@ -895,25 +895,22 @@ class AgentConnectorSquareOne(aetest.Testcase):
     @ aetest.setup
     def setup(self, testbed):
         specs = [
-            {'name': USER1, 'agent': True,
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod1",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
-            {'name': USER2, 'agent': True,
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False,
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR1, 'agent': False,
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False,
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
         ]
         placeAndVerifyAgents(specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
-        checkConsulDnsAndKV(specs, testbed.devices)
-
-    @ aetest.test
-    def basicConnectivity(self, testbed, **kwargs):
-        basicAccessSanity(testbed.devices)
+        checkConsulDns(specs, testbed.devices)
+        basicAccessSanity(specs, testbed.devices)
 
 
 if __name__ == '__main__':

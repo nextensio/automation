@@ -341,6 +341,8 @@ function create_cluster {
     # Install istio. This is nothing but the demo.yaml in the istio bundle, with addonComponents
     # prometheus, kiali, grafana, tracing all set to false. 
     $istioctl manifest apply -f ./istio.yaml
+    $kubectl create namespace nextensio
+    $kubectl apply -f ./flow_control.yaml
 
     # Install metallb. metallb exposes services inside the cluster via external IP addresses
     $kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml

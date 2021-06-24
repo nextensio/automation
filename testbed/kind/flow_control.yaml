@@ -1,10 +1,21 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: envoy-filter-for-nextensio-global
+  name: nextensio-limit-buffering
   namespace: istio-system
 spec:
   configPatches:
+    - applyTo: CLUSTER
+      match:
+        cluster:
+          portNumber: 80
+      patch:
+        operation: MERGE
+        value:
+          http2_protocol_options:
+            initial_stream_window_size: 65536  
+            initial_connection_window_size: 65536 
+          per_connection_buffer_limit_bytes: 65536
     - applyTo: CLUSTER
       patch:
         operation: MERGE
@@ -15,14 +26,14 @@ spec:
         listener:
           filterChain:
             filter:
-              name: "envoy.http_connection_manager"
+              name: "envoy.filters.network.http_connection_manager"
       patch:
         operation: MERGE
         value:
           typed_config:
             "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager"
             http2_protocol_options:
-              max_concurrent_streams: 100
+              max_concurrent_streams: 100000
               initial_stream_window_size: 65536
               initial_connection_window_size: 65536
     - applyTo: LISTENER
@@ -34,10 +45,21 @@ spec:
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: envoy-filter-for-nextensio-tenant
+  name: nextensio-limit-buffering
   namespace: nextensio
 spec:
   configPatches:
+    - applyTo: CLUSTER
+      match:
+        cluster:
+          portNumber: 80
+      patch:
+        operation: MERGE
+        value:
+          http2_protocol_options:
+            initial_stream_window_size: 65536  
+            initial_connection_window_size: 65536 
+          per_connection_buffer_limit_bytes: 65536
     - applyTo: CLUSTER
       patch:
         operation: MERGE
@@ -48,14 +70,14 @@ spec:
         listener:
           filterChain:
             filter:
-              name: "envoy.http_connection_manager"
+              name: "envoy.filters.network.http_connection_manager"
       patch:
         operation: MERGE
         value:
           typed_config:
             "@type": "type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager"
             http2_protocol_options:
-              max_concurrent_streams: 100
+              max_concurrent_streams: 100000
               initial_stream_window_size: 65536
               initial_connection_window_size: 65536
     - applyTo: LISTENER
@@ -63,3 +85,4 @@ spec:
         operation: MERGE
         value:
           per_connection_buffer_limit_bytes: 65536
+

@@ -10,6 +10,14 @@ url = "https://" + sys.argv[1] + ":8080"
 token = ""
 rootca = ""
 cert = ""
+GW1 = "gatewaytesta.nextensio.net"
+GW2 = "gatewaytestc.nextensio.net"
+TENANT = "nextensio"
+USER1 = "test1@nextensio.net"
+USER2 = "test2@nextensio.net"
+CNCTR1 = "v1.kismis@nextensio.net"
+CNCTR2 = "v2.kismis@nextensio.net"
+CNCTR3 = "default@nextensio.net"
 
 def runCmd(cmd):
     try:
@@ -34,8 +42,8 @@ if __name__ == '__main__':
         print('Controller not up, waiting ...')
         time.sleep(5)
 
-    gw1json = {"name":"gatewaytesta.nextensio.net"}
-    gw2json = {"name":"gatewaytestc.nextensio.net"}
+    gw1json = {"name":GW1}
+    gw2json = {"name":GW2}
     
     ok = create_gateway(url, gw1json, token)
     while not ok:
@@ -49,7 +57,7 @@ if __name__ == '__main__':
         time.sleep(1)
         ok = create_gateway(url, gw2json, token)
 
-    tenantjson = {"_id":"nextensio",
+    tenantjson = {"_id":TENANT,
                   "image":"registry.gitlab.com/nextensio/cluster/minion:latest",
                   }
     
@@ -68,11 +76,12 @@ if __name__ == '__main__':
     # The test setup is assumed to be created with just one tenant, if we need more we just need
     # to search for the right tenant name or something inside the returned list of tenants
     tenant = tenants[0]['_id']
+    if tenant != TENANT:
+        print('Tenant mismatch after readback from DB - %s != %s' % (tenant, TENANT))
+        exit(1)
 
-    tenantclusterjson1 = {"tenant":tenant, "gateway":"gatewaytesta.nextensio.net", "image":"",
-                          "apodsets":2, "apodrepl":1, "cpods":2}
-    tenantclusterjson2 = {"tenant":tenant, "gateway":"gatewaytestc.nextensio.net", "image":"",
-                          "apodsets":1, "apodrepl":1, "cpods":3}
+    tenantclusterjson1 = {"gateway":GW1, "image":"", "apodsets":2, "apodrepl":1}
+    tenantclusterjson2 = {"gateway":GW2, "image":"", "apodsets":1, "apodrepl":1}
 
     ok = create_tenant_cluster(url, tenant, tenantclusterjson1, token)
     while not ok:
@@ -86,17 +95,15 @@ if __name__ == '__main__':
         time.sleep(1)
         ok = create_tenant_cluster(url, tenant, tenantclusterjson2, token)
 
-    user1json = {"uid":"test1@nextensio.net", "name":"User1", "email":"test1@nextensio.net",
-                 "services":[], "gateway":"gatewaytesta.nextensio.net",
-                 "pod":1}
-    user2json = {"uid":"test2@nextensio.net", "name":"User2", "email":"test2@nextensio.net",
-                 "services":[], "gateway":"gatewaytesta.nextensio.net",
-                 "pod":2}
+    user1json = {"uid":USER1, "name":"User1", "email":USER1,
+                 "services":[], "gateway":GW1, "pod":1}
+    user2json = {"uid":USER2, "name":"User2", "email":USER2,
+                 "services":[], "gateway":GW1, "pod":2}
 
-    user1attrjson = {"uid":"test1@nextensio.net", "category":"employee",
+    user1attrjson = {"uid":USER1, "category":"employee",
                      "type":"IC", "level":50, "dept":["ABU","BBU"], "team":["engineering"],
                      "location": "California", "ostype": "Linux", "osver": 20.04 }
-    user2attrjson = {"uid":"test2@nextensio.net", "category":"employee",
+    user2attrjson = {"uid":USER2, "category":"employee",
                      "type":"IC", "level":50, "dept":["ABU","BBU"], "team":["sales"],
                      "location": "Massachusets", "ostype": "Windows", "osver": 10.12 }
     
@@ -121,18 +128,18 @@ if __name__ == '__main__':
         ]
 
 
-    bundle1json = {"bid":"default@nextensio.net", "name":"Default Internet",
-                   "services":["nextensio-default-internet"], "gateway":"gatewaytestc.nextensio.net", "cpodrepl":1}
-    bundle2json = {"bid":"v1.kismis@nextensio.net", "name":"Kismis ONE",
-                   "services":["v1.kismis.org"], "gateway":"gatewaytestc.nextensio.net", "cpodrepl":1}
-    bundle3json = {"bid":"v2.kismis@nextensio.net", "name":"Kismis TWO",
-                   "services":["v2.kismis.org"], "gateway":"gatewaytestc.nextensio.net", "cpodrepl":1}
+    bundle1json = {"bid":CNCTR3, "name":"Default Internet",
+                   "services":["nextensio-default-internet"], "gateway":GW2, "cpodrepl":1}
+    bundle2json = {"bid":CNCTR1, "name":"Kismis ONE",
+                   "services":["v1.kismis.org"], "gateway":GW2, "cpodrepl":1}
+    bundle3json = {"bid":CNCTR2, "name":"Kismis TWO",
+                   "services":["v2.kismis.org"], "gateway":GW2, "cpodrepl":1}
 
-    bundle1attrjson = {"bid":"default@nextensio.net", "dept":["ABU","BBU"],
+    bundle1attrjson = {"bid":CNCTR3, "dept":["ABU","BBU"],
                        "team":["engineering","sales"], "IC":1, "manager":1, "nonemployee":"allow"}
-    bundle2attrjson = {"bid":"v1.kismis@nextensio.net", "dept":["ABU","BBU"],
+    bundle2attrjson = {"bid":CNCTR1, "dept":["ABU","BBU"],
                        "team":["engineering","sales"], "IC":1, "manager":1, "nonemployee":"allow"}
-    bundle3attrjson = {"bid":"v2.kismis@nextensio.net", "dept":["ABU","BBU"],
+    bundle3attrjson = {"bid":CNCTR2, "dept":["ABU","BBU"],
                        "team":["engineering","sales"], "IC":1, "manager":1, "nonemployee":"allow"}
     
 
@@ -153,10 +160,12 @@ if __name__ == '__main__':
     host1attrjson = { "host": "kismis.org",
                       "routeattrs": [
 		      {"tag": "v2", "team": ["engineering"], "dept": ["ABU","BBU"],
-		       "category": ["employee","nonemployee"], "type": ["IC","manager"], "IClvl": 1, "mlvl": 1
+		       "category": ["employee","nonemployee"], "type": ["IC","manager"],
+                       "IClvl": 1, "mlvl": 1
                       },
 		      {"tag": "v1", "team": ["sales"], "dept": ["BBU","ABU"],
-		        "category": ["employee"], "type": ["manager","IC"], "IClvl": 4, "mlvl": 4
+		       "category": ["employee"], "type": ["manager","IC"],
+                       "IClvl": 4, "mlvl": 4
 		      } ]
 		    }
 

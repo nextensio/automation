@@ -116,26 +116,27 @@ def istioChecks(cluster, useragent, podnum, xfor, xconnect):
         time.sleep(1)
         podready = podHasService(cluster, podname, xfor, xconnect)
 
-# First make sure the Connector is connected to the right pod, after that do an
-# nslookup inside consul server pod to ensure that all the services of our
-# interest are reachable. The names will be reachable only if the connectors
-# corresponding to those services have connected to the cluster and advertised
-# their services via Hello message. So this is the best kind of check we have to
-# ensure that the connectors are "ready"
-def checkConsulDnsEntry(devices, cluster, svc):
+# The dig lookup ensures that the service is reachable, and we also check
+# the TXT records from the dig result to ensure that the service is in the
+# proper pod that we expect
+def checkConsulDnsEntry(devices, cluster, svc, pod):
     device = clusterPod2Device(cluster, "consul")
-    service = nameToConsul(svc, tenant)
-    addr = devices[device].shell.execute('nslookup ' + service)
-    pat = re.compile("Name:.*%s" % nameToService(svc))
-    m = re.search(pat, addr)
-    while not m:
-        logger.info('Cluster %s, waiting for consul entry %s' %
-                    (cluster, service))
-        time.sleep(1)
-        addr = devices[device].shell.execute('nslookup ' + service)
-        m = re.search(pat, addr)
-    print("Found Consul dns entry for %s in cluster %s" % (svc, cluster))
+    service = nameToService(svc)
 
+    while True:
+        value = devices[device].shell.execute('dig ' + service + '-nextensio' + '.query.consul SRV').strip()
+        lines = value.splitlines()
+        cur = "None"
+        for l in lines:
+            m = re.search(r'\"NextensioPod:(.+)\"', l)
+            if m != None and m[1] == pod:
+                print("Found svc %s pod value %s in cluster %s" % (svc, m[0], cluster))
+                return
+            if m != None:
+                cur = m[1]
+        logger.info('Cluster %s, waiting for consul kv %s in %s, current %s' %
+                    (cluster, service, pod, cur))
+        time.sleep(1)
 
 def checkConsulDns(specs, devices):
     services = []
@@ -151,7 +152,7 @@ def checkConsulDns(specs, devices):
     for cluster in cls:
         for service in services:
             if cluster == service['cluster']:
-                checkConsulDnsEntry(devices, cluster, service['name'])
+                checkConsulDnsEntry(devices, cluster, service['name'], service['pod'])
 
 def checkOnboarding(specs):
     for spec in specs:

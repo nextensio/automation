@@ -3,7 +3,6 @@ kind: IstioOperator
 spec:
   meshConfig:
     accessLogFile: /dev/stdout
-    disablePolicyChecks: false
   components:
     egressGateways:
     - name: istio-egressgateway
@@ -45,43 +44,6 @@ spec:
               targetPort: 15443
               name: tls
 
-    policy:
-      enabled: false
-      k8s:
-        env:
-          - name: POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                apiVersion: v1
-                fieldPath: metadata.namespace
-          - name: GOMAXPROCS
-            value: "6"
-        hpaSpec:
-          maxReplicas: 5
-          minReplicas: 1
-          scaleTargetRef:
-            apiVersion: apps/v1
-            kind: Deployment
-            name: istio-telemetry
-          metrics:
-            - type: Resource
-              resource:
-                name: cpu
-                targetAverageUtilization: 80
-        replicaCount: 1       
-        resources:
-          requests:
-            cpu: 10m
-            memory: 100Mi
-
-    telemetry:
-      enabled: false
-      k8s:
-        resources:
-          requests:
-            cpu: 50m
-            memory: 100Mi
-
     pilot:
       k8s:
         env:
@@ -106,16 +68,6 @@ spec:
             cpu: 10m
             memory: 100Mi
 
-  addonComponents:
-    kiali:
-      enabled: true 
-    grafana:
-      enabled: false
-    tracing:
-      enabled: true 
-    prometheus:
-      enabled: true 
-
   values:
     global:
       proxy:
@@ -129,14 +81,9 @@ spec:
 
     telemetry:
       enabled: true
-      v1:
-        enabled: false
       v2:
         enabled: true
         metadataExchange: 
-          wasmEnabled: true 
-        prometheus:
-          enabled: true
           wasmEnabled: true 
         stackdriver:
           enabled: false
@@ -145,87 +92,8 @@ spec:
           topology: false
           configOverride: {}
 
-    mixer:
-      adapters:
-        useAdapterCRDs: false
-        kubernetesenv:
-          enabled: true
-        prometheus:
-          enabled: true
-          metricsExpiryDuration: 10m
-        stackdriver:
-          enabled: false
-        stdio:
-          enabled: true
-          outputAsJson: false
-      policy:
-        autoscaleEnabled: false
-      telemetry:
-        autoscaleEnabled: false
-
     gateways:
       istio-egressgateway:
         autoscaleEnabled: false
       istio-ingressgateway:
         autoscaleEnabled: false
-        
-    prometheus:
-      hub: docker.io/prom
-      tag: v2.15.1
-      retention: 6h
-      scrapeInterval: 15s
-      contextPath: /prometheus
-      security:
-        enabled: true
-      nodeSelector: {}
-      tolerations: []
-      podAntiAffinityLabelSelector: []
-      podAntiAffinityTermLabelSelector: []
-      provisionPrometheusCert: true
-
-    tracing:
-      provider: jaeger
-      nodeSelector: {}
-      podAntiAffinityLabelSelector: []
-      podAntiAffinityTermLabelSelector: []
-      jaeger:
-        hub: docker.io/jaegertracing
-        tag: "1.16"
-        memory:
-          max_traces: 50000
-        spanStorageType: badger
-        persist: false
-        storageClassName: ""
-        accessMode: ReadWriteMany
-      service:
-        annotations: {}
-        name: http-query
-        type: ClusterIP
-        externalPort: 9411
-   
-    kiali:
-      hub: quay.io/kiali
-      tag: v1.18
-      contextPath: /kiali
-      nodeSelector: {}
-      podAntiAffinityLabelSelector: []
-      podAntiAffinityTermLabelSelector: []
-      dashboard:
-        secretName: kiali
-        usernameKey: username
-        passphraseKey: passphrase
-        viewOnlyMode: false
-        grafanaURL:
-        grafanaInClusterURL: http://grafana:3000
-        jaegerURL:
-        jaegerInClusterURL: http://tracing/jaeger
-        auth:
-          strategy: login
-      prometheusNamespace:
-      createDemoSecret: true 
-      security:
-        enabled: false
-        cert_file: /kiali-cert/cert-chain.pem
-        private_key_file: /kiali-cert/key.pem
-      service:
-        annotations: {}

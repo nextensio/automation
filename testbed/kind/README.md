@@ -58,10 +58,6 @@ and clustermgr/mel - all stored in gitlab. Today they are manually built and kep
 that with gitlab CI/CD. So you need to login to the image repo to be able to allow the scripts to download the 
 images, this is a one time activity
 
-* install kind (https://kind.sigs.k8s.io/docs/user/quick-start/) - the kind command needs to be in $PATH
-
-Thats about it, you are ready to create the full nextensio setup!
-
 ### Creating the setup
 
 Get the nextensio clustermgr repository, go to test/kind folder and run "./create.sh" - give it good 15 minutes, 

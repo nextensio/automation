@@ -26,8 +26,10 @@ spec:
             value: "REPLACE_CLUSTER"
           - name: MY_YAML
             value: "/go/yaml/"
-          - name: MY_WAN_IP
-            value: "REPLACE_SELF_NODE_IP"
+          - name: CONSUL_WAN_IP
+            value: "REPLACE_CONSUL_WAN_IP"
+          - name: CONSUL_STORAGE_CLASS
+            value: "REPLACE_CONSUL_STORAGE"
           - name: MY_MONGO_URI
             value: "mongodb://REPLACE_CONTROLLER_IP:27017,REPLACE_CONTROLLER_IP:27018,REPLACE_CONTROLLER_IP:27019/"
 

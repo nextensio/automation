@@ -339,8 +339,9 @@ function bootstrap_cluster {
     tmpf=$tmpdir/$cluster-mel.yaml
     cp mel.yaml $tmpf
     sed -i "s/REPLACE_CLUSTER/$cluster/g" $tmpf
-    sed -i "s/REPLACE_SELF_NODE_IP/$my_ip/g" $tmpf
     sed -i "s/REPLACE_CONTROLLER_IP/$ctrl_ip/g" $tmpf
+    sed -i "s/REPLACE_CONSUL_WAN_IP/$my_ip/g" $tmpf
+    sed -i "s/REPLACE_CONSUL_STORAGE/standard/g" $tmpf
     $kubectl apply -f $tmpf
 
     # Install loadbalancer to attract traffic to istio ingress gateway via external IP (docker contaier IP)

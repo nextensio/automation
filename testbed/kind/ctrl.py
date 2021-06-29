@@ -27,6 +27,13 @@ def runCmd(cmd):
         pass
         return ""
 
+def create_attrset_many(url, tenant, attrsetjson, token):
+    for a in attrsetjson:
+        ok = create_attrset(url, tenant, a, token)
+        if not ok:
+            return ok
+    return True
+    
 if __name__ == '__main__':
     token = runCmd("go run ./pkce.go https://dev-635657.okta.com").strip()
     if token == "":
@@ -109,22 +116,14 @@ if __name__ == '__main__':
     
 
     userattrsetjson = [
-        {"name": "category", "appliesTo": "Users", "type": "String", "isArray": False,
-         "rangeCheck": "1-16"},
-        {"name": "type", "appliesTo": "Users", "type": "String", "isArray": False,
-         "rangeCheck": "1-16"},
-        {"name": "level", "appliesTo": "Users", "type": "Number", "numType": "int",
-         "isArray": False, "rangeCheck": "1-20"},
-        {"name": "dept", "appliesTo": "Users", "type": "String", "isArray": True,
-         "rangeCheck": "1-16"},
-        {"name": "team", "appliesTo": "Users", "type": "String", "isArray": True,
-         "rangeCheck": "1-16"},
-        {"name": "location", "appliesTo": "Users", "type": "String", "isArray": False,
-         "rangeCheck": "1-16"},
-        {"name": "ostype", "appliesTo": "Users", "type": "String", "isArray": False,
-         "rangeCheck": "1-16"},
-        {"name": "osver", "appliesTo": "Users", "type": "Number", "numType": "float",
-         "isArray": False, "rangeCheck": "1.0-40.0"}
+        {"name": "category", "appliesTo": "Users", "type": "String"},
+        {"name": "type", "appliesTo": "Users", "type": "String"},
+        {"name": "level", "appliesTo": "Users", "type": "Number"},
+        {"name": "dept", "appliesTo": "Users", "type": "String"},
+        {"name": "team", "appliesTo": "Users", "type": "String"},
+        {"name": "location", "appliesTo": "Users", "type": "String"},
+        {"name": "ostype", "appliesTo": "Users", "type": "String"},
+        {"name": "osver", "appliesTo": "Users", "type": "Number"},
         ]
 
 
@@ -144,16 +143,11 @@ if __name__ == '__main__':
     
 
     bundleattrsetjson = [
-        {"name": "dept", "appliesTo": "Bundles", "type": "String", "isArray": True,
-         "rangeCheck": "1-16"},
-        {"name": "team", "appliesTo": "Bundles", "type": "String", "isArray": True,
-         "rangeCheck": "1-16"},
-        {"name": "IC", "appliesTo": "Bundles", "type": "Number", "numType": "int",
-         "isArray": False, "rangeCheck": "1-20"},
-        {"name": "manager", "appliesTo": "Bundles", "type": "Number", "numType": "int",
-         "isArray": False, "rangeCheck": "1-20"},
-        {"name": "nonemployee", "appliesTo": "Bundles", "type": "String", "isArray": False,
-         "rangeCheck": "1-8"}
+        {"name": "dept", "appliesTo": "Bundles", "type": "String"},
+        {"name": "team", "appliesTo": "Bundles", "type": "String"},
+        {"name": "IC", "appliesTo": "Bundles", "type": "Number"},
+        {"name": "manager", "appliesTo": "Bundles", "type": "Number"},
+        {"name": "nonemployee", "appliesTo": "Bundles", "type": "String"},
         ]
 
 
@@ -174,39 +168,33 @@ if __name__ == '__main__':
             }
 
     hostattrsetjson = [
-        {"name": "dept", "appliesTo": "Hosts", "type": "String", "isArray": True,
-         "rangeCheck": "1-16"},
-        {"name": "team", "appliesTo": "Hosts", "type": "String", "isArray": True,
-         "rangeCheck": "1-16"},
-        {"name": "IClvl", "appliesTo": "Hosts", "type": "Number", "numType": "int",
-         "isArray": False, "rangeCheck": "1-20"},
-        {"name": "mlvl", "appliesTo": "Hosts", "type": "Number", "numType": "int",
-         "isArray": False, "rangeCheck": "1-20"},
-        {"name": "category", "appliesTo": "Hosts", "type": "String", "isArray": True,
-         "rangeCheck": "1-16"},
-        {"name": "type", "appliesTo": "Hosts", "type": "String", "isArray": False,
-         "rangeCheck": "1-16"}
+        {"name": "dept", "appliesTo": "Hosts", "type": "String"},
+        {"name": "team", "appliesTo": "Hosts", "type": "String"},
+        {"name": "IClvl", "appliesTo": "Hosts", "type": "Number"},
+        {"name": "mlvl", "appliesTo": "Hosts", "type": "Number"},
+        {"name": "category", "appliesTo": "Hosts", "type": "String"},
+        {"name": "type", "appliesTo": "Hosts", "type": "String"}
         ]
 
 
     # Prime some user, bundle and host attr sets for the UI attribute editor
-    ok = create_attrset(url, tenant, userattrsetjson, token)
+    ok = create_attrset_many(url, tenant, userattrsetjson, token)
     while not ok:
         print('User attrset creation failed, retrying ...')
         time.sleep(1)
-        ok = create_attrset(url, tenant, userattrsetjson, token)
+        ok = create_attrset_many(url, tenant, userattrsetjson, token)
 
-    ok = create_attrset(url, tenant, bundleattrsetjson, token)
+    ok = create_attrset_many(url, tenant, bundleattrsetjson, token)
     while not ok:
         print('Bundle attrset creation failed, retrying ...')
         time.sleep(1)
-        ok = create_attrset(url, tenant, bundleattrsetjson, token)
+        ok = create_attrset_many(url, tenant, bundleattrsetjson, token)
 
-    ok = create_attrset(url, tenant, hostattrsetjson, token)
+    ok = create_attrset_many(url, tenant, hostattrsetjson, token)
     while not ok:
         print('Host attrset creation failed, retrying ...')
         time.sleep(1)
-        ok = create_attrset(url, tenant, hostattrsetjson, token)
+        ok = create_attrset_many(url, tenant, hostattrsetjson, token)
 
     # User info and user attributes creation
     ok = create_user(url, tenant, user1json, token)

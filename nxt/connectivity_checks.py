@@ -56,16 +56,6 @@ def nameToService(name):
     svc = svc.replace("@", "-")
     return svc
 
-# The consul service names are registered as servicename-domain where domain is the
-# kuberentes domain created for that tenant/customer. We create kubernetes domains
-# using the tenant id of the customer
-
-
-def nameToConsul(name, tenant):
-    svc = nameToService(name)
-    consul = svc + "-" + tenant + '.query.consul'
-    return consul
-
 # We use the clustername-podname as the nomenclature. These names are loaded as
 # environment shell variables from the /tmp/nextensio-kin/environment file, and
 # hence not using dashes in the names (shell vars cant have dashes)
@@ -124,7 +114,7 @@ def checkConsulDnsEntry(devices, cluster, svc, pod):
     service = nameToService(svc)
 
     while True:
-        value = devices[device].shell.execute('dig ' + service + '-nextensio' + '.query.consul SRV').strip()
+        value = devices[device].shell.execute('dig ' + service + '-nxt-' + TENANT + '.query.consul SRV').strip()
         lines = value.splitlines()
         cur = "None"
         for l in lines:
@@ -134,7 +124,7 @@ def checkConsulDnsEntry(devices, cluster, svc, pod):
                 return
             if m != None:
                 cur = m[1]
-        logger.info('Cluster %s, waiting for consul kv %s in %s, current %s' %
+        logger.info('Cluster %s, waiting for consul TXT record %s in pod %s, current %s' %
                     (cluster, service, pod, cur))
         time.sleep(1)
 
@@ -143,7 +133,7 @@ def checkConsulDns(specs, devices):
     cls = []
     for spec in specs:
         if spec['agent'] != True:
-            services.append({'name': 'nextensio-' + spec['name'], 'cluster': spec['cluster'], 'pod': spec['pod']})
+            services.append({'name': TENANT + '-' + spec['name'], 'cluster': spec['cluster'], 'pod': spec['pod']})
             if spec['service'] != '':
                 services.append({'name': spec['service'], 'cluster': spec['cluster'], 'pod': spec['pod']})
             if spec['cluster'] not in cls:
@@ -517,7 +507,7 @@ class CommonSetup(aetest.CommonSetup):
                     namespace='consul-system', container='')
             else:
                 testbed.devices[d].shell.configure(
-                    namespace=tenant, container='minion')
+                    namespace="nxt-"+tenant, container='minion')
 
 
 class CommonCleanup(aetest.CommonCleanup):
@@ -535,22 +525,9 @@ def placeAgent(spec):
         config_bundle(spec['name'], spec['service'], gateway, spec['pod'])
 
 
-#TODO: After we moved around the external-service / egress-gateway rules to be
-#in the default namespace, it stopped displaying the ingress gateway virtualSvc
-#information! Not sure why, its nice to have this back, need to get it working
-#podready = podHasService(cluster, podname, xfor, xconnect)
-def verifyIstio(spec):
-    return
-    for cluster in clusters:
-        istioChecks(cluster, spec['agent'], spec['pod'],
-                    spec['service'], nameToService(spec['name']))
-
-
 def placeAndVerifyAgents(specs):
     for spec in specs:
         placeAgent(spec)
-    for spec in specs:
-        verifyIstio(spec)
 
 # The aetest.setup section in this class is executed BEFORE the aetest.test sections,
 # so this is like a big-test with a setup, and then a set of test cases and then a teardown,

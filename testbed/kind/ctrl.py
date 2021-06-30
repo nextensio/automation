@@ -163,8 +163,14 @@ if __name__ == '__main__':
 		      } ]
 		    }
 
+    # Unused attributes, all attributes have to have some value though
     host2attrjson = { "host": "nextensio-default-internet",
-                      "routeattrs": [{ "tag" : "" }]
+                      "routeattrs": [
+                        {"tag": "", "team": [""], "dept": [""],
+                         "category": [""], "type": [""],
+                         "IClvl": 0, "mlvl": 0
+                        } 
+                      ]
             }
 
     hostattrsetjson = [

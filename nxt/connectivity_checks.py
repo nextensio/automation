@@ -314,9 +314,9 @@ def config_routes(tag1, tag2):
     routejson = { "host": "kismis.org", 
                       "routeattrs": [
 		      {"tag": tag1, "team": ["engineering","sales"], "dept": ["ABU","BBU"],
-                       "category":["employee","nonemployee"], "type":["IC"] },
+                       "category":["employee","nonemployee"], "type":["IC"], "IClvl": 1, "mlvl": 1 },
 		      {"tag": tag2, "team": ["engineering","sales"], "dept": ["ABU","BBU"],
-                       "category":["employee"], "type":["manager"] }
+                       "category":["employee"], "type":["manager"], "IClvl": 1, "mlvl": 1 }
 		      ]
                 }
     ok = create_host_attr(url, tenant, routejson, token)
@@ -330,9 +330,11 @@ def config_user_attr(level1, level2):
     global token
 
     user1attrjson = {"uid":USER1, "category":"employee", "type":"IC", "level":level1,
-                     "dept":["ABU","BBU"], "team":["engineering","sales"] }
+                     "dept":["ABU","BBU"], "team":["engineering","sales"],
+                     "location": "California", "ostype": "Linux", "osver": 20.04 }
     user2attrjson = {"uid":USER2, "category":"employee", "type":"manager", "level":level2,
-                     "dept":["ABU","BBU"], "team":["engineering","sales"] }
+                     "dept":["ABU","BBU"], "team":["engineering","sales"],
+                     "location": "California", "ostype": "Linux", "osver": 20.04 }
     ok = create_user_attr(url, tenant, user1attrjson, token)
     while not ok:
         logger.info('UserAttr test1 config failed, retrying ...')

@@ -356,7 +356,7 @@ def config_bundle(bundle, service, gateway, pod):
 
     bundlenm = 'Bundle %s' % bundle
     bundlejson = {"bid":bundle, "name":bundlenm,
-                   "services":[service], "gateway":gateway, "pod":pod, "cpodrepl": 1}
+                   "services":[service], "gateway":gateway, "pod":pod, "cpodrepl": 2}
     ok = create_bundle(url, tenant, bundlejson, token)
     while not ok:
         logger.info('Bundle %s updation failed, retrying ...' % bundle)

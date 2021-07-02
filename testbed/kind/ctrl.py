@@ -128,11 +128,11 @@ if __name__ == '__main__':
 
 
     bundle1json = {"bid":CNCTR3, "name":"Default Internet",
-                   "services":["nextensio-default-internet"], "gateway":GW2, "cpodrepl":1}
+                   "services":["nextensio-default-internet"], "gateway":GW2, "cpodrepl":2}
     bundle2json = {"bid":CNCTR1, "name":"Kismis ONE",
-                   "services":["v1.kismis.org"], "gateway":GW2, "cpodrepl":1}
+                   "services":["v1.kismis.org"], "gateway":GW2, "cpodrepl":2}
     bundle3json = {"bid":CNCTR2, "name":"Kismis TWO",
-                   "services":["v2.kismis.org"], "gateway":GW2, "cpodrepl":1}
+                   "services":["v2.kismis.org"], "gateway":GW2, "cpodrepl":2}
 
     bundle1attrjson = {"bid":CNCTR3, "dept":["ABU","BBU"],
                        "team":["engineering","sales"], "IC":1, "manager":1, "nonemployee":"allow"}

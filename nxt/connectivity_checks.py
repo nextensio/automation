@@ -517,17 +517,21 @@ class CommonCleanup(aetest.CommonCleanup):
         logger.info('Cleanup done')
 
 
-def placeAgent(spec):
-    gateway = spec['cluster'] + '.nextensio.net'
-    if spec['agent'] == True:
-        config_user(spec['name'], spec['service'], gateway,  spec['pod'])
-    else:
-        config_bundle(spec['name'], spec['service'], gateway, spec['pod'])
-
-
-def placeAndVerifyAgents(specs):
+def placeAndVerifyAgents(devices, specs):
+    users = 0
+    bundles = 0
+    increments = {'user': 0, 'bundle': 0, 'route': 0, 'policy': 0}
+    versions = getAllOpaVersions(devices, specs, {}, increments)
     for spec in specs:
-        placeAgent(spec)
+        gateway = spec['cluster'] + '.nextensio.net'
+        if spec['agent'] == True:
+            users = users + 1
+            config_user(spec['name'], spec['service'], gateway,  spec['pod'])
+        else:
+            bundles = bundles + 1
+            config_bundle(spec['name'], spec['service'], gateway, spec['pod'])
+    increments = {'user': users, 'bundle': bundles, 'route': 0, 'policy': 0}
+    versions = getAllOpaVersions(devices, specs, versions['ref'], increments)
 
 # The aetest.setup section in this class is executed BEFORE the aetest.test sections,
 # so this is like a big-test with a setup, and then a set of test cases and then a teardown,
@@ -556,7 +560,7 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
             {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
         ]
-        placeAndVerifyAgents(specs)
+        placeAndVerifyAgents(testbed.devices, specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
         checkConsulDns(specs, testbed.devices)
@@ -594,7 +598,7 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
             {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR2POD}
         ]
-        placeAndVerifyAgents(specs)
+        placeAndVerifyAgents(testbed.devices, specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
         checkConsulDns(specs, testbed.devices)
@@ -619,7 +623,7 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
             {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD}
         ]
-        placeAndVerifyAgents(specs)
+        placeAndVerifyAgents(testbed.devices, specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
         checkConsulDns(specs, testbed.devices)
@@ -637,7 +641,7 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
             {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
         ]
-        placeAndVerifyAgents(specs)
+        placeAndVerifyAgents(testbed.devices, specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
         checkConsulDns(specs, testbed.devices)
@@ -668,7 +672,7 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
-        placeAndVerifyAgents(specs)
+        placeAndVerifyAgents(testbed.devices, specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
         checkConsulDns(specs, testbed.devices)
@@ -708,7 +712,7 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD}
         ]
-        placeAndVerifyAgents(specs)
+        placeAndVerifyAgents(testbed.devices, specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
         checkConsulDns(specs, testbed.devices)
@@ -726,7 +730,7 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
-        placeAndVerifyAgents(specs)
+        placeAndVerifyAgents(testbed.devices, specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
         checkConsulDns(specs, testbed.devices)
@@ -752,7 +756,7 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD}
         ]
-        placeAndVerifyAgents(specs)
+        placeAndVerifyAgents(testbed.devices, specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
         checkConsulDns(specs, testbed.devices)
@@ -771,7 +775,7 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
-        placeAndVerifyAgents(specs)
+        placeAndVerifyAgents(testbed.devices, specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
         checkConsulDns(specs, testbed.devices)
@@ -802,7 +806,7 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD}
         ]
-        placeAndVerifyAgents(specs)
+        placeAndVerifyAgents(testbed.devices, specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
         checkConsulDns(specs, testbed.devices)
@@ -840,7 +844,7 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD}
         ]
-        placeAndVerifyAgents(specs)
+        placeAndVerifyAgents(testbed.devices, specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
         checkConsulDns(specs, testbed.devices)
@@ -863,7 +867,7 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
             {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
-        placeAndVerifyAgents(specs)
+        placeAndVerifyAgents(testbed.devices, specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
         checkConsulDns(specs, testbed.devices)
@@ -886,7 +890,7 @@ class AgentConnectorSquareOne(aetest.Testcase):
             {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
         ]
-        placeAndVerifyAgents(specs)
+        placeAndVerifyAgents(testbed.devices, specs)
         resetAgents(testbed.devices)
         checkOnboarding(specs)
         checkConsulDns(specs, testbed.devices)

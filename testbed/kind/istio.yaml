@@ -83,8 +83,6 @@ spec:
       enabled: true
       v2:
         enabled: true
-        metadataExchange: 
-          wasmEnabled: true 
         stackdriver:
           enabled: false
           logging: false

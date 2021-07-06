@@ -44,21 +44,6 @@ spec:
               targetPort: 15443
               name: tls
 
-    policy:
-      enabled: false
-      k8s:
-        resources:
-          requests:
-            cpu: 10m
-            memory: 100Mi
-
-    telemetry:
-      k8s:
-        resources:
-          requests:
-            cpu: 50m
-            memory: 100Mi
-
     pilot:
       k8s:
         env:
@@ -83,16 +68,6 @@ spec:
             cpu: 10m
             memory: 100Mi
 
-  addonComponents:
-    kiali:
-      enabled: false
-    grafana:
-      enabled: false
-    tracing:
-      enabled: false
-    prometheus:
-      enabled: false
-
   values:
     global:
       proxy:
@@ -104,28 +79,8 @@ spec:
     pilot:
       autoscaleEnabled: false
 
-    mixer:
-      adapters:
-        useAdapterCRDs: false
-        kubernetesenv:
-          enabled: true
-        prometheus:
-          enabled: true
-          metricsExpiryDuration: 10m
-        stackdriver:
-          enabled: false
-        stdio:
-          enabled: true
-          outputAsJson: false
-      policy:
-        autoscaleEnabled: false
-      telemetry:
-        autoscaleEnabled: false
-
     gateways:
       istio-egressgateway:
         autoscaleEnabled: false
       istio-ingressgateway:
         autoscaleEnabled: false
-    kiali:
-      createDemoSecret: true

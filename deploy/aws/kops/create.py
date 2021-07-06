@@ -93,10 +93,10 @@ def helm_apply(cmd):
 def download_utils():
     try:
         check_call(
-            "curl -fsL https://storage.googleapis.com/kubernetes-release/release/v1.18.5/bin/linux/amd64/kubectl -o %s/kubectl" % tmpdir)
+            "curl -fsL https://storage.googleapis.com/kubernetes-release/release/v1.21.2/bin/linux/amd64/kubectl -o %s/kubectl" % tmpdir)
         check_call("chmod +x %s/kubectl" % tmpdir)
         check_call(
-            "curl -fsL https://github.com/istio/istio/releases/download/1.6.4/istioctl-1.6.4-linux-amd64.tar.gz -o %s/istioctl.tgz" % tmpdir)
+            "curl -fsL https://github.com/istio/istio/releases/download/1.10.2/istioctl-1.10.2-linux-amd64.tar.gz -o %s/istioctl.tgz" % tmpdir)
         check_call(
             "tar -xvzf %s/istioctl.tgz -C %s/" % (tmpdir, tmpdir))
         check_call("chmod +x %s/istioctl" % tmpdir)

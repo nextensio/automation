@@ -447,6 +447,62 @@ def basicAccessSanity(specs, devices):
     versions = getAllOpaVersions(devices, specs, versions['ref'], increments)
     publicAndPvtPass("TWO", "ONE")
 
+# Access default internet four times, ensuring that the accesses are split across
+# two connectors (since by default we have round robin loadbalancing)
+def basicLoadbalancing(specs, devices):
+    def1 = 0
+    def2 = 0
+    def1_new = 0
+    def2_new = 0
+    try:
+        out = docker_run("nxt_default1", "curl http://127.0.0.1/server-status?auto")
+        m = re.search(r'Total Accesses: ([0-9]+)', out)
+        if not m:
+            print("Bad lighthttpd stats %s" % out)
+            sys.exit(1)
+        def1 = int(m[1])
+        out = docker_run("nxt_default2", "curl http://127.0.0.1/server-status?auto")
+        m = re.search(r'Total Accesses: ([0-9]+)', out)
+        if not m:
+            print("Bad lighthttpd stats %s" % out)
+            sys.exit(1)
+        def2 = int(m[1])
+    except Exception as e:
+        print("Exception %s" % e)
+        sys.exit(1)
+
+    # This should trigger two accesses to default1 and two to default2
+    for i in range(4):
+        if proxyGet('nxt_agent1', 'https://foobar.com',
+                    "I am Nextensio agent nxt_default") != True:
+            print("agent1 default internet access fail")
+            sys.exit(1)
+
+    try:
+        out = docker_run("nxt_default1", "curl http://127.0.0.1/server-status?auto")
+        m = re.search(r'Total Accesses: ([0-9]+)', out)
+        if not m:
+            print("Bad lighthttpd stats %s" % out)
+            sys.exit(1)
+        def1_new = int(m[1])
+        out = docker_run("nxt_default2", "curl http://127.0.0.1/server-status?auto")
+        m = re.search(r'Total Accesses: ([0-9]+)', out)
+        if not m:
+            print("Bad lighthttpd stats %s" % out)
+            sys.exit(1)
+        def2_new = int(m[1])
+    except Exception as e:
+        print("Exception %s" % e)
+        sys.exit(1)
+
+    # The http access to read the stats (the server-status access) itself adds
+    # a count of 1 to the Total Accesses !
+    if def1_new != def1 + 3:
+        print("Mismatching default1 counts %d / %d" % (def1, def1_new))
+        sys.exit(1)
+    if def2_new != def2 + 3:
+        print("Mismatching default1 counts %d / %d" % (def2, def2_new))
+        sys.exit(1)
 
 # This aetest sections in this class is executed at the very beginning BEFORE
 # any of the actual test cases run. So we have all the environment loading and
@@ -537,9 +593,62 @@ def placeAndVerifyAgents(devices, specs):
 # The aetest.setup section in this class is executed BEFORE the aetest.test sections,
 # so this is like a big-test with a setup, and then a set of test cases and then a teardown,
 # and then the next big-test class is run similarly
-# In all these test cases, we keep only one connector per cpod, since that's a goal.
-# Agents, however, may connect to the same or different apods.
 
+class Agent2PodsConnector3PodsClusters2LoadBalance(aetest.Testcase):
+    '''In this class of tests, all agents and connectors are in separate pods.
+    Agent1 and Agent2 are kept in cluster gatewaytesta, while default, v1.kismis and v2.kismis
+    are kept in cluster gatewaytestc. Then we test loadbalancing across the default connectors
+    '''
+    @ aetest.setup
+    def setup(self, testbed):
+        specs = [
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod1",
+                'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
+                'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-1",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
+        ]
+        placeAndVerifyAgents(testbed.devices, specs)
+        resetAgents(testbed.devices)
+        checkOnboarding(specs)
+        checkConsulDns(specs, testbed.devices)
+
+    @ aetest.test
+    def basicConnectivity(self, testbed, **kwargs):
+        specs = [
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod1",
+                'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
+                'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-1",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
+        ]
+        basicLoadbalancing(specs, testbed.devices)
+
+    @ aetest.cleanup
+    def cleanup(self):
+        return
 
 class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
     '''In this class of tests, all agents and connectors are in separate pods.
@@ -595,7 +704,7 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
         basicAccessSanity(specs, testbed.devices)
 
     @ aetest.test
-    def basicConnectivity(self, testbed, **kwargs):
+    def basicConnectivitySameCluster(self, testbed, **kwargs):
         '''Previous test had all cpods in GW2CLUSTER. Before running through all test cases,
         first just run through one test with all cpods in GW1CLUSTER as well. 
         '''

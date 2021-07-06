@@ -512,13 +512,15 @@ function create_all {
 
     docker kill nxt_agent1; docker rm nxt_agent1
     docker kill nxt_agent2; docker rm nxt_agent2
-    docker kill nxt_default; docker rm nxt_default
+    docker kill nxt_default1; docker rm nxt_default1
+    docker kill nxt_default2; docker rm nxt_default2
     docker kill nxt_kismis_ONE; docker rm nxt_kismis_ONE
     docker kill nxt_kismis_TWO; docker rm nxt_kismis_TWO
     docker container prune -f
     create_agent nxt_agent1 true test1@nextensio.net
     create_agent nxt_agent2 true test2@nextensio.net
-    create_connector nxt_default false default@nextensio.net 127.0.0.1 foobar.com
+    create_connector nxt_default1 false default@nextensio.net 127.0.0.1 foobar.com
+    create_connector nxt_default2 false default@nextensio.net 127.0.0.1 foobar.com
     create_connector nxt_kismis_ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org
     create_connector nxt_kismis_TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org
     nxt_agent1=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent1`
@@ -632,11 +634,13 @@ case "$options" in
     ;;
 *reset-conn)
     source $tmpdir/environment
-    docker kill nxt_default; docker rm nxt_default
+    docker kill nxt_default1; docker rm nxt_default1
+    docker kill nxt_default2; docker rm nxt_default2
     docker kill nxt_kismis_ONE; docker rm nxt_kismis_ONE
     docker kill nxt_kismis_TWO; docker rm nxt_kismis_TWO
     docker container prune -f
-    create_connector nxt_default false default@nextensio.net 127.0.0.1 foobar.com
+    create_connector nxt_default1 false default@nextensio.net 127.0.0.1 foobar.com
+    create_connector nxt_default2 false default@nextensio.net 127.0.0.1 foobar.com
     create_connector nxt_kismis_ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org
     create_connector nxt_kismis_TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org
     ;;

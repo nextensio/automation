@@ -242,7 +242,8 @@ def getAllOpaVersions(devices, specs, current, increments):
 def resetAgents(devices):
     devices['nxt_agent1'].shell.restart()
     devices['nxt_agent2'].shell.restart()
-    devices['nxt_default'].shell.restart()
+    devices['nxt_default1'].shell.restart()
+    devices['nxt_default2'].shell.restart()
     devices['nxt_kismis_ONE'].shell.restart()
     devices['nxt_kismis_TWO'].shell.restart()
 
@@ -553,11 +554,17 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
                 'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
             {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
                 'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
         ]
         placeAndVerifyAgents(testbed.devices, specs)
@@ -572,11 +579,17 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
                 'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
             {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
                 'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
         ]
         basicAccessSanity(specs, testbed.devices)
@@ -591,11 +604,17 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
                 'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
             {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
                 'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW1CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW1CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW1CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR2POD}
         ]
         placeAndVerifyAgents(testbed.devices, specs)
@@ -616,11 +635,17 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
             {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod1",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
-            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD}
         ]
         placeAndVerifyAgents(testbed.devices, specs)
@@ -634,11 +659,17 @@ class Agent2PodsConnector3PodsClusters2(aetest.Testcase):
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
             {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
         ]
         placeAndVerifyAgents(testbed.devices, specs)
@@ -665,11 +696,17 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
             {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
         placeAndVerifyAgents(testbed.devices, specs)
@@ -684,11 +721,17 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
             {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
         basicAccessSanity(specs, testbed.devices)
@@ -705,11 +748,17 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
             {'name': USER2, 'agent': True, 'device': GW2CLUSTER+"_apod1",
              'service': '', 'cluster': GW2CLUSTER, 'pod': 1},
-            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD}
         ]
         placeAndVerifyAgents(testbed.devices, specs)
@@ -723,11 +772,17 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
             {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
         placeAndVerifyAgents(testbed.devices, specs)
@@ -749,11 +804,17 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
              'service': '', 'cluster': GW2CLUSTER, 'pod': 1},
             {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod1",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
-            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD}
         ]
         placeAndVerifyAgents(testbed.devices, specs)
@@ -768,11 +829,17 @@ class Agent2PodsConnector3PodsClustersMixed(aetest.Testcase):
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
             {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
         placeAndVerifyAgents(testbed.devices, specs)
@@ -799,11 +866,17 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
             {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod1",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
-            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD}
         ]
         placeAndVerifyAgents(testbed.devices, specs)
@@ -818,11 +891,17 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
             {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod1",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
-            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW1CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW1CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW1CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD}
         ]
         basicAccessSanity(specs, testbed.devices)
@@ -837,11 +916,17 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
             {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW1CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW1CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW1CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW1CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD}
         ]
         placeAndVerifyAgents(testbed.devices, specs)
@@ -860,11 +945,17 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
              'service': '', 'cluster': GW2CLUSTER, 'pod': 1},
             {'name': USER1, 'agent': True, 'device': GW2CLUSTER+"_apod1",
              'service': '', 'cluster': GW2CLUSTER, 'pod': 1},
-            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD}
         ]
         placeAndVerifyAgents(testbed.devices, specs)
@@ -883,11 +974,17 @@ class AgentConnectorSquareOne(aetest.Testcase):
              'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
             {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
              'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
-            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3",
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
              'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
-            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1",
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
              'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
-            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2",
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-1",
              'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
         ]
         placeAndVerifyAgents(testbed.devices, specs)

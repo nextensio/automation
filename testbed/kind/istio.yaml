@@ -83,6 +83,40 @@ spec:
       enabled: true
       v2:
         enabled: true
+        prometheus:
+          configOverride:
+            inboundSidecar:
+              metrics:
+                - name: request_bytes
+                  dimensions:
+                    destination_port: string(destination.port)
+                    request_host: request.headers['x-nextensio-sourceagent']
+                    nxt_for: request.headers['x-nextensio-for']
+                    nxt_srcAgent: request.headers['x-nextensio-sourceagent']
+                    nxt_srcPod: request.headers['x-nextensio-sourcepod']
+                    nxt_session: string(request.headers['x-nextensio-session'])
+                    nxt_srcCluster: request.headers[x-nextensio-sourcecluster']
+                    nxt_destCluster: request.headers[x-nextensio-destcluster']
+                    nxt_uuid: 'schin'
+            outboundSidecar:
+              metrics:
+                - name: request_bytes
+                  dimensions:
+                    destination_port: string(destination.port)
+                    request_host: request.headers['x-nextensio-sourceagent']
+                    nxt_for: request.headers['x-nextensio-for']
+                    nxt_srcAgent: request.headers['x-nextensio-sourceagent']
+                    nxt_srcPod: request.headers['x-nextensio-sourcepod']
+                    nxt_session: string(request.headers['x-nextensio-session'])
+                    nxt_srcCluster: request.headers[x-nextensio-sourcecluster']
+                    nxt_destCluster: request.headers[x-nextensio-destcluster']
+                    nxt_uuid: 'schin'
+            gateway:
+              metrics:
+                - name: requests_total
+                  dimensions:
+                    destination_port: string(destination.port)
+                    request_host: request.host
         stackdriver:
           enabled: false
           logging: false

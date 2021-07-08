@@ -39,45 +39,12 @@ image_kube_metrics="quay.io/mxinden/kube-state-metrics:v1.4.0-gzip.3"
 image_thanos="quay.io/thanos/thanos:v0.12.2"
 image_grafana="docker.io/grafana/grafana:7.4.3"
  
-function common_images {
-    $kind load docker-image $image_metallb_controller --name $1
-    $kind load docker-image $image_metallb_speaker --name $1
-    $kind load docker-image $image_kindnetd --name $1
-    $kind load docker-image $image_localpath --name $1
-    $kind load docker-image $image_prometheus --name $1
-    $kind load docker-image $image_debian_base --name $1
-    $kind load docker-image $image_coredns --name $1
-    $kind load docker-image $image_etcd --name $1
-    $kind load docker-image $image_apiserver --name $1
-    $kind load docker-image $image_controller_manager --name $1
-    $kind load docker-image $image_kube_proxy --name $1
-    $kind load docker-image $image_pause --name $1
-    $kind load docker-image $image_pause --name $1
-    $kind load docker-image $image_node_exporter --name $1
-    $kind load docker-image $image_kube_metrics --name $1
-}
-   
-function download_nextensio_images {
-    docker pull registry.gitlab.com/nextensio/ux/ux:latest
-    docker pull registry.gitlab.com/nextensio/controller/controller:latest
-    docker pull registry.gitlab.com/nextensio/cluster/minion:latest
-    docker pull registry.gitlab.com/nextensio/clustermgr/mel:latest
-    docker pull registry.gitlab.com/nextensio/agent/go-agent:latest
-    docker pull registry.gitlab.com/nextensio/agent/rust-agent:latest
-}
-
-function download_infra_images {
-    docker image inspect ${image_mongo} > /dev/null || docker pull ${image_mongo}
+function download_common_images {
     docker image inspect ${image_kind_node} > /dev/null || docker pull ${image_kind_node}
     docker image inspect ${image_metallb_controller} > /dev/null || docker pull ${image_metallb_controller}
     docker image inspect ${image_metallb_speaker} > /dev/null || docker pull ${image_metallb_speaker}
     docker image inspect ${image_kindnetd} > /dev/null || docker pull ${image_kindnetd}
     docker image inspect ${image_localpath} > /dev/null || docker pull ${image_localpath}
-    docker image inspect ${image_istio_pilot} > /dev/null || docker pull ${image_istio_pilot}
-    docker image inspect ${image_istio_proxy} > /dev/null || docker pull ${image_istio_proxy}
-    docker image inspect ${image_jaeger} > /dev/null || docker pull ${image_jaeger}
-    docker image inspect ${image_consul} > /dev/null || docker pull ${image_consul}
-    docker image inspect ${image_prometheus} > /dev/null || docker pull ${image_prometheus}
     docker image inspect ${image_debian_base} > /dev/null || docker pull ${image_debian_base}
     docker image inspect ${image_coredns} > /dev/null || docker pull ${image_coredns}
     docker image inspect ${image_etcd} > /dev/null || docker pull ${image_etcd}
@@ -86,12 +53,81 @@ function download_infra_images {
     docker image inspect ${image_kube_proxy} > /dev/null || docker pull ${image_kube_proxy}
     docker image inspect ${image_kube_scheduler} > /dev/null || docker pull ${image_kube_scheduler}
     docker image inspect ${image_pause} > /dev/null || docker pull ${image_pause}
-    docker image inspect ${image_kiali} > /dev/null || docker pull ${image_kiali}
-    docker image inspect ${image_alertmgr} > /dev/null || docker pull ${image_alertmgr}
     docker image inspect ${image_node_exporter} > /dev/null || docker pull ${image_node_exporter}
     docker image inspect ${image_kube_metrics} > /dev/null || docker pull ${image_kube_metrics}
-    docker image inspect ${image_thanos} > /dev/null || docker pull ${image_thanos}
+}
+
+function load_common_images {
+    $kind load docker-image $image_metallb_controller --name $1
+    $kind load docker-image $image_metallb_speaker --name $1
+    $kind load docker-image $image_kindnetd --name $1
+    $kind load docker-image $image_localpath --name $1
+    $kind load docker-image $image_debian_base --name $1
+    $kind load docker-image $image_coredns --name $1
+    $kind load docker-image $image_etcd --name $1
+    $kind load docker-image $image_apiserver --name $1
+    $kind load docker-image $image_controller_manager --name $1
+    $kind load docker-image $image_kube_proxy --name $1
+    $kind load docker-image $image_kube_scheduler --name $1
+    $kind load docker-image $image_pause --name $1
+    $kind load docker-image $image_node_exporter --name $1
+    $kind load docker-image $image_kube_metrics --name $1
+}
+   
+function download_controller_infra_images {
+    docker image inspect ${image_mongo} > /dev/null || docker pull ${image_mongo}
+}
+
+function download_nextensio_controller {
+    docker pull registry.gitlab.com/nextensio/ux/ux:latest
+    docker pull registry.gitlab.com/nextensio/controller/controller:latest
+}
+
+function load_controller_images {
+    $kind load docker-image $image_mongo --name controller
+    $kind load docker-image registry.gitlab.com/nextensio/ux/ux:latest --name controller
+    $kind load docker-image registry.gitlab.com/nextensio/controller/controller:latest --name controller
+}
+
+function download_cluster_infra_images {
+    docker image inspect ${image_prometheus} > /dev/null || docker pull ${image_prometheus}
+    docker image inspect ${image_istio_pilot} > /dev/null || docker pull ${image_istio_pilot}
+    docker image inspect ${image_istio_proxy} > /dev/null || docker pull ${image_istio_proxy}
+    docker image inspect ${image_jaeger} > /dev/null || docker pull ${image_jaeger}
+    docker image inspect ${image_consul} > /dev/null || docker pull ${image_consul}
+    docker image inspect ${image_kiali} > /dev/null || docker pull ${image_kiali}
+    docker image inspect ${image_alertmgr} > /dev/null || docker pull ${image_alertmgr}
     docker image inspect ${image_grafana} > /dev/null || docker pull ${image_grafana}
+    docker image inspect ${image_thanos} > /dev/null || docker pull ${image_thanos}
+}
+
+function download_nextensio_cluster {
+    docker pull registry.gitlab.com/nextensio/clustermgr/mel:latest
+    docker pull registry.gitlab.com/nextensio/cluster/minion:latest
+}
+
+function load_cluster_images {
+    cluster=$1
+    $kind load docker-image $image_prometheus --name $cluster
+    $kind load docker-image $image_istio_pilot --name $cluster
+    $kind load docker-image $image_istio_proxy --name $cluster
+    $kind load docker-image $image_jaeger --name $cluster
+    $kind load docker-image $image_consul --name $cluster
+    $kind load docker-image $image_kiali --name $cluster
+    $kind load docker-image registry.gitlab.com/nextensio/cluster/minion:latest --name $cluster
+    $kind load docker-image registry.gitlab.com/nextensio/clustermgr/mel:latest --name $cluster
+}
+
+function load_monitoring_images {
+    $kind load docker-image $image_prometheus --name monitoring
+    $kind load docker-image $image_alertmgr --name monitoring
+    $kind load docker-image $image_grafana --name monitoring
+    $kind load docker-image $image_thanos --name monitoring
+}
+
+function download_nextensio_agents {
+    docker pull registry.gitlab.com/nextensio/agent/go-agent:latest
+    docker pull registry.gitlab.com/nextensio/agent/rust-agent:latest
 }
 
 # Create a controller
@@ -99,10 +135,8 @@ function create_controller {
     $kind create cluster --config ./kind-config.yaml --name controller
 
     # Load required images into cluster
-    common_images controller
-    $kind load docker-image registry.gitlab.com/nextensio/ux/ux:latest --name controller
-    $kind load docker-image registry.gitlab.com/nextensio/controller/controller:latest --name controller
-    $kind load docker-image $image_mongo --name controller
+    load_common_images controller
+    load_controller_images
 
     # metallb as a loadbalancer to map services to externally accessible IPs
     $kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
@@ -142,10 +176,8 @@ function create_monitoring {
     $kind create cluster --config ./kind-config.yaml --name monitoring 
 
     # Load required images into cluster
-    common_images monitoring
-    $kind load docker-image $image_alertmgr --name monitoring
-    $kind load docker-image $image_grafana --name monitoring
-    $kind load docker-image $image_thanos --name monitoring
+    load_common_images monitoring
+    load_monitoring_images 
 
     # metallb as a loadbalancer to map services to externally accessible IPs
     $kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
@@ -283,14 +315,8 @@ function create_cluster {
     $kind create cluster --config ./kind-config.yaml --name $cluster
 
     # Load required images into cluster
-    common_images $1
-    $kind load docker-image registry.gitlab.com/nextensio/cluster/minion:latest --name $cluster
-    $kind load docker-image registry.gitlab.com/nextensio/clustermgr/mel:latest --name $cluster
-    $kind load docker-image $image_istio_pilot --name $cluster
-    $kind load docker-image $image_istio_proxy --name $cluster
-    $kind load docker-image $image_jaeger --name $cluster
-    $kind load docker-image $image_consul --name $cluster
-    $kind load docker-image $image_kiali --name $cluster
+    load_common_images $1
+    load_cluster_images $1
 
     # We should have done a docker login to be able to download images from the gitlab registry
     $kubectl create secret generic regcred --from-file=.dockerconfigjson=$HOME/.docker/config.json --type=kubernetes.io/dockerconfigjson
@@ -453,17 +479,35 @@ function create_connector {
         --network kind --name $name registry.gitlab.com/nextensio/agent/go-agent:latest
 }
 
-function create_all {
+function create_controller_clusters {
+    image=$1
+    if [ "$image" != "local" ];
+    then
+        download_controller_infra_images
+        download_nextensio_controller
+    fi
+
     # delete existing clusters
-    $kind delete cluster --name gatewaytesta
-    $kind delete cluster --name gatewaytestc
     $kind delete cluster --name controller
-    $kind delete cluster --name monitoring
 
     create_controller
     # Find controller ip address
     ctrl_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' controller-control-plane`
     bootstrap_controller $ctrl_ip
+}
+
+function create_gw_monitoring_clusters {
+    image=$1
+    if [ "$image" != "local" ];
+    then
+        download_cluster_infra_images
+        download_nextensio_cluster
+    fi
+
+    # delete existing clusters
+    $kind delete cluster --name gatewaytesta
+    $kind delete cluster --name gatewaytestc
+    $kind delete cluster --name monitoring
 
     create_cluster gatewaytesta
     create_cluster gatewaytestc
@@ -510,6 +554,23 @@ function create_all {
     NEXTENSIO_CERT=../../testCert/nextensio.crt ./ctrl.py $ctrl_ip ../../testCert/nextensio.crt
     echo "Controller config done, going to create agents and connectors"
 
+    # Create monitoring cluster for telemetry
+    create_monitoring
+    monitoring_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' monitoring-control-plane`
+  
+    # Configure monitoring stuff (prometheus, thanos, grafana). This also install 
+    # prometheus and thanos sidecar on all the clusters 
+    # TODO: check monitoring cluster readiness
+    bootstrap_monitoring $monitoring_ip $ctrl_ip $gatewaytesta_ip $gatewaytestc_ip
+}
+
+function create_agent_connector {
+    image=$1
+    if [ "$image" != "local" ];
+    then
+        download_nextensio_agents
+    fi
+
     docker kill nxt_agent1; docker rm nxt_agent1
     docker kill nxt_agent2; docker rm nxt_agent2
     docker kill nxt_default1; docker rm nxt_default1
@@ -525,15 +586,23 @@ function create_all {
     create_connector nxt_kismis_TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org
     nxt_agent1=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent1`
     nxt_agent2=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent2`
+}
 
-    # Create monitoring cluster for telemetry
-    create_monitoring
-    monitoring_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' monitoring-control-plane`
-  
-    # Configure monitoring stuff (prometheus, thanos, grafana). This also install 
-    # prometheus and thanos sidecar on all the clusters 
-    # TODO: check monitoring cluster readiness
-    bootstrap_monitoring $monitoring_ip $ctrl_ip $gatewaytesta_ip $gatewaytestc_ip
+function create_all {
+    image=$1
+    if [ "$image" != "local" ];
+    then
+        # Download common infra images we need from docker hub
+        download_common_images
+    fi
+    create_controller_clusters $1
+    # People who want to test controller/UX might not want the data clusters, they
+    # can set an environment variable to skip data clusters/agents etc..
+    if [ "$CONTROLLER_ONLY" != "true" ];
+    then
+        create_gw_monitoring_clusters $1
+        create_agent_connector $1
+    fi
 }
 
 function save_env {
@@ -557,15 +626,6 @@ function save_env {
 }
 
 function main {
-    image=$1
-    if [ "$image" != "local" ];
-    then
-	# Download images we build from our gitlab repos
-        download_nextensio_images
-    fi
-    # Download infra images we need from docker hub
-    download_infra_images
-    
     # Check and prep our working directory - /tmp/nextensio-kind/
     kubefile=https://storage.googleapis.com/kubernetes-release/release/v1.21.2/bin/linux/amd64/kubectl
     mkdir $tmpdir;
@@ -596,7 +656,7 @@ function main {
     fi
 
     # Create everything!
-    create_all
+    create_all $1
     # Display and save environment information
     save_env
 }

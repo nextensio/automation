@@ -450,6 +450,17 @@ def basicAccessSanity(specs, devices):
 # Access default internet four times, ensuring that the accesses are split across
 # two connectors (since by default we have round robin loadbalancing)
 def basicLoadbalancing(specs, devices):
+    # Set routes/policies all back to default
+    increments = {'user': 0, 'bundle': 0, 'route': 0, 'policy': 0}
+    logger.info('STEP1')
+    versions = getAllOpaVersions(devices, specs, {}, increments)
+    config_policy()
+    config_routes('v1', 'v2')
+    config_user_attr(50, 50)
+    config_default_bundle_attr(['ABU,BBU'], ['engineering', 'sales'])
+    increments = {'user': 2, 'bundle': 1, 'route': 1, 'policy': 1}
+    versions = getAllOpaVersions(devices, specs, versions['ref'], increments)
+
     def1 = 0
     def2 = 0
     def1_new = 0
@@ -476,6 +487,21 @@ def basicLoadbalancing(specs, devices):
         if proxyGet('nxt_agent1', 'https://foobar.com',
                     "I am Nextensio agent nxt_default") != True:
             print("agent1 default internet access fail")
+            sys.exit(1)
+
+    # Access kismis multiple times from agent1 and agent2 and ensure
+    # it works. kismis has two replicas but only one connector, so here
+    # we are trying to ensure that the kismis access does NOT end up
+    # on a replica without a connector 
+    for i in range(4):
+        if proxyGet('nxt_agent1', 'https://kismis.org',
+                    "I am Nextensio agent nxt_kismis_ONE") != True:
+            print("agent1 kismis_ONE fail")
+            sys.exit(1)
+    for i in range(4):
+        if proxyGet('nxt_agent2', 'https://kismis.org',
+                    "I am Nextensio agent nxt_kismis_TWO") != True:
+            print("agent2 kismis_TWO fail")
             sys.exit(1)
 
     try:

@@ -607,7 +607,10 @@ function create_all {
 
 function save_env {
     echo "###########################################################################"
-    echo "######You can access controller UI at https://$ctrl_ip/  ############"
+    echo "######Add the below two lines to /etc/hosts to access controller##########"
+    echo "$ctrl_ip controller.nextensio.net"
+    echo "$ctrl_ip server.nextensio.net"
+    echo "######Then you can access controller UI at https://controller.nextensio.net/ ###"
     echo "##You can set a broswer proxy to $nxt_agent1:8181 to send traffic via nextensio##"
     echo "##OR You can set a broswer proxy to $nxt_agent2:8181 to send traffic via nextensio##"
     echo "##All the above information is saved in $tmpdir/environment for future reference##"

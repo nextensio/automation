@@ -95,8 +95,8 @@ spec:
                     nxt_srcAgent: request.headers['x-nextensio-sourceagent']
                     nxt_srcPod: request.headers['x-nextensio-sourcepod']
                     nxt_session: string(request.headers['x-nextensio-session'])
-                    nxt_srcCluster: request.headers[x-nextensio-sourcecluster']
-                    nxt_destCluster: request.headers[x-nextensio-destcluster']
+                    nxt_srcCluster: request.headers['x-nextensio-sourcecluster']
+                    nxt_destCluster: request.headers['x-nextensio-destcluster']
                     nxt_uuid: 'schin'
             outboundSidecar:
               metrics:
@@ -108,8 +108,8 @@ spec:
                     nxt_srcAgent: request.headers['x-nextensio-sourceagent']
                     nxt_srcPod: request.headers['x-nextensio-sourcepod']
                     nxt_session: string(request.headers['x-nextensio-session'])
-                    nxt_srcCluster: request.headers[x-nextensio-sourcecluster']
-                    nxt_destCluster: request.headers[x-nextensio-destcluster']
+                    nxt_srcCluster: request.headers['x-nextensio-sourcecluster']
+                    nxt_destCluster: request.headers['x-nextensio-destcluster']
                     nxt_uuid: 'schin'
             gateway:
               metrics:

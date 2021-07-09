@@ -394,6 +394,18 @@ function bootstrap_cluster {
     sed -i "s/REPLACE_CONSUL_DNS/$consul_dns/g" $tmpf
     sed -i "s/REPLACE_CONTROLLER_IP/$ctrl_ip/g" $tmpf
     $kubectl replace -n kube-system -f $tmpf
+
+    # Apply custom metric dynamically, istio request_bytes custom dimension is done 
+    # through istio manifest config. Istio response_bytes custom dimension is applied
+    # on the fly, just for the fun (it can be done through the config as well)  
+    tmp_rscver="$(kubectl -n istio-system get envoyfilter stats-filter-1.10 -o yaml |  grep resourceVersion:)"
+    #remove leading whitespace of rsc ver
+    cur_rscver=$(echo $tmp_rscver)
+    tmpf=$tmpdir/$cluster-envoyFilter_CustomStat.yaml
+    echo "current envoy filter $cur_rscver"
+    cp envoyFilter_CustomStat.yaml $tmpf
+    sed -i "s/REPLACE_CURRENT_RSC_VER/$cur_rscver/g" $tmpf
+    kubectl -n istio-system apply -f $tmpf
 }
 
 # Setup prepared query so that consul forwards the dns lookup to multiple DCs

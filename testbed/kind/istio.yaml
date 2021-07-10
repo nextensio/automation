@@ -97,7 +97,7 @@ spec:
                     nxt_session: string(request.headers['x-nextensio-session'])
                     nxt_srcCluster: request.headers['x-nextensio-sourcecluster']
                     nxt_destCluster: request.headers['x-nextensio-destcluster']
-                    nxt_uuid: 'schin'
+                    nxt_uuid: request.headers['x-nextensio-userid']
             outboundSidecar:
               metrics:
                 - name: request_bytes
@@ -110,7 +110,7 @@ spec:
                     nxt_session: string(request.headers['x-nextensio-session'])
                     nxt_srcCluster: request.headers['x-nextensio-sourcecluster']
                     nxt_destCluster: request.headers['x-nextensio-destcluster']
-                    nxt_uuid: 'schin'
+                    nxt_uuid: request.headers['x-nextensio-userid']
             gateway:
               metrics:
                 - name: requests_total

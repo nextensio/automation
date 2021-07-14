@@ -589,6 +589,7 @@ function create_agent_connector {
     docker kill nxt_default2; docker rm nxt_default2
     docker kill nxt_kismis_ONE; docker rm nxt_kismis_ONE
     docker kill nxt_kismis_TWO; docker rm nxt_kismis_TWO
+    docker kill nxt_conn2conn; docker rm nxt_conn2conn
     docker container prune -f
     create_agent nxt_agent1 true test1@nextensio.net
     create_agent nxt_agent2 true test2@nextensio.net
@@ -596,8 +597,10 @@ function create_agent_connector {
     create_connector nxt_default2 false default@nextensio.net 127.0.0.1 foobar.com
     create_connector nxt_kismis_ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org
     create_connector nxt_kismis_TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org
+    create_connector nxt_conn2conn false conn2conn@nextensio.net 
     nxt_agent1=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent1`
     nxt_agent2=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_agent2`
+    nxt_conn2conn=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nxt_conn2conn`
 }
 
 function create_all {
@@ -638,6 +641,7 @@ function save_env {
     echo "monitoring_ip=$monitoring_ip" >> $envf
     echo "nxt_agent1=$nxt_agent1" >> $envf
     echo "nxt_agent2=$nxt_agent2" >> $envf
+    echo "nxt_conn2conn=$nxt_conn2conn" >> $envf
 }
 
 function main {
@@ -713,11 +717,13 @@ case "$options" in
     docker kill nxt_default2; docker rm nxt_default2
     docker kill nxt_kismis_ONE; docker rm nxt_kismis_ONE
     docker kill nxt_kismis_TWO; docker rm nxt_kismis_TWO
+    docker kill nxt_conn2conn; docker rm nxt_conn2conn
     docker container prune -f
     create_connector nxt_default1 false default@nextensio.net 127.0.0.1 foobar.com
     create_connector nxt_default2 false default@nextensio.net 127.0.0.1 foobar.com
     create_connector nxt_kismis_ONE false v1.kismis@nextensio.net 127.0.0.1 kismis.org
     create_connector nxt_kismis_TWO false v2.kismis@nextensio.net 127.0.0.1 kismis.org
+    create_connector nxt_conn2conn false conn2conn@nextensio.net 
     ;;
 *)
     echo "Unknown option $options"  

@@ -278,25 +278,24 @@ def publicFail(kwargs):
                 "I am Nextensio agent nxt_default") == True:
         raise Exception("agent2 default internet works!")
 
-    
 def config_policy():
     global token
 
     with open('policy.AccessPolicy','r') as file:
         rego = file.read()
-    ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
-    while not ok:
-        logger.info('Access Policy creation failed, retrying ...')
-        time.sleep(1)
         ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
+        while not ok:
+            logger.info('Access Policy creation failed, retrying ...')
+            time.sleep(1)
+            ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
         
     with open('policy.RoutePolicy','r') as file:
         rego = file.read()
-    ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
-    while not ok:
-        logger.info('Route Policy creation failed, retrying ...')
-        time.sleep(1)
         ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
+        while not ok:
+            logger.info('Route Policy creation failed, retrying ...')
+            time.sleep(1)
+            ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
 
         
 def config_routes(tag1, tag2):
@@ -477,8 +476,8 @@ def basicLoadbalancing(kwargs, specs, devices):
     # going un-loadbalanced before it starts loadbalancing - not sure why that is
     # the case, this needs to be debugged and understood, the below just hacks around
     # to do a few warmup loads 
-    for i in range(4):
-        if proxyGet(kwargs, 'nxt_agent1', 'https://kismis.org',
+    for i in range(16):
+        if proxyGet(kwargs, 'nxt_agent1', 'https://foobar.com',
                     "I am Nextensio agent nxt_kismis_ONE") != True:
             print("agent1 kismis_ONE fail")
             sys.exit(1)
@@ -641,6 +640,102 @@ def placeAndVerifyAgents(devices, specs):
 # The aetest.setup section in this class is executed BEFORE the aetest.test sections,
 # so this is like a big-test with a setup, and then a set of test cases and then a teardown,
 # and then the next big-test class is run similarly
+
+# Policies for testing connector to connector
+def conn2conn_policy():
+    global token
+
+    with open('conn2conn.AccessPolicy','r') as file:
+        rego = file.read()
+        ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
+        while not ok:
+            logger.info('Access Policy creation failed, retrying ...')
+            time.sleep(1)
+            ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
+        
+    with open('conn2conn.RoutePolicy','r') as file:
+        rego = file.read()
+        ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
+        while not ok:
+            logger.info('Route Policy creation failed, retrying ...')
+            time.sleep(1)
+            ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
+
+class Connector2Connector(aetest.Testcase):
+    '''Agents and connectors back to their very first placement.
+    '''
+    @ aetest.setup
+    def setup(self, testbed):
+        specs = [
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod1",
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-1",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
+        ]
+        placeAndVerifyAgents(testbed.devices, specs)
+        resetAgents(testbed.devices)
+        checkOnboarding(specs)
+        checkConsulDns(specs, testbed.devices)
+
+    @ aetest.test
+    def basicConn2Conn(self, testbed, **kwargs):
+        specs = [
+            {'name': USER1, 'agent': True, 'device': GW1CLUSTER+"_apod1",
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 1},
+            {'name': USER2, 'agent': True, 'device': GW1CLUSTER+"_apod2",
+             'service': '', 'cluster': GW1CLUSTER, 'pod': 2},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-0",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-0",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-0",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD},
+            {'name': CNCTR3, 'agent': False, 'device': GW2CLUSTER+"_cpod3-1",
+             'service': 'nextensio-default-internet', 'cluster': GW2CLUSTER, 'pod': CNCTR3POD},
+            {'name': CNCTR1, 'agent': False, 'device': GW2CLUSTER+"_cpod1-1",
+             'service': 'v1.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR1POD},
+            {'name': CNCTR2, 'agent': False, 'device': GW2CLUSTER+"_cpod2-1",
+             'service': 'v2.kismis.org', 'cluster': GW2CLUSTER, 'pod': CNCTR2POD}
+        ]
+
+        # Just allow everything, we are purely testing connector 2 connector connectivity, thats about it
+        increments = {'user': 0, 'bundle': 0, 'route': 0, 'policy': 0}
+        versions = getAllOpaVersions(testbed.devices, specs, {}, increments)
+        conn2conn_policy()
+        increments = {'user': 0, 'bundle': 0, 'route': 0, 'policy': 1}
+        versions = getAllOpaVersions(testbed.devices, specs, versions['ref'], increments)
+        c2c = os.getenv("nxt_conn2conn")
+        subprocess.check_output("docker exec -it  curl sh -c \"echo 127.0.0.1 localhost > /etc/hosts\"", shell=True)
+        subprocess.check_output("docker exec -it  curl sh -c \"echo %s kismis.org >> /etc/hosts\"" % c2c, shell=True)
+        if proxyGet(kwargs, 'nxt_conn2conn', 'https://kismis.org',
+                    "I am Nextensio agent nxt_kismis_ONE") != True:
+            print("conn2conn kismis ONE access fail")
+            sys.exit(1)
+        subprocess.check_output("docker exec -it  curl sh -c \"echo 127.0.0.1 locahost > /etc/hosts\"", shell=True)
+        subprocess.check_output("docker exec -it  curl sh -c \"echo 1.1.1.1 foobar.com >> /etc/hosts\"", shell=True)
+        subprocess.check_output("docker exec -it  curl sh -c \"echo 1.1.1.1 kismis.org >> /etc/hosts\"", shell=True)
+
+    @ aetest.cleanup
+    def cleanup(self):
+        # Restore the original policies
+        increments = {'user': 0, 'bundle': 0, 'route': 0, 'policy': 0}
+        versions = getAllOpaVersions(testbed.devices, specs, {}, increments)
+        config_policy()
+        increments = {'user': 0, 'bundle': 0, 'route': 0, 'policy': 1}
+        versions = getAllOpaVersions(testbed.devices, specs, versions['ref'], increments)
+        return
 
 class Agent2PodsConnector3PodsClusters2LoadBalance(aetest.Testcase):
     '''In this class of tests, all agents and connectors are in separate pods.
@@ -1151,7 +1246,6 @@ class AgentConnectorSquareOne(aetest.Testcase):
 
     def squareOneSanity(self, testbed, **kwargs):
         basicAccessSanity(kwargs, specs, testbed.devices)
-
 
 if __name__ == '__main__':
     import argparse

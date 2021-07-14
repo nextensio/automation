@@ -18,6 +18,7 @@ USER2 = "test2@nextensio.net"
 CNCTR1 = "v1.kismis@nextensio.net"
 CNCTR2 = "v2.kismis@nextensio.net"
 CNCTR3 = "default@nextensio.net"
+CNCTR4 = "conn2conn@nextensio.net"
 
 def runCmd(cmd):
     try:
@@ -133,12 +134,16 @@ if __name__ == '__main__':
                    "services":["v1.kismis.org"], "gateway":GW2, "cpodrepl":2}
     bundle3json = {"bid":CNCTR2, "name":"Kismis TWO",
                    "services":["v2.kismis.org"], "gateway":GW2, "cpodrepl":2}
+    bundle4json = {"bid":CNCTR4, "name":"Connector To Connector",
+                   "services":[], "gateway":GW2, "cpodrepl":1}
 
     bundle1attrjson = {"bid":CNCTR3, "dept":["ABU","BBU"],
                        "team":["engineering","sales"], "IC":1, "manager":1, "nonemployee":"allow"}
     bundle2attrjson = {"bid":CNCTR1, "dept":["ABU","BBU"],
                        "team":["engineering","sales"], "IC":1, "manager":1, "nonemployee":"allow"}
     bundle3attrjson = {"bid":CNCTR2, "dept":["ABU","BBU"],
+                       "team":["engineering","sales"], "IC":1, "manager":1, "nonemployee":"allow"}
+    bundle4attrjson = {"bid":CNCTR4, "dept":["ABU","BBU"],
                        "team":["engineering","sales"], "IC":1, "manager":1, "nonemployee":"allow"}
     
 
@@ -257,12 +262,24 @@ if __name__ == '__main__':
         print('Bundle3 creation failed, retrying ...')
         time.sleep(1)
         ok = create_bundle(url, tenant, bundle3json, token)
-        
+ 
     ok = create_bundle_attr(url, tenant, bundle3attrjson, token)
     while not ok:
         print('Bundle3Attr creation failed, retrying ...')
         time.sleep(1)
         ok = create_bundle_attr(url, tenant, bundle3attrjson, token)
+
+    ok = create_bundle(url, tenant, bundle4json, token)
+    while not ok:
+        print('Bundle4 creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_bundle(url, tenant, bundle4json, token)
+  
+    ok = create_bundle_attr(url, tenant, bundle4attrjson, token)
+    while not ok:
+        print('Bundle4Attr creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_bundle_attr(url, tenant, bundle4attrjson, token)
 
     ok = create_host_attr(url, tenant, host1attrjson, token)
     while not ok:

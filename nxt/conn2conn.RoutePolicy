@@ -1,0 +1,4 @@
+package user.routing
+
+default route_tag = "v1"
+

@@ -478,8 +478,8 @@ def basicLoadbalancing(kwargs, specs, devices):
     # to do a few warmup loads 
     for i in range(16):
         if proxyGet(kwargs, 'nxt_agent1', 'https://foobar.com',
-                    "I am Nextensio agent nxt_kismis_ONE") != True:
-            print("agent1 kismis_ONE fail")
+                    "I am Nextensio agent nxt_default") != True:
+            print("agent1 default fail")
             sys.exit(1)
 
     def1 = 0
@@ -637,30 +637,6 @@ def placeAndVerifyAgents(devices, specs):
     increments = {'user': users, 'bundle': bundles, 'route': 0, 'policy': 0}
     versions = getAllOpaVersions(devices, specs, versions['ref'], increments)
 
-# The aetest.setup section in this class is executed BEFORE the aetest.test sections,
-# so this is like a big-test with a setup, and then a set of test cases and then a teardown,
-# and then the next big-test class is run similarly
-
-# Policies for testing connector to connector
-def conn2conn_policy():
-    global token
-
-    with open('conn2conn.AccessPolicy','r') as file:
-        rego = file.read()
-        ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
-        while not ok:
-            logger.info('Access Policy creation failed, retrying ...')
-            time.sleep(1)
-            ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
-        
-    with open('conn2conn.RoutePolicy','r') as file:
-        rego = file.read()
-        ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
-        while not ok:
-            logger.info('Route Policy creation failed, retrying ...')
-            time.sleep(1)
-            ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
-
 class Connector2Connector(aetest.Testcase):
     '''Agents and connectors back to their very first placement.
     '''
@@ -727,14 +703,15 @@ class Connector2Connector(aetest.Testcase):
         subprocess.check_output("docker exec -it  curl sh -c \"echo 1.1.1.1 foobar.com >> /etc/hosts\"", shell=True)
         subprocess.check_output("docker exec -it  curl sh -c \"echo 1.1.1.1 kismis.org >> /etc/hosts\"", shell=True)
 
-    @ aetest.cleanup
-    def cleanup(self):
         # Restore the original policies
         increments = {'user': 0, 'bundle': 0, 'route': 0, 'policy': 0}
         versions = getAllOpaVersions(testbed.devices, specs, {}, increments)
         config_policy()
         increments = {'user': 0, 'bundle': 0, 'route': 0, 'policy': 1}
         versions = getAllOpaVersions(testbed.devices, specs, versions['ref'], increments)
+
+    @ aetest.cleanup
+    def cleanup(self):
         return
 
 class Agent2PodsConnector3PodsClusters2LoadBalance(aetest.Testcase):
@@ -1215,6 +1192,30 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
         checkOnboarding(specs)
         checkConsulDns(specs, testbed.devices)
         basicAccessSanity(kwargs, specs, testbed.devices)
+
+# The aetest.setup section in this class is executed BEFORE the aetest.test sections,
+# so this is like a big-test with a setup, and then a set of test cases and then a teardown,
+# and then the next big-test class is run similarly
+
+# Policies for testing connector to connector
+def conn2conn_policy():
+    global token
+
+    with open('conn2conn.AccessPolicy','r') as file:
+        rego = file.read()
+        ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
+        while not ok:
+            logger.info('Access Policy creation failed, retrying ...')
+            time.sleep(1)
+            ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
+        
+    with open('conn2conn.RoutePolicy','r') as file:
+        rego = file.read()
+        ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
+        while not ok:
+            logger.info('Route Policy creation failed, retrying ...')
+            time.sleep(1)
+            ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
 
 class AgentConnectorSquareOne(aetest.Testcase):
     '''Agents and connectors back to their very first placement.

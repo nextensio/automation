@@ -5,14 +5,23 @@ metadata:
   namespace: istio-system
   labels:
     app: jaeger
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/component: all-in-one
 spec:
+  replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: jaeger
+      app.kubernetes.io/name: jaeger
+      app.kubernetes.io/component: all-in-one
   template:
     metadata:
       labels:
         app: jaeger
+        app.kubernetes.io/name: jaeger
+        app.kubernetes.io/component: all-in-one
       annotations:
         sidecar.istio.io/inject: "false"
         prometheus.io/scrape: "true"
@@ -36,6 +45,20 @@ spec:
               value: "50000"
             - name: QUERY_BASE_PATH
               value: /jaeger
+          ports:
+            - containerPort: 5775
+              protocol: UDP
+            - containerPort: 6831
+              protocol: UDP
+            - containerPort: 6832
+              protocol: UDP
+            - containerPort: 5778
+              protocol: TCP
+            - containerPort: 16686
+              protocol: TCP
+            - containerPort: 9411
+              protocol: TCP
+          args: ["--log-level=debug"]
           livenessProbe:
             httpGet:
               path: /
@@ -57,10 +80,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: tracing
+  name: jaeger-query
   namespace: istio-system
   labels:
     app: jaeger
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/component: query
 spec:
   type: ClusterIP
   ports:
@@ -75,6 +100,8 @@ spec:
       targetPort: 16685
   selector:
     app: jaeger
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/component: all-in-one
 ---
 # Jaeger implements the Zipkin API. To support swapping out the tracing backend, we use a Service named Zipkin.
 apiVersion: v1
@@ -99,6 +126,8 @@ metadata:
   namespace: istio-system
   labels:
     app: jaeger
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/component: collector
 spec:
   type: ClusterIP
   ports:
@@ -115,3 +144,38 @@ spec:
     name: http-zipkin
   selector:
     app: jaeger
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/component: all-in-one
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-agent
+  namespace: istio-system
+  labels:
+    app: jaeger
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/component: agent
+spec:
+  ports:
+  - name: agent-zipkin-thrift
+    port: 5775
+    protocol: UDP
+    targetPort: 5775
+  - name: agent-compact
+    port: 6831
+    protocol: UDP
+    targetPort: 6831
+  - name: agent-binary
+    port: 6832
+    protocol: UDP
+    targetPort: 6832
+  - name: agent-configs
+    port: 5778
+    protocol: TCP
+    targetPort: 5778
+  clusterIP: None
+  selector:
+    app: jaeger
+    app.kubernetes.io/name: jaeger
+    app.kubernetes.io/component: all-in-one

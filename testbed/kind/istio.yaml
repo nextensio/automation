@@ -3,6 +3,23 @@ kind: IstioOperator
 spec:
   meshConfig:
     accessLogFile: /dev/stdout
+    enableTracing: true
+    defaultConfig:
+      tracing:
+        sampling: 1
+        custom_tags:
+          #nextensio_tag:
+          #  literal:
+          #    value: "nextensio-trace"
+          nextensio_tag:
+            header:
+              name: x-nextensio-tracetag
+          nxt_trace_from:
+            header:
+              name: x-nextensio-sourceagent
+          nxt_trace_to:
+            header:
+              name: x-nextensio-for
   components:
     egressGateways:
     - name: istio-egressgateway
@@ -59,8 +76,8 @@ spec:
                 fieldPath: metadata.namespace
           - name: GODEBUG
             value: gctrace=1
-          - name: PILOT_TRACE_SAMPLING
-            value: "100"
+          #- name: PILOT_TRACE_SAMPLING
+          #  value: "100"
           - name: CONFIG_NAMESPACE
             value: istio-config
         resources:

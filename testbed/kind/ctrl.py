@@ -187,6 +187,14 @@ if __name__ == '__main__':
         {"name": "type", "appliesTo": "Hosts", "type": "String", "isArray": "true"}
         ]
 
+    tracereq1json = { "traceid": "CaliforniaLinuxUsers", "uid": "", "category":[""], "type":[""],
+                      "iclevel":50, "mgrlevel": 50, "dept":[""], "team":[""],
+                     "location": "California", "ostype": "Linux", "osver": 0.0
+                      }
+    tracereq2json = { "traceid": "SalesEmployees", "uid": "", "category":["employee"], "type":[""],
+                      "iclevel":50, "mgrlevel": 50, "dept":[""], "team":["sales"],
+                     "location": "", "ostype": "", "osver": 0.0
+                      }
 
     # Prime some user, bundle and host attr sets for the UI attribute editor
     ok = create_attrset_many(url, tenant, userattrsetjson, token)
@@ -292,7 +300,19 @@ if __name__ == '__main__':
         print('HostAttr2 creation failed, retrying ...')
         time.sleep(1)
         ok = create_host_attr(url, tenant, host2attrjson, token)
-    
+
+    ok = create_trace_request(url, tenant, tracereq1json, token)
+    while not ok:
+        print('Trace request 1 creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_trace_request(url, tenant, tracereq1json, token)
+
+    ok = create_trace_request(url, tenant, tracereq2json, token)
+    while not ok:
+        print('Trace request 2 creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_trace_request(url, tenant, tracereq2json, token)
+
     with open('policy.AccessPolicy','r') as file:
         rego = file.read()
     ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
@@ -308,6 +328,14 @@ if __name__ == '__main__':
         print('Route Policy creation failed, retrying ...')
         time.sleep(1)
         ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
+
+    with open('policy.TracePolicy','r') as file:
+        rego = file.read()
+    ok = create_policy(url, tenant, 'TracePolicy', rego, token)
+    while not ok:
+        print('Trace Policy creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_policy(url, tenant, 'TracePolicy', rego, token)
 
     ok = create_cert(url, cert, token)
     while not ok:

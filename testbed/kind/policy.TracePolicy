@@ -1,0 +1,33 @@
+package user.tracing
+
+default request = "no"
+
+#
+#    A user's attributes -----> Trace Policy <------ All trace requests
+#  (input per http2 stream)                           (reference data)
+#
+# The first rule matches user's ostype and location to determine
+# tracing. The trace request has location = California and
+# ostype = Linux.
+#
+# The second rule matches user's category and team to determine
+# tracing. The trace request has category = employee and team =
+# "sales".
+#
+# Therefore, tracing will be enabled for California users using
+# Linux or employees in sales team.
+#
+# What the policy returns is the trace request id -
+#  "CaliforniaLinuxUsers" or "SalesEmployees".
+#
+request = tid1 {
+    some i
+    input.ostype == data.tracerequests[i].ostype
+    input.location == data.tracerequests[i].location
+    tid1 := data.tracerequests[i].traceid
+} else = tid2 {
+    some i
+    input.team[_] == data.tracerequests[i].team[_]
+    input.category == data.tracerequests[i].category[_]
+    tid2 := data.tracerequests[i].traceid
+}

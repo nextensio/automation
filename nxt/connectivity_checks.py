@@ -133,7 +133,6 @@ def checkConsulDns(specs, devices):
     cls = []
     for spec in specs:
         if spec['agent'] != True:
-            services.append({'name': TENANT + '-' + spec['name'], 'cluster': spec['cluster'], 'pod': spec['pod']})
             if spec['service'] != '':
                 services.append({'name': spec['service'], 'cluster': spec['cluster'], 'pod': spec['pod']})
             if spec['cluster'] not in cls:

@@ -2,6 +2,37 @@ package user.routing
 
 default route_tag = ""
 
+# This policy works with a user's attributes and references attributes for all
+# hosts of a tenant. Services advertised by the bundles are based on the hosts.
+# This policy provides two capabilities -
+# 1. ability to have multiple instances of a host and to be able to route to a
+#    specific instance
+# 2. ability to deny access to a host by routing to a non-existent instance.
+#
+#    A user's attributes -----> Route Policy <------ Attributes for all hosts
+#  (input per http2 stream)                             (reference data)
+#
+# A host can have one or more records for attributes. Each record defines the
+# attributes and their values to be used to select a route - a valid instance
+# or a non-existent instance (deny case).
+# Hence one needs to note that for accessing host attributes, we first have an
+# array of hosts (with some high level attributes) and then an array of attribute
+# records for each route to a host instance - a valid instance and/or a fake
+# instance (deny case).
+#
+# This policy uses category (employee/nonemployee), team and department to
+# match to a route and return a tag for the route. The tag "deny" needs to be
+# returned for the non-existent host instance. The default tag is "" where no
+# routing or access denial is required.
+#
+# User attributes are accessed using the "input." path.
+# Host attributes are accessed using the "data." path.
+# Note that in the rule below, data.hosts[i] refers to the i'th host record.
+# data.hosts[i].routeattrs[n] refers to the n'th route attributes record for
+# the i'th host.
+# [_] in any expression refers to any value in an array of values (case of an
+# attribute that can have multiple values).
+#
 route_tag = rtag {
     some i
     app := data.hosts[i]

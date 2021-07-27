@@ -4,6 +4,32 @@ allow = is_allowed
 
 default is_allowed = false
 
+# This policy works with a user's attributes and references attributes for all
+# bundles of a tenant.
+#
+#    A user's attributes -----> Access Policy <------ Attributes for all bundles
+#  (input per http2 stream)                               (reference data)
+#
+# This policy checks if a user is an individual contributor (IC), a manager,
+# or a nonemployee (eg., vendor, partner, consultant) and has privileges to
+# access the bundle based on department or team and grade level for employees
+# or a allow/deny criteria for nonemployees.
+#
+# The checks are split into multiple rules which combine as
+#     Rule1 or Rule2 or Rule3 or Rule4 or Rule5 or Rule6
+# Hence, any rule that evaluates to true allows access. Access is denied if
+# all rules evaluate to false.
+#
+# User attributes are accessed using the "input." path.
+# Bundle attributes are accessed using the "data." path.
+# data.bundles[i] refers to the i'th bundle record.
+# [_] in any expression refers to any value in an array of values (case of an
+# attribute that can have multiple values).
+#
+# Rule1
+# This rule checks if user is an individual contributor (IC) with grade
+# level above or same as privilege level for ICs for bundle being accessed
+# and also that user is in a department allowed for the bundle.
 is_allowed {
 	   some i
 	   input.bid == data.bundles[i].bid
@@ -16,6 +42,10 @@ is_allowed {
 	   input.level != ""
 }
 
+# Rule2
+# This rule checks if user is an individual contributor (IC) with grade
+# level above or same as privilege level for ICs for bundle being accessed
+# and also that user is in a team allowed for the bundle.
 is_allowed  {
 	    some i
 	    input.bid == data.bundles[i].bid
@@ -28,6 +58,10 @@ is_allowed  {
 	    input.level != ""
 }
 
+# Rule3
+# This rule checks if user is a manager with grade level above or same as
+# privilege level for managers for bundle being accessed and also that user
+# is in a dept allowed for the bundle.
 is_allowed  {
 	    some i
 	    input.bid == data.bundles[i].bid
@@ -40,6 +74,10 @@ is_allowed  {
 	    input.level != ""
 }
 
+# Rule4
+# This rule checks if user is a manager with grade level above or same as
+# privilege level for managers for bundle being accessed and also that user
+# is in a team allowed for the bundle.
 is_allowed  {
 	    some i
 	    input.bid == data.bundles[i].bid
@@ -52,6 +90,10 @@ is_allowed  {
 	    input.level != ""
 }
 
+# Rule5
+# This rule checks if user is a nonemployee (eg., partner, vendor, etc)
+# accessing a bundle that allows nonemployees from the department with
+# which the nonemployee is associated.
 is_allowed  {
 	    some i
 	    input.bid == data.bundles[i].bid
@@ -62,6 +104,10 @@ is_allowed  {
 	    user_is_nonemployee
 }
 
+# Rule6
+# This rule checks if user is a nonemployee (eg., partner, vendor, etc)
+# accessing a bundle that allows nonemployees from the team with which
+# the nonemployee is associated.
 is_allowed  {
 	    some i
 	    input.bid == data.bundles[i].bid

@@ -41,6 +41,7 @@
   spec:
     containers:
     - image: gopakumarce/mongodb-replica-set:20200330-stable-1
+      imagePullPolicy: IfNotPresent
       name: mongodb-0
       env:
       - name: "MONGO_INITDB_ROOT_USERNAME"
@@ -111,6 +112,7 @@
   spec:
     containers:
     - image: gopakumarce/mongodb-replica-set:20200330-stable-1
+      imagePullPolicy: IfNotPresent
       name: mongodb-1
       env:
       - name: "MONGO_INITDB_ROOT_USERNAME"
@@ -181,6 +183,7 @@
   spec:
     containers:
     - image: gopakumarce/mongodb-replica-set:20200330-stable-1
+      imagePullPolicy: IfNotPresent
       name: mongodb-2
       env:
       - name: "MONGO_INITDB_ROOT_USERNAME"

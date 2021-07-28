@@ -164,12 +164,12 @@ function create_controller {
     load_controller_images
 
     # metallb as a loadbalancer to map services to externally accessible IPs
-    $kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
-    $kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml
+    $kubectl apply -f metallb-namespace.yaml
+    $kubectl apply -f metallb-manifest.yaml
     $kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
     # Mongo needs some storage, just use local storage
     $kubectl delete storageclass standard
-    $kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+    $kubectl apply -f local-path-storage.yaml
 }
 
 function bootstrap_controller {
@@ -205,8 +205,8 @@ function create_monitoring {
     load_monitoring_images 
 
     # metallb as a loadbalancer to map services to externally accessible IPs
-    $kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
-    $kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml
+    $kubectl apply -f metallb-namespace.yaml
+    $kubectl apply -f metallb-manifest.yaml
     $kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
     $kubectl apply -f $metric_dir/monitoring-namespace.yaml
 }
@@ -364,8 +364,8 @@ function create_cluster {
     $kubectl apply -f ./grafana.yaml
 
     # Install metallb. metallb exposes services inside the cluster via external IP addresses
-    $kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
-    $kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml
+    $kubectl apply -f metallb-namespace.yaml
+    $kubectl apply -f metallb-manifest.yaml
     $kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
 
     # Ask jaeger to be spun up as side-cars of minion pods

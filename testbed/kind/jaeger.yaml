@@ -21,6 +21,7 @@ spec:
       containers:
         - name: jaeger
           image: "docker.io/jaegertracing/all-in-one:1.22"
+          imagePullPolicy: IfNotPresent
           env:
             - name: BADGER_EPHEMERAL
               value: "false"

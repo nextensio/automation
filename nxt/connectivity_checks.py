@@ -621,20 +621,12 @@ class CommonCleanup(aetest.CommonCleanup):
 
 
 def placeAndVerifyAgents(devices, specs):
-    users = 0
-    bundles = 0
-    increments = {'user': 0, 'bundle': 0, 'route': 0, 'policy': 0}
-    versions = getAllOpaVersions(devices, specs, {}, increments)
     for spec in specs:
         gateway = spec['cluster'] + '.nextensio.net'
         if spec['agent'] == True:
-            users = users + 1
             config_user(spec['name'], spec['service'], gateway,  spec['pod'])
         else:
-            bundles = bundles + 1
             config_bundle(spec['name'], spec['service'], gateway, spec['pod'])
-    increments = {'user': users, 'bundle': bundles, 'route': 0, 'policy': 0}
-    versions = getAllOpaVersions(devices, specs, versions['ref'], increments)
 
 class Connector2Connector(aetest.Testcase):
     '''Agents and connectors back to their very first placement.

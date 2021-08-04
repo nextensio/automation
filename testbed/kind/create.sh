@@ -41,6 +41,7 @@ image_node_exporter="docker.io/prom/node-exporter:v0.16.0"
 image_kube_metrics="quay.io/mxinden/kube-state-metrics:v1.4.0-gzip.3"
 image_thanos="quay.io/thanos/thanos:v0.12.2"
 image_grafana="docker.io/grafana/grafana:7.4.3"
+image_addon_resizer="k8s.gcr.io/addon-resizer:1.8.3"
 
 function download_common_images {
     docker image inspect ${image_kind_node} > /dev/null || docker pull ${image_kind_node}
@@ -58,6 +59,7 @@ function download_common_images {
     docker image inspect ${image_pause} > /dev/null || docker pull ${image_pause}
     docker image inspect ${image_node_exporter} > /dev/null || docker pull ${image_node_exporter}
     docker image inspect ${image_kube_metrics} > /dev/null || docker pull ${image_kube_metrics}
+    docker image inspect ${image_addon_resizer} > /dev/null || docker pull ${image_addon_resizer}
 }
 
 function load_common_images {
@@ -75,6 +77,7 @@ function load_common_images {
     $kind load docker-image $image_pause --name $1
     $kind load docker-image $image_node_exporter --name $1
     $kind load docker-image $image_kube_metrics --name $1
+    $kind load docker-image $image_addon_resizer --name $1
 }
    
 function download_controller_infra_images {

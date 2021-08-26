@@ -22,12 +22,12 @@ default request = "no"
 #
 request = tid1 {
     some i
-    input.ostype == data.tracerequests[i].ostype
-    input.location == data.tracerequests[i].location
+    input.user.ostype == data.tracerequests[i].ostype
+    input.user.location == data.tracerequests[i].location
     tid1 := data.tracerequests[i].traceid
 } else = tid2 {
     some i
-    input.team[_] == data.tracerequests[i].team[_]
-    input.category == data.tracerequests[i].category[_]
+    input.user.team[_] == data.tracerequests[i].team[_]
+    input.user.category == data.tracerequests[i].category[_]
     tid2 := data.tracerequests[i].traceid
 }

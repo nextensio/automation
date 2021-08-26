@@ -25,7 +25,8 @@ default route_tag = ""
 # returned for the non-existent host instance. The default tag is "" where no
 # routing or access denial is required.
 #
-# User attributes are accessed using the "input." path.
+# Target host is accessed via "input.host"
+# User attributes are accessed using the "input.user." path.
 # Host attributes are accessed using the "data." path.
 # Note that in the rule below, data.hosts[i] refers to the i'th host record.
 # data.hosts[i].routeattrs[n] refers to the n'th route attributes record for

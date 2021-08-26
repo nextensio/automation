@@ -3,6 +3,7 @@ kind: IstioOperator
 spec:
   meshConfig:
     accessLogFile: /dev/stdout
+    enableTracing: false
   components:
     egressGateways:
     - name: istio-egressgateway
@@ -59,8 +60,6 @@ spec:
                 fieldPath: metadata.namespace
           - name: GODEBUG
             value: gctrace=1
-          - name: PILOT_TRACE_SAMPLING
-            value: "100"
           - name: CONFIG_NAMESPACE
             value: istio-config
         resources:

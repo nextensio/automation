@@ -66,7 +66,7 @@ if __name__ == '__main__':
         ok = create_gateway(url, gw2json, token)
 
     tenantjson = {"_id":TENANT,
-                  "image":"registry.gitlab.com/nextensio/cluster/minion:latest",
+                  "jaegerCollector":"https://nxt-nextensio.nxt-kc1.do-sf.nextensio.net/jaegerthrift14268/api/traces",
                   }
     
     ok = create_tenant(url, tenantjson, token)

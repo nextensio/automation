@@ -11,7 +11,6 @@ tmpdir=/tmp/nextensio-kind
 kubectl=$tmpdir/kubectl
 kind=$tmpdir/kind
 istioctl=$tmpdir/istioctl
-metric_dir=../../../metrics/monitoring
 
 image_mongo="gopakumarce/mongodb-replica-set:20200330-stable-1"
 image_kind_node="kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6"
@@ -211,128 +210,6 @@ function create_monitoring {
     $kubectl apply -f metallb-namespace.yaml
     $kubectl apply -f metallb-manifest.yaml
     $kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
-    $kubectl apply -f $metric_dir/monitoring-namespace.yaml
-}
-
-function config_gateway_monitoring {
-    cluster_name=$1
-    alertmgr_ip=$2
-    alertmgr_port=$3
-
-
-    echo "Setup monitoring components on Nxt $cluster_name cluster"
-    echo "use-context kind-$cluster_name"
-
-    $kubectl config use-context kind-$cluster_name
-    #config prometheus external label and alert-mgr target
-    tmpf=$tmpdir/$cluster_name-prometheus-configmap.yaml
-    cp $metric_dir/istio-promethues-confmap.yaml $tmpf
-    sed -i "s/REPLACE_CLUSTER_NAME/$cluster_name/g" $tmpf
-    sed -i "s/REPLACE_ALERTMGR_TARGET/$alertmgr_ip/g" $tmpf
-    sed -i "s/REPLACE_AM_TARGET_PORT/$alertmgr_port/g" $tmpf
-    $kubectl apply -f $tmpf
-    $kubectl apply -f $metric_dir/istio-prometheus-rules-config.yaml
-    $kubectl apply -f $metric_dir/istio-prometheus-deployment.yaml  
-
-    #config gateway for thanos side car
-    tmpf=$tmpdir/$cluster_name-thanos-store-gateway-svc.yaml
-    cp $metric_dir/istio-thanos-store-gateway-svc.yaml $tmpf
-    sed -i "s/REPLACE_CLUSTER_NAME/$cluster_name/g" $tmpf
-    $kubectl apply -f $tmpf
-    tmpf=$tmpdir/$cluster_name-thanos-store-gateway-service.yaml
-    cp $metric_dir/thanos-store-gateway-service.yaml $tmpf
-    sed -i "s/REPLACE_NAMESPACE/istio-system/g" $tmpf
-    $kubectl apply -f $tmpf
-
-    # Create monitoring namespace and install k8s and node exporter
-    # metric components
-    $kubectl apply -f $metric_dir/monitoring-namespace.yaml
-    $kubectl apply -f $metric_dir/node-exporter-daemonset.yml
-    $kubectl apply -f $metric_dir/K8SstateMetrics-deployment.yaml
-}
-
-function config_controller_monitoring {
-    cluster_name=$1
-    alertmgr_ip=$2
-    alertmgr_port=$3
-
-    echo "Setup monitoring components on Nxt Controller" 
-    $kubectl config use-context kind-controller
-
-    #config prometheus server, node-exported and related components   
-    $kubectl apply -f $metric_dir/monitoring-namespace.yaml
-    tmpf=$tmpdir/$cluster_name-prometheus-config.yaml
-    cp $metric_dir/prometheus-config.yaml $tmpf
-    sed -i "s/REPLACE_CLUSTER_NAME/nxt-$cluster_name/g" $tmpf
-    sed -i "s/REPLACE_ALERTMGR_TARGET/$alertmgr_ip/g" $tmpf
-    sed -i "s/REPLACE_AM_TARGET_PORT/$alertmgr_port/g" $tmpf
-    $kubectl apply -f $tmpf
-    $kubectl apply -f $metric_dir/prometheusRulesConfigmap.yaml
-    $kubectl apply -f $metric_dir/prometheus-deployment.yaml
-
-    tmpf=$tmpdir/$cluster_name-thanos-store-gateway-service.yaml
-    cp $metric_dir/thanos-store-gateway-service.yaml $tmpf
-    sed -i "s/REPLACE_NAMESPACE/monitoring/g" $tmpf
-    $kubectl apply -f $tmpf
-    $kubectl apply -f $metric_dir/node-exporter-daemonset.yml
-    $kubectl apply -f $metric_dir/K8SstateMetrics-deployment.yaml
-}
-
-function bootstrap_monitoring {
-    my_ip=$1
-    ctrl_ip=$2
-    testa_ip=$3
-    testc_ip=$4
-
-    echo "Configure monitoring cluster, use context kind-monitoring" 
-    $kubectl config use-context kind-monitoring
-
-    # Install loadbalancer to attract traffic to istio ingress gateway via external IP (docker contaier IP)
-    tmpf=$tmpdir/monitoring-metallb.yaml
-    cp metallb.yaml $tmpf
-    sed -i "s/REPLACE_SELF_NODE_IP/$my_ip/g" $tmpf
-    $kubectl apply -f $tmpf
-
-    # Config ctrl/testa/testc for thanos querier dns lookup
-    tmpf=$tmpdir/monitoring-coredns.yaml
-    cp $metric_dir/monitoring-coredns.yaml $tmpf
-    sed -i "s/REPLACE_CONTROLLER_IP/$ctrl_ip/g" $tmpf
-    sed -i "s/REPLACE_NODE1_IP/$testa_ip/g" $tmpf
-    sed -i "s/REPLACE_NODE2_IP/$testc_ip/g" $tmpf
-    $kubectl replace -n kube-system -f $tmpf
-
-    #config prometheus external label and alert-mgr target
-    tmpf=$tmpdir/monitoring-prometheus-config.yaml
-    cp $metric_dir/prometheus-config.yaml $tmpf
-    sed -i "s/REPLACE_CLUSTER_NAME/nxt-monitoring/g" $tmpf
-    sed -i "s/REPLACE_ALERTMGR_TARGET/alertmanager/g" $tmpf
-    sed -i "s/REPLACE_AM_TARGET_PORT/9093/g" $tmpf
-    $kubectl apply -f $tmpf
-
-    $kubectl apply -f $metric_dir/prometheusRulesConfigmap.yaml
-    $kubectl apply -f $metric_dir/prometheus-deployment.yaml
-    $kubectl apply -f $metric_dir/prometheus-service.yaml
-
-    # deploy thanos querier
-    $kubectl apply -f $metric_dir/thanos-querier-deployment.yaml
-
-    # deploy grafana
-    $kubectl apply -f $metric_dir/grafana-deployment.yaml
-    $kubectl apply -f $metric_dir/grafana-service.yaml
-
-    # lets add node metrics
-    # deploy node exporter. explain daemonser
-    $kubectl apply -f $metric_dir/node-exporter-daemonset.yml
-
-    # deploy kubernetes state metrics
-    $kubectl apply -f $metric_dir/K8SstateMetrics-deployment.yaml
-
-    # start prometheus alert manager
-    $kubectl apply -f $metric_dir/alertManager-deployment.yaml
-    
-    config_controller_monitoring controller $my_ip 30393
-    config_gateway_monitoring gatewaytesta $my_ip 30393
-    config_gateway_monitoring gatewaytestc $my_ip 30393
 }
 
 # Create kind clusters for gatewaytesta and gatewaytestc
@@ -546,7 +423,7 @@ function create_controller_clusters {
     bootstrap_controller $ctrl_ip
 }
 
-function create_gw_monitoring_clusters {
+function create_gw_clusters {
     image=$1
     if [ "$image" != "local" ];
     then
@@ -557,7 +434,6 @@ function create_gw_monitoring_clusters {
     # delete existing clusters
     $kind delete cluster --name gatewaytesta
     $kind delete cluster --name gatewaytestc
-    $kind delete cluster --name monitoring
 
     create_cluster gatewaytesta
     create_cluster gatewaytestc
@@ -603,15 +479,6 @@ function create_gw_monitoring_clusters {
     echo "Configuring the controller, may take a few seconds"
     NEXTENSIO_CERT=../../testCert/nextensio.crt ./ctrl.py $ctrl_ip ../../testCert/nextensio.crt
     echo "Controller config done, going to create agents and connectors"
-
-    # Create monitoring cluster for telemetry
-    #create_monitoring
-    #monitoring_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' monitoring-control-plane`
-  
-    # Configure monitoring stuff (prometheus, thanos, grafana). This also install 
-    # prometheus and thanos sidecar on all the clusters 
-    # TODO: check monitoring cluster readiness
-    #bootstrap_monitoring $monitoring_ip $ctrl_ip $gatewaytesta_ip $gatewaytestc_ip
 }
 
 function create_agent_connector {
@@ -653,7 +520,7 @@ function create_all {
     # can set an environment variable to skip data clusters/agents etc..
     if [ "$CONTROLLER_ONLY" != "true" ];
     then
-        create_gw_monitoring_clusters $1
+        create_gw_clusters $1
         create_agent_connector $1
     fi
 }
@@ -667,16 +534,11 @@ function save_env {
     echo "##You can set a broswer proxy to $nxt_agent1:8181 to send traffic via nextensio##"
     echo "##OR You can set a broswer proxy to $nxt_agent2:8181 to send traffic via nextensio##"
     echo "##All the above information is saved in $tmpdir/environment for future reference##"
-    echo "######You can access Thanos UI at http://$monitoring_ip:9092  ############"
-    echo "######You can access Grafana UI at http://$monitoring_ip:3000  ############"
-    echo "######Use http://thanos-querier:9092 as Grafana dashboard datasource ############"
-    echo "######You can access Alert Mgr UI at http://$monitoring_ip:9093  ############"
 
     envf=$tmpdir/environment
     echo "gatewaytesta_ip=$gatewaytesta_ip" > $envf
     echo "gatewaytestc_ip=$gatewaytestc_ip" >> $envf
     echo "ctrl_ip=$ctrl_ip" >> $envf
-    echo "monitoring_ip=$monitoring_ip" >> $envf
     echo "nxt_agent1=$nxt_agent1" >> $envf
     echo "nxt_agent2=$nxt_agent2" >> $envf
     echo "nxt_conn2conn=$nxt_conn2conn" >> $envf

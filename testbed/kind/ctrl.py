@@ -65,9 +65,7 @@ if __name__ == '__main__':
         time.sleep(1)
         ok = create_gateway(url, gw2json, token)
 
-    tenantjson = {"_id":TENANT,
-                  "jaegerCollector":"https://nxt-nextensio.nxt-kc1.do-sf.nextensio.net/jaegerthrift14268/api/traces",
-                  }
+    tenantjson = {"_id":TENANT}
     
     ok = create_tenant(url, tenantjson, token)
     while not ok:

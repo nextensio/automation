@@ -512,13 +512,20 @@ function create_connector {
     etchost_ip=$4
     etchost_name=$5
 
+    secret=`NEXTENSIO_CERT=../../testCert/nextensio.crt ./bundle_secret.py $ctrl_ip $username`
+    if [ "$?" != "0" ];
+    then
+        echo $secret
+        exit 1
+    fi
+
     docker run -d -it --user 0:0 --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun \
         -e NXT_GW_1_IP=$gatewaytesta_ip -e NXT_GW_1_NAME=gatewaytesta.nextensio.net \
         -e NXT_GW_2_IP=$gatewaytestc_ip -e NXT_GW_2_NAME=gatewaytestc.nextensio.net \
         -e NXT_GW_3_IP=$etchost_ip -e NXT_GW_3_NAME=$etchost_name \
-        -e NXT_USERNAME=$username -e NXT_PWD=LetMeIn123 \
         -e NXT_AGENT=$agent -e NXT_CONTROLLER=$ctrl_ip:8080 \
         -e NXT_AGENT_NAME=$name -e CLIENT_ID=0oaz5lndczD0DSUeh4x6 -e IDP_URI=https://dev-635657.okta.com \
+        -e NXT_SECRET=\"$secret\" \
         --network kind --name $name registry.gitlab.com/nextensio/agent/go-agent:latest
 }
 
@@ -598,13 +605,13 @@ function create_gw_monitoring_clusters {
     echo "Controller config done, going to create agents and connectors"
 
     # Create monitoring cluster for telemetry
-    create_monitoring
-    monitoring_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' monitoring-control-plane`
+    #create_monitoring
+    #monitoring_ip=`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' monitoring-control-plane`
   
     # Configure monitoring stuff (prometheus, thanos, grafana). This also install 
     # prometheus and thanos sidecar on all the clusters 
     # TODO: check monitoring cluster readiness
-    bootstrap_monitoring $monitoring_ip $ctrl_ip $gatewaytesta_ip $gatewaytestc_ip
+    #bootstrap_monitoring $monitoring_ip $ctrl_ip $gatewaytesta_ip $gatewaytestc_ip
 }
 
 function create_agent_connector {

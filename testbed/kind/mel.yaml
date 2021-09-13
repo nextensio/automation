@@ -32,4 +32,5 @@ spec:
             value: "REPLACE_CONSUL_STORAGE"
           - name: MY_MONGO_URI
             value: "mongodb://REPLACE_CONTROLLER_IP:27017,REPLACE_CONTROLLER_IP:27018,REPLACE_CONTROLLER_IP:27019/"
-
+          - name: MY_JAEGER_COLLECTOR
+            value: "https://nxt-nextensio.nxt-kc1.do-sf.nextensio.net/jaegerthrift14268/api/traces"

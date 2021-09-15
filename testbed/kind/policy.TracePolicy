@@ -1,6 +1,20 @@
 package user.tracing
 
-default request = "no"
+# This policy initially returned a trace request id.
+# Now, this policy returns a trace request id plus an array of user
+# attribute names for attributes that should be included as tags in
+# the trace spans. The keywords "all" or "*" can be used to indicate
+# all available user attributes. 
+# For eg.,
+# request = {"TraceRequestOne": ["team", "category", "ostype", "location"]}
+# or
+# request = {"TraceRequestTwo": ["all"]}
+#
+# A trace request id of "no" or "none" indicates that the flow should
+# not be traced. User attributes are not relevant in this case and so
+# the attributes array should be empty as shown below.
+
+default request = {"no": []}
 
 #
 #    A user's attributes -----> Trace Policy <------ All trace requests
@@ -8,26 +22,35 @@ default request = "no"
 #
 # The first rule matches user's ostype and location to determine
 # tracing. The trace request has location = California and
-# ostype = Linux.
+# ostype = Linux. It includes four user attributes that should be
+# inserted in the spans as tags
+# (the tags are called nxt-trace-<attributeName>)
 #
 # The second rule matches user's category and team to determine
 # tracing. The trace request has category = employee and team =
-# "sales".
+# "sales". Traces generated for this request have all available
+# user attributes as tags in the trace spans.
 #
 # Therefore, tracing will be enabled for California users using
 # Linux or employees in sales team.
 #
-# What the policy returns is the trace request id -
-#  "CaliforniaLinuxUsers" or "SalesEmployees".
+# What the policy returns is the trace request id + array of user
+# attributes for inclusion as span tags -
+#  "CaliforniaLinuxUsers" + userattributes array
+# or
+#  "SalesEmployees" + array containing "all"
 #
+
+userattributes := ["ostype", "location", "team", "category"]
+
 request = tid1 {
     some i
     input.user.ostype == data.tracerequests[i].ostype
     input.user.location == data.tracerequests[i].location
-    tid1 := data.tracerequests[i].traceid
+    tid1 := {data.tracerequests[i].traceid: userattributes}
 } else = tid2 {
     some i
     input.user.team[_] == data.tracerequests[i].team[_]
     input.user.category == data.tracerequests[i].category[_]
-    tid2 := data.tracerequests[i].traceid
+    tid2 := {data.tracerequests[i].traceid: ["all"]}
 }

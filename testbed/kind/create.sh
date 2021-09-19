@@ -578,6 +578,7 @@ function main {
     create_all $1
     # Display and save environment information
     save_env
+    echo "Testbed creation completed at : $(date)"
 }
 
 function usage {
@@ -587,6 +588,21 @@ function usage {
     echo "create.sh reset-agent : this will restart the agent docker"
     echo "create.sh reset-conn : this will restart the connector(s) docker(s)"
 }
+
+# Entry point of script
+if [[ -v https_proxy ]]; then
+    echo "https_proxy is set to $https_proxy - Exiting..."
+    echo "Please unset https_proxy before executing create.sh"
+    exit 1
+fi
+
+if [[ -v HTTPS_PROXY ]]; then
+    echo "HTTPS_PROXY is set to $HTTPS_PROXY - Exiting..."
+    echo "Please unset HTTPS_PROXY before executing create.sh"
+    exit 1
+fi
+
+echo "https_proxy not set. Continuing..."
 
 options=$1
 case "$options" in

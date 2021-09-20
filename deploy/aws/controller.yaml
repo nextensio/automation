@@ -36,9 +36,9 @@ spec:
           - name: API_CLIENT_ID
             value: "0oav0qhafWceOAOJb5d6"
           - name: IDP_URI
-            value: "https://dev-24743301.okta.com/oauth2/default"
+            value: "https://login.nextensio.net/oauth2/default"
           - name: IDP_API
-            value: "https://dev-24743301.okta.com"
+            value: "https://login.nextensio.net"
           - name: API_TOKEN
             value: "0033GxEtLu2vBK3JhpqAZK8A2QUAEgfu8-9bQxYa8Z"
           - name: MONGO_URI
@@ -88,7 +88,7 @@ spec:
           - name: REACT_APP_CLIENT_ID
             value: "0oav0qhafWceOAOJb5d6"
           - name: REACT_APP_IDP_URI
-            value: "https://dev-24743301.okta.com"
+            value: "https://login.nextensio.net"
           - name: TLS_KEY
             value: "/etc/nxt-certs/tls.key"
           - name: TLS_CRT

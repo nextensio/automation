@@ -1,0 +1,39 @@
+This is how okta is configured
+
+0. Custom domain set to login.nextensio.net - need to upload certificate and key and needs to 
+   reupload it I guess when larry renews it. Read about custom domain settings for okta, google for it
+
+1. The "default" authorization server is used (Security-->API)
+    scopes - openid, profile, email, address, phone, offline_access
+
+    claims:
+    a) name "sub" - (appuser != null) ? appuser.userName : app.clientId (scopes Any, type Access, Included Always)
+    a) name "userType" - user.userType (scopes Any, type Access, Included Always)
+    a) name "userType" - user.userType (scopes Any, type Id, Included Always)
+    a) name "tenant" - user.organization (scopes Any, type Access, Included Always)
+    a) name "tenant" - user.organization (scopes Any, type Id, Included Always)
+
+    Obviously the profile values for each user has a userType which says "regular", "admin" or "superadmin"
+    as seen in controller code. The "tenant" field in profile identifies the nextensio tenant the the user is part of
+
+2. There is a "Nextensio Agent Mobile" app, use PKCE (for public clients), Application Type is "native", 
+   Grant Type client-on-behalf-of-user, authorization code+refresh token, refresh token behaviour - use persistent token,
+   user consent - require consent, Signon has custom url, 
+   signin url nextensio.agent:/login and signout url nextensio.agent:/logout
+
+3. There is a "NextensioAgent" app, use PKCE (for public clients), application type is SPA (Single Page App),
+   Grant Type client-on-behalf-of-user,, authorization code+refresh token, refresh token behaviour - 
+   rotate token after every use with 30 sec grace (why different from above???),
+   user consent - require consent, Signon has custom url, 
+   signin url - http://localhost:8180/ AND io.nextensio.agent1:/callback, 
+   signout url - http://localhost:8180 AND io.nextensio.agent1:/callback
+   login initiated by - App only,
+   Initiate login URI - http://localhost:8180/
+
+4. There is a "NextensioController" app, use PKCE (for public clients), application type is SPA (Single Page App),
+   Grant Type client-on-behalf-of-user, authorization code - (why different from above???),
+   user consent - require consent, Signon has custom url, 
+   signin url - https://controller.nextensio.net/login/callback
+   signout url - https://controller.nextensio.net
+   login initiated by - App only,
+   Initiate login URI - https://controller.nextensio.net/login/callback

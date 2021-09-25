@@ -34,12 +34,9 @@ default is_allowed = false
 is_allowed {
 	   some i
 	   input.bid == data.bundles[i].bid
-	   data.bundles[i].IC != ""
-	   data.bundles[i].IC <= input.user.level
-	   dept := data.bundles[i].dept[_]
-	   dept == input.user.dept[_]
+	   input.user.level >= data.bundles[i].IC 
+	   input.user.dept[_] == data.bundles[i].dept[_]
 	   user_is_employee_IC
-	   input.user.level != ""
 }
 
 # Rule2
@@ -49,12 +46,9 @@ is_allowed {
 is_allowed  {
 	    some i
 	    input.bid == data.bundles[i].bid
-	    data.bundles[i].IC != ""
-	    data.bundles[i].IC <= input.user.level
-	    team := data.bundles[i].team[_]
-	    team == input.user.team[_]
+	    input.user.level >= data.bundles[i].IC
+	    input.user.team[_] == data.bundles[i].team[_]
 	    user_is_employee_IC
-	    input.user.level != ""
 }
 
 # Rule3
@@ -64,12 +58,9 @@ is_allowed  {
 is_allowed  {
 	    some i
 	    input.bid == data.bundles[i].bid
-	    data.bundles[i].manager != ""
-	    data.bundles[i].manager <= input.user.level
-	    dept := data.bundles[i].dept[_]
-	    dept == input.user.dept[_]
+	    input.user.level >= data.bundles[i].manager
+	    input.user.dept[_] == data.bundles[i].dept[_]
 	    user_is_employee_manager
-	    input.user.level != ""
 }
 
 # Rule4
@@ -79,12 +70,9 @@ is_allowed  {
 is_allowed  {
 	    some i
 	    input.bid == data.bundles[i].bid
-	    data.bundles[i].manager != ""
-	    data.bundles[i].manager <= input.user.level
-	    team := data.bundles[i].team[_]
-	    team == input.user.team[_]
+	    input.user.level >= data.bundles[i].manager
+	    input.user.team[_] == data.bundles[i].team[_]
 	    user_is_employee_manager
-	    input.user.level != ""
 }
 
 # Rule5
@@ -95,8 +83,7 @@ is_allowed  {
 	    some i
 	    input.bid == data.bundles[i].bid
 	    data.bundles[i].nonemployee == "allow"
-	    dept := data.bundles[i].dept[_]
-	    dept == input.user.dept[_]
+	    input.user.dept[_] == data.bundles[i].dept[_]
 	    user_is_nonemployee
 }
 
@@ -108,8 +95,7 @@ is_allowed  {
 	    some i
 	    input.bid == data.bundles[i].bid
 	    data.bundles[i].nonemployee == "allow"
-	    team := data.bundles[i].team[_]
-	    team == input.user.team[_]
+	    input.user.team[_] == data.bundles[i].team[_]
 	    user_is_nonemployee
 }
 

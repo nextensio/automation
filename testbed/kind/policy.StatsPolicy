@@ -1,0 +1,25 @@
+package user.stats
+
+default attributes = {"exclude": ["uid", "maj_ver", "min_ver", "_hostname", "_model", "_osMinor", "_osPatch", "_osName"]}
+
+#
+# This policy simply provides the user attributes to be included or
+# excluded as dimensions for stats.
+# To include specific attributes :
+# select := {"include": [attr1, attr2, attr3, ..]}
+# select := {"include": ["all"]}
+#
+# Instead, one can also assume all user attributes will get included
+# except those specifically excluded. For eg.,
+# select := {"exclude": [attr1, attr2, attr3, ...]}
+# select := {"exclude": ["all"]}
+#
+# All attributes can also be excluded via an empty list
+# select := {"include": []}
+#
+# Note that "include" and "exclude" are mutually exclusive. Specify
+# only one.
+#
+attributes = select {
+    select := {"exclude": ["uid", "maj_ver", "min_ver", "_hostname", "_model", "_osMinor", "_osPatch", "_osName"]}
+}

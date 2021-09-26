@@ -335,6 +335,14 @@ if __name__ == '__main__':
         time.sleep(1)
         ok = create_policy(url, tenant, 'TracePolicy', rego, token)
 
+    with open('policy.StatsPolicy','r') as file:
+        rego = file.read()
+    ok = create_policy(url, tenant, 'StatsPolicy', rego, token)
+    while not ok:
+        print('Stats Policy creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_policy(url, tenant, 'StatsPolicy', rego, token)
+
     ok = create_cert(url, cert, token)
     while not ok:
         print('CERT creation failed, retrying ...')

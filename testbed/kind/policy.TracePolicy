@@ -14,7 +14,7 @@ package user.tracing
 # not be traced. User attributes are not relevant in this case and so
 # the attributes array should be empty as shown below.
 
-default request = {"no": []}
+default request = {"no": [""]}
 
 #
 #    A user's attributes -----> Trace Policy <------ All trace requests

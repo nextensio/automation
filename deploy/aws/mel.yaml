@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: mel
-        image: registry.gitlab.com/nextensio/clustermgr/mel:latest
+        image: registry.gitlab.com/nextensio/clustermgr/mel:production
         imagePullPolicy: IfNotPresent
         stdin: true 
         tty: true 

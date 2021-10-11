@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: controller
-        image: registry.gitlab.com/nextensio/controller/controller:latest
+        image: registry.gitlab.com/nextensio/controller/controller:production
         imagePullPolicy: IfNotPresent
         volumeMounts:
           - name: secret-volume
@@ -73,7 +73,7 @@ spec:
     spec:
       containers:
       - name: ux
-        image: registry.gitlab.com/nextensio/ux/ux:latest
+        image: registry.gitlab.com/nextensio/ux/ux:production
         imagePullPolicy: IfNotPresent
         volumeMounts:
           - name: secret-volume

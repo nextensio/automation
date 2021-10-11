@@ -86,8 +86,8 @@ if __name__ == '__main__':
         print('Tenant mismatch after readback from DB - %s != %s' % (tenant, TENANT))
         exit(1)
 
-    tenantclusterjson1 = {"gateway":GW1, "image":"", "apodsets":2, "apodrepl":1}
-    tenantclusterjson2 = {"gateway":GW2, "image":"", "apodsets":1, "apodrepl":1}
+    tenantclusterjson1 = {"gateway":GW1, "image":"registry.gitlab.com/nextensio/cluster/minion:latest", "apodsets":2, "apodrepl":1}
+    tenantclusterjson2 = {"gateway":GW2, "image":"registry.gitlab.com/nextensio/cluster/minion:latest", "apodsets":1, "apodrepl":1}
 
     ok = create_tenant_cluster(url, tenant, tenantclusterjson1, token)
     while not ok:

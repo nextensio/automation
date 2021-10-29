@@ -111,10 +111,10 @@ def istioChecks(cluster, useragent, podnum, xfor, xconnect):
 # proper pod that we expect
 def checkConsulDnsEntry(devices, cluster, svc, pod):
     device = clusterPod2Device(cluster, "consul")
-    service = nameToService(svc)
+    service = svc
 
     while True:
-        value = devices[device].shell.execute('dig ' + service + '-nxt-' + TENANT + '.query.consul SRV').strip()
+        value = devices[device].shell.execute('dig ' + service + '.nxt-' + TENANT + '.query.consul SRV').strip()
         lines = value.splitlines()
         cur = "None"
         for l in lines:

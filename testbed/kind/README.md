@@ -51,7 +51,7 @@ on your host.
 
 * install kind (https://kind.sigs.k8s.io/docs/user/quick-start/) - the kind command needs to be in $PATH
 
-* controller apis - get the controller git repo from gitlab, "cd controller/python; pip3 install ."
+* controller apis - get the apis git repo from gitlab, "cd apis/controller/python; pip3 install ."
 
 * install docker - plenty of docs on internet to do that
 

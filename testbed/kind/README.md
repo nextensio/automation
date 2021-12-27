@@ -49,8 +49,6 @@ on your host.
 
 * install golang compiler
 
-* install kind (https://kind.sigs.k8s.io/docs/user/quick-start/) - the kind command needs to be in $PATH
-
 * controller apis - get the apis git repo from gitlab, "cd apis/controller/python; pip3 install ."
 
 * install docker - plenty of docs on internet to do that
@@ -59,6 +57,28 @@ on your host.
 and clustermgr/mel - all stored in gitlab. Today they are manually built and kept there, but its easy to automate
 that with gitlab CI/CD. So you need to login to the image repo to be able to allow the scripts to download the 
 images, this is a one time activity
+
+* For debugging purposes it is helpful to install kubeadm (https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)
+
+* Browser will reject self-signed certificates, which is what we use for testbed creation
+    On chrome, go to Settings > Privacy and Security > Security > Manage Certificates > Authorities > Import 
+      Import NXT/automation/testCert/nextensio.crt
+    On other browsers, import the same cert. 
+
+### Creating the setup controller only
+
+* cd into the ux and controller repos and run "make build"
+
+* notice the image shas, then say "docker tag <the image sha> registry.gitlab.com/nextensio/ux/ux:latest" for the ux image
+                              and "docker tag <the image sha> registry.gitlab.com/nextensio/controller/controller:latest" for the controller image"
+  (You can find out the image shas by running docker images)
+
+* cd into automation/testbed/kind and run as root "CONTROLLER_ONLY=true ./create.sh local-image"
+
+* There will be a printout that says something like 
+    "172.18.0.2 controller.nextensio.net"
+    "172.18.0.2 server.nextensio.net"
+  Add the printout to your /etc/hosts folder
 
 ### Creating the setup
 

@@ -20,12 +20,7 @@ image_kindnetd="docker.io/kindest/kindnetd:v20210326-1e038dc5"
 image_localpath="docker.io/rancher/local-path-provisioner:v0.0.14"
 image_istio_pilot="docker.io/istio/pilot:1.10.2"
 image_istio_proxy="docker.io/istio/proxyv2:1.10.2"
-image_jaeger="docker.io/jaegertracing/all-in-one:1.22"
-image_jaeger_agent="jaegertracing/jaeger-agent:1.24.0"
-image_jaeger_1_24="docker.io/jaegertracing/all-in-one:1.24"
-image_jaeger_operator="jaegertracing/jaeger-operator:1.24.0"
 image_consul="gopakumarce/consul:1.9.6"
-image_prometheus="docker.io/prom/prometheus:v2.24.0"
 image_debian_base="k8s.gcr.io/build-image/debian-base:v2.1.0"
 image_coredns="k8s.gcr.io/coredns/coredns:v1.8.0"
 image_etcd="k8s.gcr.io/etcd:3.4.13-0"
@@ -34,12 +29,8 @@ image_controller_manager="k8s.gcr.io/kube-controller-manager:v1.21.1"
 image_kube_proxy="k8s.gcr.io/kube-proxy:v1.21.1"
 image_kube_scheduler="k8s.gcr.io/kube-scheduler:v1.21.1"
 image_pause="k8s.gcr.io/pause:3.5"
-image_kiali="quay.io/kiali/kiali:v1.34"
-image_alertmgr="docker.io/prom/alertmanager:v0.15.3"
 image_node_exporter="docker.io/prom/node-exporter:v0.16.0"
 image_kube_metrics="quay.io/mxinden/kube-state-metrics:v1.4.0-gzip.3"
-image_thanos="quay.io/thanos/thanos:v0.12.2"
-image_grafana="docker.io/grafana/grafana:7.4.3"
 image_addon_resizer="k8s.gcr.io/addon-resizer:1.8.3"
 
 function download_common_images {
@@ -95,18 +86,9 @@ function load_controller_images {
 }
 
 function download_cluster_infra_images {
-    docker image inspect ${image_prometheus} > /dev/null || docker pull ${image_prometheus}
     docker image inspect ${image_istio_pilot} > /dev/null || docker pull ${image_istio_pilot}
     docker image inspect ${image_istio_proxy} > /dev/null || docker pull ${image_istio_proxy}
-    docker image inspect ${image_jaeger} > /dev/null || docker pull ${image_jaeger}
-    docker image inspect ${image_jaeger_agent} > /dev/null || docker pull ${image_jaeger_agent}
-    docker image inspect ${image_jaeger_1_24} > /dev/null || docker pull ${image_jaeger_1_24}
-    docker image inspect ${image_jaeger_operator} > /dev/null || docker pull ${image_jaeger_operator}
     docker image inspect ${image_consul} > /dev/null || docker pull ${image_consul}
-    docker image inspect ${image_kiali} > /dev/null || docker pull ${image_kiali}
-    docker image inspect ${image_alertmgr} > /dev/null || docker pull ${image_alertmgr}
-    docker image inspect ${image_grafana} > /dev/null || docker pull ${image_grafana}
-    docker image inspect ${image_thanos} > /dev/null || docker pull ${image_thanos}
 }
 
 function download_nextensio_cluster {
@@ -116,45 +98,16 @@ function download_nextensio_cluster {
 
 function load_cluster_images {
     cluster=$1
-    $kind load docker-image $image_prometheus --name $cluster
     $kind load docker-image $image_istio_pilot --name $cluster
     $kind load docker-image $image_istio_proxy --name $cluster
-    $kind load docker-image $image_jaeger --name $cluster
-    $kind load docker-image $image_jaeger_agent --name $cluster
-    $kind load docker-image $image_jaeger_1_24 --name $cluster
-    $kind load docker-image $image_jaeger_operator --name $cluster
     $kind load docker-image $image_consul --name $cluster
-    $kind load docker-image $image_kiali --name $cluster
     $kind load docker-image registry.gitlab.com/nextensio/cluster/minion:latest --name $cluster
     $kind load docker-image registry.gitlab.com/nextensio/clustermgr/mel:latest --name $cluster
-}
-
-function load_monitoring_images {
-    $kind load docker-image $image_prometheus --name monitoring
-    $kind load docker-image $image_alertmgr --name monitoring
-    $kind load docker-image $image_grafana --name monitoring
-    $kind load docker-image $image_thanos --name monitoring
 }
 
 function download_nextensio_agents {
     docker pull registry.gitlab.com/nextensio/agent/go-agent:latest
     docker pull registry.gitlab.com/nextensio/agent/rust-agent:latest
-}
-
-# Create jaeger, based on the link below
-# https://www.digitalocean.com/community/tutorials/how-to-implement-distributed-tracing-with-jaeger-on-kubernetes
-# to see jaeger UI - kubectl -n nxt-nextensio port-forward $(kubectl -n nxt-nextensio get pods -l=app="jaeger" -o name) 16686:16686
-# and open http://localhost:16686 in your browswer
-function create_jaeger {
-    $kubectl create namespace nxt-nextensio
-    $kubectl create -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/crds/jaegertracing.io_jaegers_crd.yaml
-    $kubectl create -n nxt-nextensio -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/service_account.yaml
-    $kubectl create -n nxt-nextensio -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/role.yaml
-    $kubectl create -n nxt-nextensio -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/role_binding.yaml
-    $kubectl create -n nxt-nextensio -f jaeger-operator.yaml
-    $kubectl create -f https://raw.githubusercontent.com/jaegertracing/jaeger-operator/master/deploy/cluster_role.yaml
-    $kubectl create -f jaeger-rolebinding.yaml
-    $kubectl apply -n nxt-nextensio -f ./jaeger-simplest.yaml
 }
 
 # Create a controller
@@ -204,7 +157,6 @@ function create_monitoring {
 
     # Load required images into cluster
     load_common_images monitoring
-    load_monitoring_images 
 
     # metallb as a loadbalancer to map services to externally accessible IPs
     $kubectl apply -f metallb-namespace.yaml
@@ -235,21 +187,13 @@ function create_cluster {
         --user=kubelet \
         --group=system:serviceaccounts
 
-    # Install istio. This is nothing but the demo.yaml in the istio bundle, with addonComponents
-    # prometheus, kiali, grafana, tracing all set to false. 
+    # Install istio. This is nothing but the demo.yaml in the istio bundle, with some addons
     $istioctl manifest apply -f ./istio.yaml --skip-confirmation
-    $kubectl apply -f ./jaeger.yaml
-    $kubectl apply -f ./kiali.yaml
-    $kubectl apply -f ./prometheus.yaml
-    $kubectl apply -f ./grafana.yaml
 
     # Install metallb. metallb exposes services inside the cluster via external IP addresses
     $kubectl apply -f metallb-namespace.yaml
     $kubectl apply -f metallb-manifest.yaml
     $kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
-
-    # Ask jaeger to be spun up as side-cars of minion pods
-    create_jaeger
 
     EXTFILE="$tmpdir/$cluster-extfile.conf"
     echo "subjectAltName = DNS:$cluster.nextensio.net" > "${EXTFILE}"
@@ -302,18 +246,6 @@ function bootstrap_cluster {
     sed -i "s/REPLACE_CONSUL_DNS/$consul_dns/g" $tmpf
     sed -i "s/REPLACE_CONTROLLER_IP/$ctrl_ip/g" $tmpf
     $kubectl replace -n kube-system -f $tmpf
-
-    # Apply custom metric dynamically, istio request_bytes custom dimension is done 
-    # through istio manifest config. Istio response_bytes custom dimension is applied
-    # on the fly, just for the fun (it can be done through the config as well)  
-    tmp_rscver="$(kubectl -n istio-system get envoyfilter stats-filter-1.10 -o yaml |  grep resourceVersion:)"
-    #remove leading whitespace of rsc ver
-    cur_rscver=$(echo $tmp_rscver)
-    tmpf=$tmpdir/$cluster-envoyFilter_CustomStat.yaml
-    echo "current envoy filter $cur_rscver"
-    cp envoyFilter_CustomStat.yaml $tmpf
-    sed -i "s/REPLACE_CURRENT_RSC_VER/$cur_rscver/g" $tmpf
-    kubectl -n istio-system apply -f $tmpf
 }
 
 # Setup prepared query so that consul forwards the dns lookup to multiple DCs

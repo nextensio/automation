@@ -378,7 +378,7 @@ function create_agent {
         -e NXT_GW_3_IP=$etchost_ip -e NXT_GW_3_NAME=$etchost_name \
         -e NXT_USERNAME=$username -e NXT_PWD=LetMeIn123 \
         -e NXT_AGENT=$agent -e NXT_CONTROLLER=$ctrl_ip:8080 \
-        -e NXT_AGENT_NAME=$name NXT_TESTING=true \
+        -e NXT_AGENT_NAME=$name -e NXT_TESTING=true \
         --network kind --name $name registry.gitlab.com/nextensio/agent/rust-agent:latest
 }
 

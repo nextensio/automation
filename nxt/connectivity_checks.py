@@ -153,19 +153,19 @@ def checkOnboarding(specs):
         checkUserOnboarding(spec['name'], gw, podnm)
 
 def checkUserOnboarding(uid, gw, podnm):
-    ok, onblog = get_onboard_log(url, tenant, uid, token)
+    ok, onblog = get_onboard_log(url, tenant, uid, token, "superadmin")
     while not ok:
         print('Onboarding log entry fetch failed, retrying ...')
         time.sleep(1)
-        ok, onblog = get_onboard_log(url, tenant, uid, token)
+        ok, onblog = get_onboard_log(url, tenant, uid, token, "superadmin")
     while onblog['gw'] != gw:
         print('Waiting for %s to get onboarded, gw %s / %s' % (uid, gw, onblog['gw']))
         time.sleep(1)
-        ok, onblog = get_onboard_log(url, tenant, uid, token)
+        ok, onblog = get_onboard_log(url, tenant, uid, token, "superadmin")
     while onblog['connectid'] != podnm:
         print('Waiting for %s to get onboarded pod %s / %s' % (uid, podnm, onblog['connectid']))
         time.sleep(1)
-        ok, onblog = get_onboard_log(url, tenant, uid, token)
+        ok, onblog = get_onboard_log(url, tenant, uid, token, "superadmin")
     print("%s onboarded for cluster %s pod %s" % (uid, gw, podnm))
 
 def parseVersions(versions):
@@ -282,19 +282,19 @@ def config_policy():
 
     with open('policy.AccessPolicy','r') as file:
         rego = file.read()
-        ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
+        ok = create_policy(url, tenant, 'AccessPolicy', rego, token, "superadmin")
         while not ok:
             logger.info('Access Policy creation failed, retrying ...')
             time.sleep(1)
-            ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
+            ok = create_policy(url, tenant, 'AccessPolicy', rego, token, "superadmin")
         
     with open('policy.RoutePolicy','r') as file:
         rego = file.read()
-        ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
+        ok = create_policy(url, tenant, 'RoutePolicy', rego, token, "superadmin")
         while not ok:
             logger.info('Route Policy creation failed, retrying ...')
             time.sleep(1)
-            ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
+            ok = create_policy(url, tenant, 'RoutePolicy', rego, token, "superadmin")
 
         
 def config_routes(tag1, tag2):
@@ -308,11 +308,11 @@ def config_routes(tag1, tag2):
                        "category":["employee"], "type":["manager"], "IClvl": 1, "mlvl": 1 }
 		      ]
                 }
-    ok = create_host_attr(url, tenant, routejson, token)
+    ok = create_host_attr(url, tenant, routejson, token, "superadmin")
     while not ok:
         logger.info('Route creation failed, retrying ...')
         time.sleep(1)
-        ok = create_host_attr(url, tenant, routejson, token)
+        ok = create_host_attr(url, tenant, routejson, token, "superadmin")
 
 
 def config_user_attr(level1, level2):
@@ -324,17 +324,17 @@ def config_user_attr(level1, level2):
     user2attrjson = {"uid":USER2, "category":"employee", "type":"manager", "level":level2,
                      "dept":["ABU","BBU"], "team":["engineering","sales"],
                      "location": "California", "ostype": "Linux", "osver": 20.04 }
-    ok = create_user_attr(url, tenant, user1attrjson, token)
+    ok = create_user_attr(url, tenant, user1attrjson, token, "superadmin")
     while not ok:
         logger.info('UserAttr test1 config failed, retrying ...')
         time.sleep(1)
-        ok = create_user_attr(url, tenant, user1attrjson, token)
+        ok = create_user_attr(url, tenant, user1attrjson, token, "superadmin")
 
-    ok = create_user_attr(url, tenant, user2attrjson, token)
+    ok = create_user_attr(url, tenant, user2attrjson, token, "superadmin")
     while not ok:
         logger.info('UserAttr test2 config failed, retrying ...')
         time.sleep(1)
-        ok = create_user_attr(url, tenant, user2attrjson, token)
+        ok = create_user_attr(url, tenant, user2attrjson, token, "superadmin")
 
 
 def config_user(user, service, gateway, pod):
@@ -343,11 +343,11 @@ def config_user(user, service, gateway, pod):
     usernm = 'Test User %s' % user
     userjson = {"uid":user, "name":usernm, "email":user,
                  "services":[service], "gateway":gateway, "pod":pod}
-    ok = create_user(url, tenant, userjson, token)
+    ok = create_user(url, tenant, userjson, token, "superadmin")
     while not ok:
         logger.info('User %s updation failed, retrying ...' % user)
         time.sleep(1)
-        ok = create_user(url, tenant, userjson, token)
+        ok = create_user(url, tenant, userjson, token, "superadmin")
 
 
 def config_bundle(bundle, service, gateway, pod):
@@ -356,11 +356,11 @@ def config_bundle(bundle, service, gateway, pod):
     bundlenm = 'Bundle %s' % bundle
     bundlejson = {"bid":bundle, "name":bundlenm,
                    "services":[service], "gateway":gateway, "pod":pod, "cpodrepl": 2}
-    ok = create_bundle(url, tenant, bundlejson, token)
+    ok = create_bundle(url, tenant, bundlejson, token, "superadmin")
     while not ok:
         logger.info('Bundle %s updation failed, retrying ...' % bundle)
         time.sleep(1)
-        ok = create_bundle(url, tenant, bundlejson, token)
+        ok = create_bundle(url, tenant, bundlejson, token, "superadmin")
 
 
 def config_default_bundle_attr(depts, teams):
@@ -368,11 +368,11 @@ def config_default_bundle_attr(depts, teams):
 
     bundleattrjson = {"bid":CNCTR3, "dept":depts,
                        "team":teams, "IC":10, "manager":10, "nonemployee":"allow"}
-    ok = create_bundle_attr(url, tenant, bundleattrjson, token)
+    ok = create_bundle_attr(url, tenant, bundleattrjson, token, "superadmin")
     while not ok:
         logger.info('BundleAttr bundle default config failed, retrying ...')
         time.sleep(1)
-        ok = create_bundle_attr(url, tenant, bundleattrjson, token)
+        ok = create_bundle_attr(url, tenant, bundleattrjson, token, "superadmin")
 
 
 # If testing in webproxy mode, the curl command will open a connection to port 8181
@@ -573,11 +573,11 @@ class CommonSetup(aetest.CommonSetup):
         # Load the testbed information variables as environment variables
         load_dotenv(dotenv_path='/tmp/nextensio-kind/environment')
         url = "https://" + os.getenv('ctrl_ip') + ":8080"
-        ok, tenants = get_tenants(url, token)
+        ok, tenants = get_tenants(url, token, "superadmin")
         while not ok:
             logger.info('Tenant fetch %s failed, retrying ...' % url)
             time.sleep(1)
-            ok, tenants = get_tenants(url, token)
+            ok, tenants = get_tenants(url, token, "superadmin")
         # The test setup is assumed to be created with just one tenant, if we need more we just need
         # to search for the right tenant name or something inside the returned list of tenants
         tenant = tenants[0]['_id']
@@ -1199,19 +1199,19 @@ def conn2conn_policy():
 
     with open('conn2conn.AccessPolicy','r') as file:
         rego = file.read()
-        ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
+        ok = create_policy(url, tenant, 'AccessPolicy', rego, token, "superadmin")
         while not ok:
             logger.info('Access Policy creation failed, retrying ...')
             time.sleep(1)
-            ok = create_policy(url, tenant, 'AccessPolicy', rego, token)
+            ok = create_policy(url, tenant, 'AccessPolicy', rego, token, "superadmin")
         
     with open('conn2conn.RoutePolicy','r') as file:
         rego = file.read()
-        ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
+        ok = create_policy(url, tenant, 'RoutePolicy', rego, token, "superadmin")
         while not ok:
             logger.info('Route Policy creation failed, retrying ...')
             time.sleep(1)
-            ok = create_policy(url, tenant, 'RoutePolicy', rego, token)
+            ok = create_policy(url, tenant, 'RoutePolicy', rego, token, "superadmin")
 
 class AgentConnectorSquareOne(aetest.Testcase):
     '''Agents and connectors back to their very first placement.

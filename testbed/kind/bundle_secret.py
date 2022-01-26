@@ -22,7 +22,7 @@ if __name__ == '__main__':
         print('Cannot get access token for bundle %s, exiting' % sys.argv[2])
         exit(1)
 
-    secret = get_bundle_key(url, "nextensio", sys.argv[2], token).strip()
+    secret = get_bundle_key(url, "nextensio", sys.argv[2], token, "superadmin").strip()
     if secret == "":
         print('Cannot get secret for bundle %s' % sys.argv[2])
         exit(1)

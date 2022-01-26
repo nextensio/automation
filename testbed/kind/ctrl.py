@@ -15,10 +15,10 @@ GW2 = "gatewaytestc.nextensio.net"
 TENANT = "nextensio"
 USER1 = "test1@nextensio.net"
 USER2 = "test2@nextensio.net"
-CNCTR1 = "v1.kismis@nextensio.net"
-CNCTR2 = "v2.kismis@nextensio.net"
-CNCTR3 = "default@nextensio.net"
-CNCTR4 = "conn2conn@nextensio.net"
+CNCTR1 = "v1kismis"
+CNCTR2 = "v2kismis"
+CNCTR3 = "default"
+CNCTR4 = "conn2conn"
 
 def runCmd(cmd):
     try:

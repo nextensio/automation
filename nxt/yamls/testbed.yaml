@@ -72,7 +72,7 @@ devices:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytesta:nextensio-default-nextensio-net-0'
+        name: 'kind-gatewaytesta:nextensio-default-0'
   gatewaytesta_cpod1-0:
     os: linux
     type: kubernetes
@@ -80,7 +80,7 @@ devices:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytesta:nextensio-v1-kismis-nextensio-net-0'
+        name: 'kind-gatewaytesta:nextensio-v1kismis-0'
   gatewaytesta_cpod2-0:
     os: linux
     type: kubernetes
@@ -88,7 +88,7 @@ devices:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytesta:nextensio-v2-kismis-nextensio-net-0'
+        name: 'kind-gatewaytesta:nextensio-v2kismis-0'
   gatewaytesta_cpod3-1:
     os: linux
     type: kubernetes
@@ -96,7 +96,7 @@ devices:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytesta:nextensio-default-nextensio-net-1'
+        name: 'kind-gatewaytesta:nextensio-default-1'
   gatewaytesta_cpod1-1:
     os: linux
     type: kubernetes
@@ -104,7 +104,7 @@ devices:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytesta:nextensio-v1-kismis-nextensio-net-1'
+        name: 'kind-gatewaytesta:nextensio-v1kismis-1'
   gatewaytesta_cpod2-1:
     os: linux
     type: kubernetes
@@ -112,7 +112,7 @@ devices:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytesta:nextensio-v2-kismis-nextensio-net-1'
+        name: 'kind-gatewaytesta:nextensio-v2kismis-1'
   gatewaytesta_consul:
     os: linux
     type: kubernetes
@@ -136,7 +136,7 @@ devices:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytestc:nextensio-default-nextensio-net-0'
+        name: 'kind-gatewaytestc:nextensio-default-0'
   gatewaytestc_cpod1-0:
     os: linux
     type: kubernetes
@@ -144,7 +144,7 @@ devices:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytestc:nextensio-v1-kismis-nextensio-net-0'
+        name: 'kind-gatewaytestc:nextensio-v1kismis-0'
   gatewaytestc_cpod2-0:
     os: linux
     type: kubernetes
@@ -152,7 +152,7 @@ devices:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytestc:nextensio-v2-kismis-nextensio-net-0'
+        name: 'kind-gatewaytestc:nextensio-v2kismis-0'
   gatewaytestc_cpod3-1:
     os: linux
     type: kubernetes
@@ -160,7 +160,7 @@ devices:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytestc:nextensio-default-nextensio-net-1'
+        name: 'kind-gatewaytestc:nextensio-default-1'
   gatewaytestc_cpod1-1:
     os: linux
     type: kubernetes
@@ -168,7 +168,7 @@ devices:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytestc:nextensio-v1-kismis-nextensio-net-1'
+        name: 'kind-gatewaytestc:nextensio-v1kismis-1'
   gatewaytestc_cpod2-1:
     os: linux
     type: kubernetes
@@ -176,7 +176,7 @@ devices:
       defaults:
         class: 'containers.KubernetesConnection'
       container:
-        name: 'kind-gatewaytestc:nextensio-v2-kismis-nextensio-net-1'
+        name: 'kind-gatewaytestc:nextensio-v2kismis-1'
   gatewaytestc_consul:
     os: linux
     type: kubernetes

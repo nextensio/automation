@@ -41,9 +41,9 @@ USER2 = "test2@nextensio.net"
 CNCTR1 = "v1kismis"
 CNCTR2 = "v2kismis"
 CNCTR3 = "default"
-CNCTR1POD = "nextensio-v1-kismis-nextensio-net"
-CNCTR2POD = "nextensio-v2-kismis-nextensio-net"
-CNCTR3POD = "nextensio-default-nextensio-net"
+CNCTR1POD = "nextensio-v1kismis"
+CNCTR2POD = "nextensio-v2kismis"
+CNCTR3POD = "nextensio-default"
 
 token = ""
 

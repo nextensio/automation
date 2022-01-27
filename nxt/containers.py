@@ -10,15 +10,18 @@ from kubernetes.stream.ws_client import ERROR_CHANNEL
 from kubernetes.client import AppsV1Api
 
 
-def docker_run(cname, cmd, environment={}):
+def docker_run(cname, cmd, expected_exit, environment={}):
     try:
         client = docker.from_env()
         container = client.containers.get(cname)
         out = container.exec_run(cmd, environment=environment)
-        return out.output.decode("utf-8")
-    except:
+        if out.exit_code != 0:
+            if expected_exit == None or expected_exit != out.exit_code:
+                return "docker command fail exit_code %s" % out.exit_code, True
+        return out.output.decode("utf-8"), False
+    except Exception as e:
         pass
-        return ""
+        return "Docker command fail Exception %s" % e, True
 
 
 def kube_get_pod(cluster, namespace, pod):

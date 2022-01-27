@@ -246,36 +246,66 @@ def resetAgents(devices):
     devices['nxt_kismis_ONE'].shell.restart()
     devices['nxt_kismis_TWO'].shell.restart()
 
+def quit_error(text):
+    print(text)
+    raise Exception("Test failed")
+    sys.exit(1)
 
 # Ensure public and private access is successul
 def publicAndPvtPass(kwargs, agent1, agent2):
-    if proxyGet(kwargs, 'nxt_agent1', 'https://foobar.com',
-                "I am Nextensio agent nxt_default") != True:
+    proxy, text, err = proxyGet(kwargs, 'nxt_agent1', 'https://foobar.com',
+                                "I am Nextensio agent nxt_default", None) 
+    if err == True:
+        quit_error(text)
+    if proxy != True:
         print("agent1 default internet access fail")
-        sys.exit(1)
-    if proxyGet(kwargs, 'nxt_agent2', 'https://foobar.com',
-                "I am Nextensio agent nxt_default") != True:
+        quit_error(text)
+
+    proxy, text, err = proxyGet(kwargs, 'nxt_agent2', 'https://foobar.com',
+                                "I am Nextensio agent nxt_default", None) 
+    if err == True:
+        quit_error(text)
+    if proxy != True:
         print("agent2 default internet fail")
-        sys.exit(1)
-    if proxyGet(kwargs, 'nxt_agent1', 'https://kismis.org',
-                "I am Nextensio agent nxt_kismis_" + agent1) != True:
+        quit_error(text)
+
+    proxy, text, err = proxyGet(kwargs, 'nxt_agent1', 'https://kismis.org',
+                                "I am Nextensio agent nxt_kismis_" + agent1, None) 
+    if err == True:
+        quit_error(text)
+    if proxy != True:
         print("agent1 kismis_%s fail" % agent1)
-        sys.exit(1)
-    if proxyGet(kwargs, 'nxt_agent2', 'https://kismis.org',
-                "I am Nextensio agent nxt_kismis_" + agent2) != True:
+        quit_error(text)
+
+    proxy, text, err = proxyGet(kwargs, 'nxt_agent2', 'https://kismis.org',
+                                "I am Nextensio agent nxt_kismis_" + agent2, None) 
+    if err == True:
+        quit_error(text)
+    if proxy != True:
         print("agent2 kismis_%s fail" % agent2)
-        sys.exit(1)
+        quit_error(text)
 
 # Ensure public access fails
 
 
 def publicFail(kwargs):
-    if proxyGet(kwargs, 'nxt_agent1', 'https://foobar.com',
-                "I am Nextensio agent nxt_default") == True:
-        raise Exception("agent1 default internet access works!")
-    if proxyGet(kwargs, 'nxt_agent2', 'https://foobar.com',
-                "I am Nextensio agent nxt_default") == True:
-        raise Exception("agent2 default internet works!")
+    # Exit code 28 means the curl command timed out, which is what we really
+    # expect here
+    proxy, text, err = proxyGet(kwargs, 'nxt_agent1', 'https://foobar.com',
+                                "I am Nextensio agent nxt_default", 28) 
+    if err == True:
+        quit_error(text)
+    if proxy == True:
+        quit_error("agent1 default internet access works!")
+
+    # Exit code 28 means the curl command timed out, which is what we really
+    # expect here
+    proxy, text, err = proxyGet(kwargs, 'nxt_agent2', 'https://foobar.com',
+                                "I am Nextensio agent nxt_default", 28) 
+    if err == True:
+        quit_error(text)
+    if proxy == True:
+        quit_error("agent2 default internet works!")
 
 def config_policy():
     global token
@@ -385,22 +415,25 @@ def webProxyTestMode(kwargs):
     return True
 
 # Get a URL via a proxy
-def proxyGet(kwargs, agent, url, expected):
+def proxyGet(kwargs, agent, url, expected, expected_exit):
     try:
         if webProxyTestMode(kwargs):
             env = {"https_proxy": "http://" + os.getenv(agent) + ":8181"}
-            text = docker_run("curl", "curl --silent --connect-timeout 5 --max-time 5 -k %s" % url, environment=env)
+            text, err = docker_run("curl", "curl --silent --connect-timeout 5 --max-time 5 -k %s" % url, expected_exit, environment=env)
+            if err == True:
+                return False, text, err
         else:
-            docker_run("curl", "route add default gw %s" % os.getenv(agent))
-            text = docker_run("curl", "curl --silent --connect-timeout 5 --max-time 5 -k %s" % url)
-            docker_run("curl", "route del default gw %s" % os.getenv(agent))
+            docker_run("curl", "route add default gw %s" % os.getenv(agent), None)
+            text, err = docker_run("curl", "curl --silent --connect-timeout 5 --max-time 5 -k %s" % url, expected_exit)
+            docker_run("curl", "route del default gw %s" % os.getenv(agent), None)
+            if err == True:
+                return False, text, err
     except Exception as e:
         pass
-        print("Exception %s" % e)
-        return False
+        return False, "Exception %s" % e, True
     if expected not in text:
-        return False
-    return True
+        return False, text, False
+    return True, "", False
 
 # Basic access sanity checks public and private URL access, in some cases
 # the accesses are expected to succeed and in some cases its expected to fail
@@ -476,70 +509,77 @@ def basicLoadbalancing(kwargs, specs, devices):
     # the case, this needs to be debugged and understood, the below just hacks around
     # to do a few warmup loads 
     for i in range(16):
-        if proxyGet(kwargs, 'nxt_agent1', 'https://foobar.com',
-                    "I am Nextensio agent nxt_default") != True:
+        proxy, text, err = proxyGet(kwargs, 'nxt_agent1', 'https://foobar.com',
+                                    "I am Nextensio agent nxt_default", None) 
+        if err == True:
+            quit_error(text)
+        if proxy != True:
             print("agent1 default fail")
-            sys.exit(1)
+            quit_error(text)
 
     def1 = 0
     def2 = 0
     def1_new = 0
     def2_new = 0
     try:
-        out = docker_run("nxt_default1", "curl http://127.0.0.1/server-status?auto")
+        out, err = docker_run("nxt_default1", "curl http://127.0.0.1/server-status?auto", None)
         m = re.search(r'Total Accesses: ([0-9]+)', out)
         if not m:
-            print("Bad lighthttpd stats %s" % out)
-            sys.exit(1)
+            quit_error("Bad lighthttpd stats %s" % out)
         def1 = int(m[1])
-        out = docker_run("nxt_default2", "curl http://127.0.0.1/server-status?auto")
+        out, err = docker_run("nxt_default2", "curl http://127.0.0.1/server-status?auto", None)
         m = re.search(r'Total Accesses: ([0-9]+)', out)
         if not m:
-            print("Bad lighthttpd stats %s" % out)
-            sys.exit(1)
+            quit_error("Bad lighthttpd stats %s" % out)
         def2 = int(m[1])
     except Exception as e:
-        print("Exception %s" % e)
-        sys.exit(1)
+        quit_error("Exception %s" % e)
 
     # This should trigger four accesses to default1 and four to default2
     for i in range(8):
-        if proxyGet(kwargs, 'nxt_agent1', 'https://foobar.com',
-                    "I am Nextensio agent nxt_default") != True:
+        proxy, text, err = proxyGet(kwargs, 'nxt_agent1', 'https://foobar.com',
+                                    "I am Nextensio agent nxt_default", None) 
+        if err == True:
+            quit_error(text)
+        if proxy != True:
             print("agent1 default internet access fail")
-            sys.exit(1)
+            quit_error(text)
 
     # Access kismis multiple times from agent1 and agent2 and ensure
     # it works. kismis has two replicas but only one connector, so here
     # we are trying to ensure that the kismis access does NOT end up
     # on a replica without a connector 
     for i in range(4):
-        if proxyGet(kwargs, 'nxt_agent1', 'https://kismis.org',
-                    "I am Nextensio agent nxt_kismis_ONE") != True:
+        proxy, text, err = proxyGet(kwargs, 'nxt_agent1', 'https://kismis.org',
+                                    "I am Nextensio agent nxt_kismis_ONE", None) 
+        if err == True:
+            quit_error(text)
+        if proxy != True:
             print("agent1 kismis_ONE fail")
-            sys.exit(1)
+            quit_error(text)
+
     for i in range(4):
-        if proxyGet(kwargs, 'nxt_agent2', 'https://kismis.org',
-                    "I am Nextensio agent nxt_kismis_TWO") != True:
+        proxy, text, err = proxyGet(kwargs, 'nxt_agent2', 'https://kismis.org',
+                                    "I am Nextensio agent nxt_kismis_TWO", None) 
+        if err == True:
+            quit_error(text)
+        if proxy != True:
             print("agent2 kismis_TWO fail")
-            sys.exit(1)
+            quit_error(text)
 
     try:
-        out = docker_run("nxt_default1", "curl http://127.0.0.1/server-status?auto")
+        out, err = docker_run("nxt_default1", "curl http://127.0.0.1/server-status?auto", None)
         m = re.search(r'Total Accesses: ([0-9]+)', out)
         if not m:
-            print("Bad lighthttpd stats %s" % out)
-            sys.exit(1)
+            quit_error("Bad lighthttpd stats %s" % out)
         def1_new = int(m[1])
-        out = docker_run("nxt_default2", "curl http://127.0.0.1/server-status?auto")
+        out, err = docker_run("nxt_default2", "curl http://127.0.0.1/server-status?auto", None)
         m = re.search(r'Total Accesses: ([0-9]+)', out)
         if not m:
-            print("Bad lighthttpd stats %s" % out)
-            sys.exit(1)
+            quit_error("Bad lighthttpd stats %s" % out)
         def2_new = int(m[1])
     except Exception as e:
-        print("Exception %s" % e)
-        sys.exit(1)
+        quit_error("Exception %s" % e)
 
     # The http access to read the stats (the server-status access) itself adds
     # a count of 1 to the Total Accesses ! And then each access is incrementing the Total Accesses
@@ -552,8 +592,7 @@ def basicLoadbalancing(kwargs, specs, devices):
     delta1 = def1_new - def1
     delta2 = def2_new - def2
     if (delta1 - delta2 > 2) or (delta2 - delta1 > 2): 
-        print("Mismatching default counts %d / %d, %d / %d" % (def1, def1_new, def2, def2_new))
-        sys.exit(1)
+        quit_error("Mismatching default counts %d / %d, %d / %d" % (def1, def1_new, def2, def2_new))
 
 # This aetest sections in this class is executed at the very beginning BEFORE
 # any of the actual test cases run. So we have all the environment loading and
@@ -582,8 +621,7 @@ class CommonSetup(aetest.CommonSetup):
         # to search for the right tenant name or something inside the returned list of tenants
         tenant = tenants[0]['_id']
         if tenant != TENANT:
-            print('Tenant mismatch after readback from DB - %s != %s' % (tenant, TENANT))
-            sys.exit(1)
+            quit_error('Tenant mismatch after readback from DB - %s != %s' % (tenant, TENANT))
 
 
     def parseTestbed(self, testbed):
@@ -691,10 +729,14 @@ class Connector2Connector(aetest.Testcase):
         c2c = os.getenv("nxt_conn2conn")
         subprocess.check_output("docker exec -it  curl sh -c \"echo 127.0.0.1 localhost > /etc/hosts\"", shell=True)
         subprocess.check_output("docker exec -it  curl sh -c \"echo %s kismis.org >> /etc/hosts\"" % c2c, shell=True)
-        if proxyGet(kwargs, 'nxt_conn2conn', 'https://kismis.org',
-                    "I am Nextensio agent nxt_kismis_ONE") != True:
+        proxy, text, err = proxyGet(kwargs, 'nxt_conn2conn', 'https://kismis.org',
+                                    "I am Nextensio agent nxt_kismis_ONE", None) 
+        if err == True:
+            quit_error(text)
+        if proxy != True:
             print("conn2conn kismis ONE access fail")
-            sys.exit(1)
+            quit_error(text)
+
         subprocess.check_output("docker exec -it  curl sh -c \"echo 127.0.0.1 locahost > /etc/hosts\"", shell=True)
         subprocess.check_output("docker exec -it  curl sh -c \"echo 1.1.1.1 foobar.com >> /etc/hosts\"", shell=True)
         subprocess.check_output("docker exec -it  curl sh -c \"echo 1.1.1.1 kismis.org >> /etc/hosts\"", shell=True)

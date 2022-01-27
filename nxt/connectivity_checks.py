@@ -249,7 +249,6 @@ def resetAgents(devices):
 def quit_error(text):
     print(text)
     raise Exception("Test failed")
-    sys.exit(1)
 
 # Ensure public and private access is successul
 def publicAndPvtPass(kwargs, agent1, agent2):

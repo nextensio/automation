@@ -29,12 +29,8 @@ spec:
         env:
           - name: NXT_READONLY
             value: "false"
-          - name: AGENT_SPA_CLIENT_ID
-            value: "0oav0q3hn65I4Zkmr5d6"
-          - name: AGENT_MOB_CLIENT_ID
-            value: "0oav0rc5g0E3irFto5d6"
           - name: API_CLIENT_ID
-            value: "0oav0qhafWceOAOJb5d6"
+            value: "0oav0q3hn65I4Zkmr5d6"
           - name: IDP_URI
             value: "https://login.nextensio.net/oauth2/default"
           - name: IDP_API
@@ -86,7 +82,7 @@ spec:
           - name: REACT_APP_API_URL
             value: "https://server.nextensio.net:8080"
           - name: REACT_APP_CLIENT_ID
-            value: "0oav0qhafWceOAOJb5d6"
+            value: "0oav0q3hn65I4Zkmr5d6"
           - name: REACT_APP_IDP_URI
             value: "https://login.nextensio.net"
           - name: TLS_KEY

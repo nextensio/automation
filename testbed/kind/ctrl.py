@@ -53,6 +53,12 @@ if __name__ == '__main__':
     gw1json = {"name":GW1}
     gw2json = {"name":GW2}
     
+    ok = create_clientid(url, "0oaz5lndczD0DSUeh4x6", token, "superadmin")
+    while not ok:
+        print('Clientid creation failed, retrying ...')
+        time.sleep(1)
+        ok = create_clientid(url, "0oaz5lndczD0DSUeh4x6", token, "superadmin")
+
     ok = create_gateway(url, gw1json, token, "superadmin")
     while not ok:
         print('Gateway1 creation failed, retrying ...')

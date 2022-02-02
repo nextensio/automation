@@ -311,6 +311,7 @@ function create_agent {
         -e NXT_USERNAME=$username -e NXT_PWD=LetMeIn123 \
         -e NXT_AGENT=$agent -e NXT_CONTROLLER=$ctrl_ip:8080 \
         -e NXT_AGENT_NAME=$name -e NXT_TESTING=true \
+        -e NXT_IDP="https://dev-635657.okta.com" \
         --network kind --name $name registry.gitlab.com/nextensio/agent/rust-agent:latest
 }
 

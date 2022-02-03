@@ -16,24 +16,15 @@ This is how okta is configured
     Obviously the profile values for each user has a userType which says "regular", "admin" or "superadmin"
     as seen in controller code. The "tenant" field in profile identifies the nextensio tenant the the user is part of
 
-2. There is a "Nextensio Agent Mobile" app, use PKCE (for public clients), Application Type is "native", 
-   Grant Type client-on-behalf-of-user, authorization code+refresh token, refresh token behaviour - use persistent token,
-   user consent - require consent, Signon has custom url, 
-   signin url nextensio.agent:/login and signout url nextensio.agent:/logout
-
-3. There is a "NextensioAgent" app, use PKCE (for public clients), application type is SPA (Single Page App),
+2. There is a "NextensioAgent" app, use PKCE (for public clients), application type is SPA (Single Page App),
    Grant Type client-on-behalf-of-user,, authorization code+refresh token, refresh token behaviour - 
    rotate token after every use with 30 sec grace (why different from above???),
    user consent - require consent, Signon has custom url, 
-   signin url - http://localhost:8180/ AND io.nextensio.agent1:/callback, 
-   signout url - http://localhost:8180 AND io.nextensio.agent1:/callback
+   signin url - http://localhost:8180/ AND io.nextensio.agent1:/callback AND nextensio.agent:/login AND https://controller.nextensio.net/login/callback
+   signout url - http://localhost:8180 AND io.nextensio.agent1:/callback AND nextensio.agent:/logout AND https://controller.nextensio.net
    login initiated by - App only,
    Initiate login URI - http://localhost:8180/
 
-4. There is a "NextensioController" app, use PKCE (for public clients), application type is SPA (Single Page App),
-   Grant Type client-on-behalf-of-user, authorization code - (why different from above???),
-   user consent - require consent, Signon has custom url, 
-   signin url - https://controller.nextensio.net/login/callback
-   signout url - https://controller.nextensio.net
-   login initiated by - App only,
-   Initiate login URI - https://controller.nextensio.net/login/callback
+   NOTE: The client_id of this APP needs to be entered in the "Client ID" tab in the UI (home page logged in as superadmin).
+   If by mistake someone deletes this app in okta, no worries, just create an app again as mentioned above and
+   update the new client_id in the controller UI

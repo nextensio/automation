@@ -398,8 +398,16 @@ function create_gw_clusters {
     # Install bind to do dig and get SRV records
     $kubectl config use-context kind-gatewaytesta
     $kubectl exec -it gatewaytesta-consul-server-0 -n consul-system -- apk add bind-tools
+    if [ $? != 0 ]; then
+	echo "ERROR installing bind-tools from alpinelinux.org ... exiting"
+	exit 1
+    fi
     $kubectl config use-context kind-gatewaytestc
     $kubectl exec -it gatewaytestc-consul-server-0 -n consul-system -- apk add bind-tools
+    if [ $? != 0 ]; then
+	echo "ERROR installing bind-tools from alpinelinux.org ... exiting"
+	exit 1
+    fi
 
     $kubectl config use-context kind-controller
     ctrlpod=`$kubectl get pods -n default | grep nextensio-controller | grep Running`;
@@ -487,6 +495,11 @@ function main {
         # Download kubectl
         echo "downloading kubectl..."
         curl -fsL $kubefile -o $tmpdir/kubectl
+	if [[ ! -f $tmpdir/kubectl ]]
+	then
+	    echo "ERROR - could not find kubectl ... exiting"
+	    exit 1
+	fi
         chmod +x $tmpdir/kubectl
     fi
     md5=`md5sum /tmp/nextensio-kind/istioctl|awk '{ print $1 }'`
@@ -496,6 +509,11 @@ function main {
         echo "downloading istioctl..."
         istiofile=https://github.com/istio/istio/releases/download/1.10.2/istioctl-1.10.2-linux-amd64.tar.gz
         curl -fsL $istiofile -o $tmpdir/istioctl.tgz
+	if [[ ! -f $tmpdir/istioctl.tgz ]]
+	then
+	    echo "ERROR - could not find istioctl ... exiting"
+	    exit 1
+	fi
         tar -xvzf $tmpdir/istioctl.tgz -C $tmpdir/
         chmod +x $tmpdir/istioctl
         rm $tmpdir/istioctl.tgz
@@ -504,6 +522,11 @@ function main {
     if [ "$md5" != "d20d60208676a13ff058eac2e67855f6" ]
     then
         curl -Lo $tmpdir/kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+	if [[ ! -f $tmpdir/kind ]]
+	then
+	    echo "ERROR - could not find kind ... exiting"
+	    exit 1
+	fi
         chmod +x $tmpdir/kind
     fi
 

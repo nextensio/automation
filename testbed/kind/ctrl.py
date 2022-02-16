@@ -71,7 +71,7 @@ if __name__ == '__main__':
         time.sleep(1)
         ok = create_gateway(url, gw2json, token, "superadmin")
 
-    tenantjson = {"_id":TENANT}
+    tenantjson = {"_id":TENANT, "easymode":False}
     
     ok = create_tenant(url, tenantjson, token, "superadmin")
     while not ok:

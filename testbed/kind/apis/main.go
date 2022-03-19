@@ -14,6 +14,10 @@ import (
 var ctx context.Context
 var client *apis.APIClient
 
+const GW1 = "gatewaytesta.nextensio.net"
+const GW2 = "gatewaytestc.nextensio.net"
+const TENANT = "nextensio"
+
 func is_controller_up() bool {
 	_, resp, err := client.DefaultApi.GetTenants(ctx, "superadmin")
 	if err != nil || resp == nil {
@@ -48,5 +52,41 @@ func main() {
 		ok, resp, err = client.DefaultApi.AddClientid(ctx, apis.AddClientId{Clientid: "0oaz5lndczD0DSUeh4x6"}, "superadmin")
 	}
 
+	ok, resp, err = client.DefaultApi.AddGateway(ctx, apis.GatewayStruct{Name: GW1}, "superadmin")
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Clientid creation failed, retrying ...")
+		ok, resp, err = client.DefaultApi.AddGateway(ctx, apis.GatewayStruct{Name: GW1}, "superadmin")
+	}
+	ok, resp, err = client.DefaultApi.AddGateway(ctx, apis.GatewayStruct{Name: GW2}, "superadmin")
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Clientid creation failed, retrying ...")
+		ok, resp, err = client.DefaultApi.AddGateway(ctx, apis.GatewayStruct{Name: GW2}, "superadmin")
+	}
+
+	ok, resp, err = client.DefaultApi.AddTenant(ctx, apis.TenantUpdate{Id: TENANT, Name: TENANT}, "superadmin")
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Tenant creation failed, retrying ...")
+		ok, resp, err = client.DefaultApi.AddTenant(ctx, apis.TenantUpdate{Id: TENANT, Name: TENANT}, "superadmin")
+	}
+
+	ok, resp, err = client.DefaultApi.AddClusterHandler(ctx,
+		apis.TenantCluster{Gateway: GW1, Image: "registry.gitlab.com/nextensio/cluster/minion:latest", Apodsets: 2, Apodrepl: 1},
+		"superadmin", TENANT)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Tenant creation failed, retrying ...")
+		ok, resp, err = client.DefaultApi.AddClusterHandler(ctx,
+			apis.TenantCluster{Gateway: GW1, Image: "registry.gitlab.com/nextensio/cluster/minion:latest", Apodsets: 2, Apodrepl: 1},
+			"superadmin", TENANT)
+	}
+
+	ok, resp, err = client.DefaultApi.AddClusterHandler(ctx,
+		apis.TenantCluster{Gateway: GW2, Image: "registry.gitlab.com/nextensio/cluster/minion:latest", Apodsets: 1, Apodrepl: 1},
+		"superadmin", TENANT)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Tenant creation failed, retrying ...")
+		ok, resp, err = client.DefaultApi.AddClusterHandler(ctx,
+			apis.TenantCluster{Gateway: GW2, Image: "registry.gitlab.com/nextensio/cluster/minion:latest", Apodsets: 1, Apodrepl: 1},
+			"superadmin", TENANT)
+	}
 	fmt.Println("APIs completed succesfully")
 }

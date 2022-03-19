@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -157,12 +156,4 @@ func authenticate(IDP string) *accessIdTokens {
 		return nil
 	}
 	return &aidTokens
-}
-
-func main() {
-	tokens := authenticate(os.Args[1])
-	if tokens == nil {
-		os.Exit(1)
-	}
-	fmt.Println(tokens.AccessToken)
 }

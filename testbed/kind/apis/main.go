@@ -86,6 +86,15 @@ var user2attrjson = map[string]interface{}{"uid": USER2, "category": "employee",
 	"type": "IC", "level": 50, "dept": []string{"ABU", "BBU"}, "team": []string{"sales"},
 	"location": "Massachusets", "ostype": "Windows", "osver": 10.12}
 
+var bundle1attrjson = map[string]interface{}{"bid": CNCTR3, "dept": []string{"ABU", "BBU"},
+	"team": []string{"engineering", "sales"}, "IC": 1, "manager": 1, "nonemployee": "allow"}
+var bundle2attrjson = map[string]interface{}{"bid": CNCTR1, "dept": []string{"ABU", "BBU"},
+	"team": []string{"engineering", "sales"}, "IC": 1, "manager": 1, "nonemployee": "allow"}
+var bundle3attrjson = map[string]interface{}{"bid": CNCTR2, "dept": []string{"ABU", "BBU"},
+	"team": []string{"engineering", "sales"}, "IC": 1, "manager": 1, "nonemployee": "allow"}
+var bundle4attrjson = map[string]interface{}{"bid": CNCTR4, "dept": []string{"ABU", "BBU"},
+	"team": []string{"engineering", "sales"}, "IC": 1, "manager": 1, "nonemployee": "allow"}
+
 func is_controller_up() bool {
 	_, resp, err := client.DefaultApi.GetTenants(ctx, "superadmin")
 	if err != nil || resp == nil {
@@ -202,6 +211,82 @@ func main() {
 		fmt.Println("Add userattr failed, retrying ...")
 		time.Sleep(1 * time.Second)
 		ok, resp, err = client.DefaultApi.AddUserAttr(ctx, user2attrjson, "superadmin", TENANT, USER2)
+	}
+
+	ok, resp, err = client.DefaultApi.AddBundle(ctx,
+		apis.BundleStruct{Bid: CNCTR3, Name: "Default Internet", Services: []string{"nextensio-default-internet"}, Gateway: GW2, Cpodrepl: 2},
+		"superadmin", TENANT,
+	)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add Bundle failed, retrying ...")
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddBundle(ctx,
+			apis.BundleStruct{Bid: CNCTR3, Name: "Default Internet", Services: []string{"nextensio-default-internet"}, Gateway: GW2, Cpodrepl: 2},
+			"superadmin", TENANT,
+		)
+	}
+	ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle1attrjson, "superadmin", TENANT)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add userattr failed, retrying ...")
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle1attrjson, "superadmin", TENANT)
+	}
+
+	ok, resp, err = client.DefaultApi.AddBundle(ctx,
+		apis.BundleStruct{Bid: CNCTR1, Name: "Kismis ONE", Services: []string{"v1.kismis.org"}, Gateway: GW2, Cpodrepl: 2},
+		"superadmin", TENANT,
+	)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add Bundle failed, retrying ...")
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddBundle(ctx,
+			apis.BundleStruct{Bid: CNCTR1, Name: "Kismis ONE", Services: []string{"v1.kismis.org"}, Gateway: GW2, Cpodrepl: 2},
+			"superadmin", TENANT,
+		)
+	}
+	ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle2attrjson, "superadmin", TENANT)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add userattr failed, retrying ...")
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle2attrjson, "superadmin", TENANT)
+	}
+
+	ok, resp, err = client.DefaultApi.AddBundle(ctx,
+		apis.BundleStruct{Bid: CNCTR2, Name: "Kismis TWO", Services: []string{"v2.kismis.org"}, Gateway: GW2, Cpodrepl: 2},
+		"superadmin", TENANT,
+	)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add Bundle failed, retrying ...")
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddBundle(ctx,
+			apis.BundleStruct{Bid: CNCTR2, Name: "Kismis TWO", Services: []string{"v2.kismis.org"}, Gateway: GW2, Cpodrepl: 2},
+			"superadmin", TENANT,
+		)
+	}
+	ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle3attrjson, "superadmin", TENANT)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add userattr failed, retrying ...")
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle3attrjson, "superadmin", TENANT)
+	}
+
+	ok, resp, err = client.DefaultApi.AddBundle(ctx,
+		apis.BundleStruct{Bid: CNCTR4, Name: "Connector To Connector", Services: []string{}, Gateway: GW2, Cpodrepl: 1},
+		"superadmin", TENANT,
+	)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add Bundle failed, retrying ...")
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddBundle(ctx,
+			apis.BundleStruct{Bid: CNCTR4, Name: "Connector To Connector", Services: []string{}, Gateway: GW2, Cpodrepl: 1},
+			"superadmin", TENANT,
+		)
+	}
+	ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle4attrjson, "superadmin", TENANT)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add userattr failed, retrying ...")
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle4attrjson, "superadmin", TENANT)
 	}
 
 	fmt.Println("APIs completed succesfully")

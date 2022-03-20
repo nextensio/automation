@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -95,6 +96,36 @@ var bundle3attrjson = map[string]interface{}{"bid": CNCTR2, "dept": []string{"AB
 var bundle4attrjson = map[string]interface{}{"bid": CNCTR4, "dept": []string{"ABU", "BBU"},
 	"team": []string{"engineering", "sales"}, "IC": 1, "manager": 1, "nonemployee": "allow"}
 
+var host1attrjson = map[string]interface{}{"host": "kismis.org",
+	"routeattrs": []map[string]interface{}{
+		{"tag": "v2", "team": []string{"engineering"}, "dept": []string{"ABU", "BBU"},
+			"category": []string{"employee", "nonemployee"}, "type": []string{"IC", "manager"},
+			"IClvl": 1, "mlvl": 1,
+		},
+		{"tag": "v1", "team": []string{"sales"}, "dept": []string{"BBU", "ABU"},
+			"category": []string{"employee"}, "type": []string{"manager", "IC"},
+			"IClvl": 4, "mlvl": 4,
+		}},
+}
+
+var host2attrjson = map[string]interface{}{"host": "nextensio-default-internet",
+	"routeattrs": []map[string]interface{}{
+		{"tag": "", "team": []string{""}, "dept": []string{""},
+			"category": []string{""}, "type": []string{""},
+			"IClvl": 0, "mlvl": 0,
+		},
+	},
+}
+
+var tracereq1json = map[string]interface{}{"traceid": "CaliforniaLinuxUsers", "uid": "", "category": []string{""}, "type": []string{""},
+	"iclevel": 50, "mgrlevel": 50, "dept": []string{""}, "team": []string{""},
+	"location": "California", "ostype": "Linux", "osver": 0.0,
+}
+var tracereq2json = map[string]interface{}{"traceid": "SalesEmployees", "uid": "", "category": []string{"employee"}, "type": []string{""},
+	"iclevel": 50, "mgrlevel": 50, "dept": []string{""}, "team": []string{"sales"},
+	"location": "", "ostype": "", "osver": 0.0,
+}
+
 func is_controller_up() bool {
 	_, resp, err := client.DefaultApi.GetTenants(ctx, "superadmin")
 	if err != nil || resp == nil {
@@ -117,6 +148,17 @@ func create_attrset_many(sets []apis.AttrSetStruct) {
 			ok, resp, err = client.DefaultApi.AddAttrSet(ctx, a, "superadmin", TENANT)
 		}
 	}
+}
+
+func read_rune(file string) []rune {
+	content, err := ioutil.ReadFile(file)
+	for err != nil {
+		fmt.Println("Cant read file", file)
+		time.Sleep(1 * time.Second)
+		content, err = ioutil.ReadFile(file)
+	}
+	str := string(content)
+	return []rune(str)
 }
 
 func main() {
@@ -143,13 +185,13 @@ func main() {
 
 	ok, resp, err = client.DefaultApi.AddGateway(ctx, apis.GatewayStruct{Name: GW1}, "superadmin")
 	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
-		fmt.Println("Clientid creation failed, retrying ...")
+		fmt.Println("Gateway creation failed, retrying ...")
 		time.Sleep(1 * time.Second)
 		ok, resp, err = client.DefaultApi.AddGateway(ctx, apis.GatewayStruct{Name: GW1}, "superadmin")
 	}
 	ok, resp, err = client.DefaultApi.AddGateway(ctx, apis.GatewayStruct{Name: GW2}, "superadmin")
 	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
-		fmt.Println("Clientid creation failed, retrying ...")
+		fmt.Println("Gateway creation failed, retrying ...")
 		time.Sleep(1 * time.Second)
 		ok, resp, err = client.DefaultApi.AddGateway(ctx, apis.GatewayStruct{Name: GW2}, "superadmin")
 	}
@@ -227,7 +269,7 @@ func main() {
 	}
 	ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle1attrjson, "superadmin", TENANT)
 	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
-		fmt.Println("Add userattr failed, retrying ...")
+		fmt.Println("Add battr failed, retrying ...")
 		time.Sleep(1 * time.Second)
 		ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle1attrjson, "superadmin", TENANT)
 	}
@@ -246,7 +288,7 @@ func main() {
 	}
 	ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle2attrjson, "superadmin", TENANT)
 	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
-		fmt.Println("Add userattr failed, retrying ...")
+		fmt.Println("Add battr failed, retrying ...")
 		time.Sleep(1 * time.Second)
 		ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle2attrjson, "superadmin", TENANT)
 	}
@@ -265,7 +307,7 @@ func main() {
 	}
 	ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle3attrjson, "superadmin", TENANT)
 	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
-		fmt.Println("Add userattr failed, retrying ...")
+		fmt.Println("Add battr failed, retrying ...")
 		time.Sleep(1 * time.Second)
 		ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle3attrjson, "superadmin", TENANT)
 	}
@@ -284,9 +326,76 @@ func main() {
 	}
 	ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle4attrjson, "superadmin", TENANT)
 	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
-		fmt.Println("Add userattr failed, retrying ...")
+		fmt.Println("Add battr failed, retrying ...")
 		time.Sleep(1 * time.Second)
 		ok, resp, err = client.DefaultApi.AddBundleAttr(ctx, bundle4attrjson, "superadmin", TENANT)
+	}
+
+	ok, resp, err = client.DefaultApi.AddHostAttr(ctx, host1attrjson, "superadmin", TENANT)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add hostattr failed, retrying ...")
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddHostAttr(ctx, host1attrjson, "superadmin", TENANT)
+	}
+
+	ok, resp, err = client.DefaultApi.AddHostAttr(ctx, host2attrjson, "superadmin", TENANT)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add hostattr failed, retrying ...")
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddHostAttr(ctx, host2attrjson, "superadmin", TENANT)
+	}
+
+	ok, resp, err = client.DefaultApi.AddTraceReq(ctx, tracereq1json, "superadmin", TENANT)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add tracereq failed, retrying ...")
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddTraceReq(ctx, tracereq1json, "superadmin", TENANT)
+	}
+	ok, resp, err = client.DefaultApi.AddTraceReq(ctx, tracereq2json, "superadmin", TENANT)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add tracereq failed, retrying ...")
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddTraceReq(ctx, tracereq2json, "superadmin", TENANT)
+	}
+
+	r := read_rune("../policy.AccessPolicy")
+	ok, resp, err = client.DefaultApi.AddPolicyHandler(ctx, apis.AddPolicy{Pid: "AccessPolicy", Rego: r}, "superadmin", TENANT)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add policy failed, retrying ...", err, resp, ok)
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddPolicyHandler(ctx, apis.AddPolicy{Pid: "AccessPolicy", Rego: r}, "superadmin", TENANT)
+	}
+
+	r = read_rune("../policy.RoutePolicy")
+	ok, resp, err = client.DefaultApi.AddPolicyHandler(ctx, apis.AddPolicy{Pid: "RoutePolicy", Rego: r}, "superadmin", TENANT)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add policy failed, retrying ...", err, resp, ok)
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddPolicyHandler(ctx, apis.AddPolicy{Pid: "RoutePolicy", Rego: r}, "superadmin", TENANT)
+	}
+
+	r = read_rune("../policy.TracePolicy")
+	ok, resp, err = client.DefaultApi.AddPolicyHandler(ctx, apis.AddPolicy{Pid: "TracePolicy", Rego: r}, "superadmin", TENANT)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add policy failed, retrying ...", err, resp, ok)
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddPolicyHandler(ctx, apis.AddPolicy{Pid: "TracePolicy", Rego: r}, "superadmin", TENANT)
+	}
+
+	r = read_rune("../policy.StatsPolicy")
+	ok, resp, err = client.DefaultApi.AddPolicyHandler(ctx, apis.AddPolicy{Pid: "StatsPolicy", Rego: r}, "superadmin", TENANT)
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add policy failed, retrying ...", err, resp, ok)
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddPolicyHandler(ctx, apis.AddPolicy{Pid: "StatsPolicy", Rego: r}, "superadmin", TENANT)
+	}
+
+	r = read_rune("../../../testCert/nextensio.crt")
+	ok, resp, err = client.DefaultApi.AddCerts(ctx, apis.CertStruct{Certid: "CACert", Cert: r}, "superadmin")
+	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
+		fmt.Println("Add cert failed, retrying ...", err, resp, ok)
+		time.Sleep(1 * time.Second)
+		ok, resp, err = client.DefaultApi.AddCerts(ctx, apis.CertStruct{Certid: "CACert", Cert: r}, "superadmin")
 	}
 
 	fmt.Println("APIs completed succesfully")

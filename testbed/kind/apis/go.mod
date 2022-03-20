@@ -2,7 +2,7 @@ module nextensio/test
 
 go 1.17
 
-require gitlab.com/nextensio/apis/controller/go v0.0.0-20220320191625-298a7ca4a9dd
+require gitlab.com/nextensio/apis/controller/go v0.0.0-20220320193725-e88d28d92e4b
 
 require (
 	github.com/antihax/optional v1.0.0 // indirect

@@ -418,7 +418,7 @@ function create_gw_clusters {
     done
     # configure the controller with some default customer/tenant information
     echo "Configuring the controller, may take a few seconds"
-    NEXTENSIO_CERT=../../testCert/nextensio.crt ./ctrl.py $ctrl_ip ../../testCert/nextensio.crt
+    cd apis; go build ./...; ./test; cd ..
     echo "Controller config done, going to create agents and connectors"
 }
 

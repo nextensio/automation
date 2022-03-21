@@ -322,7 +322,7 @@ function create_connector {
     etchost_ip=$4
     etchost_name=$5
 
-    secret=`NEXTENSIO_CERT=../../testCert/nextensio.crt ./bundle_secret.py $ctrl_ip $username`
+    ./apis/test -controller $ctrl_ip -bkey $username`
     if [ "$?" != "0" ];
     then
         echo $secret
@@ -418,7 +418,7 @@ function create_gw_clusters {
     done
     # configure the controller with some default customer/tenant information
     echo "Configuring the controller, may take a few seconds"
-    cd apis; go build ./...; ./test; cd ..
+    cd apis; go build ./...; ./test -controller $ctrl_ip; cd ..
     echo "Controller config done, going to create agents and connectors"
 }
 

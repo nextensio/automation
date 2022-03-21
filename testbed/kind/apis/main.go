@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -167,13 +168,30 @@ func main() {
 		os.Exit(1)
 	}
 
+	bkey := flag.String("bkey", "", "get bundle key")
+	controller := flag.String("controller", "server.nextensio.net", "controller name/IP")
+	flag.Parse()
+
+	cfg := apis.NewConfiguration()
+	cfg.BasePath = "https://" + *controller + ":8080/api/v1"
+
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	ctx = context.WithValue(context.Background(), apis.ContextAccessToken, tokens.AccessToken)
-	client = apis.NewAPIClient(apis.NewConfiguration())
+	client = apis.NewAPIClient(cfg)
 
 	for !is_controller_up() {
 		fmt.Println("Controller not up, waiting ...")
 		time.Sleep(5 * time.Second)
+	}
+
+	if *bkey != "" {
+		bundle, resp, err := client.DefaultApi.GetBundle(ctx, "superadmin", TENANT, *bkey)
+		for err != nil || (resp != nil && resp.StatusCode != 200) || bundle.Result != "ok" {
+			time.Sleep(1 * time.Second)
+			bundle, resp, err = client.DefaultApi.GetBundle(ctx, "superadmin", TENANT, *bkey)
+		}
+		fmt.Println(bundle.Bundle.SharedKey)
+		return
 	}
 
 	ok, resp, err := client.DefaultApi.AddClientid(ctx, apis.AddClientId{Clientid: "0oaz5lndczD0DSUeh4x6"}, "superadmin")
@@ -196,11 +214,11 @@ func main() {
 		ok, resp, err = client.DefaultApi.AddGateway(ctx, apis.GatewayStruct{Name: GW2}, "superadmin")
 	}
 
-	ok, resp, err = client.DefaultApi.AddTenant(ctx, apis.TenantUpdate{Id: TENANT, Name: TENANT}, "superadmin")
+	ok, resp, err = client.DefaultApi.AddTenant(ctx, apis.TenantUpdate{Id: TENANT, Name: TENANT, Easymode: false}, "superadmin")
 	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
 		fmt.Println("Tenant creation failed, retrying ...")
 		time.Sleep(1 * time.Second)
-		ok, resp, err = client.DefaultApi.AddTenant(ctx, apis.TenantUpdate{Id: TENANT, Name: TENANT}, "superadmin")
+		ok, resp, err = client.DefaultApi.AddTenant(ctx, apis.TenantUpdate{Id: TENANT, Name: TENANT, Easymode: false}, "superadmin")
 	}
 
 	ok, resp, err = client.DefaultApi.AddClusterHandler(ctx,

@@ -128,6 +128,16 @@ gitlab.com/nextensio/apis/controller/go v0.0.0-20220320193725-e88d28d92e4b h1:yp
 gitlab.com/nextensio/apis/controller/go v0.0.0-20220320193725-e88d28d92e4b/go.mod h1:6CZ97UjhQquoojTABYrbQqHiZhWXjuSZOzav0H9X7sQ=
 gitlab.com/nextensio/apis/controller/go v0.0.0-20220320201746-861239e12939 h1:YUlaKonmLXh875wXviP+9ifnM2IxsJZyjJfTW9HXoqo=
 gitlab.com/nextensio/apis/controller/go v0.0.0-20220320201746-861239e12939/go.mod h1:6CZ97UjhQquoojTABYrbQqHiZhWXjuSZOzav0H9X7sQ=
+gitlab.com/nextensio/apis/controller/go v0.0.0-20220321122111-d5b62d8e1249 h1:tOG3c6h1ydQmJDamEyH6N5S0WdF0tK+zDDRtTZyV9e4=
+gitlab.com/nextensio/apis/controller/go v0.0.0-20220321122111-d5b62d8e1249/go.mod h1:6CZ97UjhQquoojTABYrbQqHiZhWXjuSZOzav0H9X7sQ=
+gitlab.com/nextensio/apis/controller/go v0.0.0-20220321130105-e8448aa80d76 h1:KbBnXPdRAo3u3GHZ/GrNniQJPJm+d9nb1b8AvLp5slw=
+gitlab.com/nextensio/apis/controller/go v0.0.0-20220321130105-e8448aa80d76/go.mod h1:6CZ97UjhQquoojTABYrbQqHiZhWXjuSZOzav0H9X7sQ=
+gitlab.com/nextensio/apis/controller/go v0.0.0-20220321132428-1272b5f44dc0 h1:5bHpzRzZBGWtMm32GYezw1k4QsuZkATcc4HVsmzwM1I=
+gitlab.com/nextensio/apis/controller/go v0.0.0-20220321132428-1272b5f44dc0/go.mod h1:6CZ97UjhQquoojTABYrbQqHiZhWXjuSZOzav0H9X7sQ=
+gitlab.com/nextensio/apis/controller/go v0.0.0-20220321133800-3e95b664eeb5 h1:jK++USksUM2YgBNtifsBdQsjvmEBioLP6rr4sOWc1io=
+gitlab.com/nextensio/apis/controller/go v0.0.0-20220321133800-3e95b664eeb5/go.mod h1:6CZ97UjhQquoojTABYrbQqHiZhWXjuSZOzav0H9X7sQ=
+gitlab.com/nextensio/apis/controller/go v0.0.0-20220321134818-1d6b82dc41e3 h1:go/qW6Rb2esYXwrW5Qj/WcFiHNih89xaTpOQlFi2TsA=
+gitlab.com/nextensio/apis/controller/go v0.0.0-20220321134818-1d6b82dc41e3/go.mod h1:6CZ97UjhQquoojTABYrbQqHiZhWXjuSZOzav0H9X7sQ=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
 go.opencensus.io v0.22.0/go.mod h1:+kGneAE2xo2IficOXnaByMWTGM9T73dGwxeWcUqIpI8=
 go.opencensus.io v0.22.2/go.mod h1:yxeiOL68Rb0Xd1ddK5vPZ/oVn4vY4Ynel7k9FzqtOIw=

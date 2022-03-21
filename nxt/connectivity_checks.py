@@ -288,10 +288,10 @@ def publicAndPvtPass(kwargs, agent1, agent2):
 
 
 def publicFail(kwargs):
-    # Exit code 28 means the curl command timed out, which is what we really
+    # Exit code 35 means the curl command timed out, which is what we really
     # expect here
     proxy, text, err = proxyGet(kwargs, 'nxt_agent1', 'https://foobar.com',
-                                "I am Nextensio agent nxt_default", 28) 
+                                "I am Nextensio agent nxt_default", 35) 
     if err == True:
         quit_error(text)
     if proxy == True:
@@ -300,7 +300,7 @@ def publicFail(kwargs):
     # Exit code 28 means the curl command timed out, which is what we really
     # expect here
     proxy, text, err = proxyGet(kwargs, 'nxt_agent2', 'https://foobar.com',
-                                "I am Nextensio agent nxt_default", 28) 
+                                "I am Nextensio agent nxt_default", 35) 
     if err == True:
         quit_error(text)
     if proxy == True:

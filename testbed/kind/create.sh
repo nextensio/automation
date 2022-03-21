@@ -322,7 +322,7 @@ function create_connector {
     etchost_ip=$4
     etchost_name=$5
 
-    ./apis/test -controller $ctrl_ip -bkey $username
+    secret=`./apis/test -controller $ctrl_ip -bkey $username`
     if [ "$?" != "0" ];
     then
         echo $secret

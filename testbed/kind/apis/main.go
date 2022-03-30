@@ -216,7 +216,7 @@ func main() {
 
 	ok, resp, err = client.DefaultApi.AddTenant(ctx, apis.TenantUpdate{Id: TENANT, Name: TENANT, Easymode: false}, "superadmin")
 	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
-		fmt.Println("Tenant creation failed, retrying ...")
+		fmt.Println("Tenant creation failed, retrying ...", err, resp, ok.Result)
 		time.Sleep(1 * time.Second)
 		ok, resp, err = client.DefaultApi.AddTenant(ctx, apis.TenantUpdate{Id: TENANT, Name: TENANT, Easymode: false}, "superadmin")
 	}
@@ -225,7 +225,7 @@ func main() {
 		apis.TenantCluster{Gateway: GW1, Image: "registry.gitlab.com/nextensio/cluster/minion:latest", Apodsets: 2, Apodrepl: 1},
 		"superadmin", TENANT)
 	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
-		fmt.Println("Tenant creation failed, retrying ...")
+		fmt.Println("Cluster add failed, retrying ...", err, resp, ok.Result)
 		time.Sleep(1 * time.Second)
 		ok, resp, err = client.DefaultApi.AddClusterHandler(ctx,
 			apis.TenantCluster{Gateway: GW1, Image: "registry.gitlab.com/nextensio/cluster/minion:latest", Apodsets: 2, Apodrepl: 1},
@@ -236,7 +236,7 @@ func main() {
 		apis.TenantCluster{Gateway: GW2, Image: "registry.gitlab.com/nextensio/cluster/minion:latest", Apodsets: 1, Apodrepl: 1},
 		"superadmin", TENANT)
 	for err != nil || (resp != nil && resp.StatusCode != 200) || ok.Result != "ok" {
-		fmt.Println("Tenant creation failed, retrying ...")
+		fmt.Println("Cluster add failed retrying ...", err, resp, ok.Result)
 		time.Sleep(1 * time.Second)
 		ok, resp, err = client.DefaultApi.AddClusterHandler(ctx,
 			apis.TenantCluster{Gateway: GW2, Image: "registry.gitlab.com/nextensio/cluster/minion:latest", Apodsets: 1, Apodrepl: 1},

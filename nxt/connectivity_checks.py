@@ -7,10 +7,10 @@ import sys
 import re
 import requests
 import time
-from nextensio_controller import *
 import subprocess
 from containers import kube_get_pod
 from containers import docker_run
+import swagger_client
 
 # THE MOTTO: DO DETERMINISTIC TESTING. What it means is simple. Lets say we configure something
 # on the controller and we want to wait to ensure all the pods have got that config. One approach
@@ -26,10 +26,6 @@ from containers import docker_run
 # do it more predictably.
 
 logger = logging.getLogger(__name__)
-url = None
-tenant = None
-clusters = []
-agents = []
 
 GW1 = "gatewaytesta.nextensio.net"
 GW2 = "gatewaytestc.nextensio.net"
@@ -45,7 +41,12 @@ CNCTR1POD = "nextensio-v1kismis"
 CNCTR2POD = "nextensio-v2kismis"
 CNCTR3POD = "nextensio-default"
 
+url = None
+tenant = TENANT
+clusters = []
+agents = []
 token = ""
+api_instance = None
 
 # In nextensio, all services are words seperated by dashes, all dots and @ symbols
 # are converted to dashes
@@ -153,19 +154,19 @@ def checkOnboarding(specs):
         checkUserOnboarding(spec['name'], gw, podnm)
 
 def checkUserOnboarding(uid, gw, podnm):
-    ok, onblog = get_onboard_log(url, tenant, uid, token, "superadmin")
-    while not ok:
+    onblog = api_instance.get_user_onboard_log("superadmin", tenant, uid)
+    while onblog.result != "ok":
         print('Onboarding log entry fetch failed, retrying ...')
         time.sleep(1)
-        ok, onblog = get_onboard_log(url, tenant, uid, token, "superadmin")
-    while onblog['gw'] != gw:
-        print('Waiting for %s to get onboarded, gw %s / %s' % (uid, gw, onblog['gw']))
+        onblog = api_instance.get_user_onboard_log("superadmin", tenant, uid)
+    while onblog.gw != gw:
+        print('Waiting for %s to get onboarded, gw %s / %s' % (uid, gw, onblog.gw))
         time.sleep(1)
-        ok, onblog = get_onboard_log(url, tenant, uid, token, "superadmin")
-    while onblog['connectid'] != podnm:
-        print('Waiting for %s to get onboarded pod %s / %s' % (uid, podnm, onblog['connectid']))
+        onblog = api_instance.get_user_onboard_log("superadmin", tenant, uid)
+    while onblog.connectid != podnm:
+        print('Waiting for %s to get onboarded pod %s / %s' % (uid, podnm, onblog.connectid))
         time.sleep(1)
-        ok, onblog = get_onboard_log(url, tenant, uid, token, "superadmin")
+        onblog = api_instance.get_user_onboard_log("superadmin", tenant, uid)
     print("%s onboarded for cluster %s pod %s" % (uid, gw, podnm))
 
 def parseVersions(versions):
@@ -288,10 +289,10 @@ def publicAndPvtPass(kwargs, agent1, agent2):
 
 
 def publicFail(kwargs):
-    # Exit code 28 means the curl command timed out, which is what we really
+    # Exit code 35 means the curl command timed out, which is what we really
     # expect here
     proxy, text, err = proxyGet(kwargs, 'nxt_agent1', 'https://foobar.com',
-                                "I am Nextensio agent nxt_default", 28) 
+                                "I am Nextensio agent nxt_default", 35) 
     if err == True:
         quit_error(text)
     if proxy == True:
@@ -300,35 +301,31 @@ def publicFail(kwargs):
     # Exit code 28 means the curl command timed out, which is what we really
     # expect here
     proxy, text, err = proxyGet(kwargs, 'nxt_agent2', 'https://foobar.com',
-                                "I am Nextensio agent nxt_default", 28) 
+                                "I am Nextensio agent nxt_default", 35) 
     if err == True:
         quit_error(text)
     if proxy == True:
         quit_error("agent2 default internet works!")
 
 def config_policy():
-    global token
-
     with open('policy.AccessPolicy','r') as file:
         rego = file.read()
-        ok = create_policy(url, tenant, 'AccessPolicy', rego, token, "superadmin")
+        ok = create_policy('AccessPolicy', rego)
         while not ok:
             logger.info('Access Policy creation failed, retrying ...')
             time.sleep(1)
-            ok = create_policy(url, tenant, 'AccessPolicy', rego, token, "superadmin")
+            ok = create_policy('AccessPolicy', rego)
         
     with open('policy.RoutePolicy','r') as file:
         rego = file.read()
-        ok = create_policy(url, tenant, 'RoutePolicy', rego, token, "superadmin")
+        ok = create_policy('RoutePolicy', rego)
         while not ok:
             logger.info('Route Policy creation failed, retrying ...')
             time.sleep(1)
-            ok = create_policy(url, tenant, 'RoutePolicy', rego, token, "superadmin")
+            ok = create_policy('RoutePolicy', rego)
 
         
 def config_routes(tag1, tag2):
-    global token
-
     routejson = { "host": "kismis.org", 
                       "routeattrs": [
 		      {"tag": tag1, "team": ["engineering","sales"], "dept": ["ABU","BBU"],
@@ -337,71 +334,56 @@ def config_routes(tag1, tag2):
                        "category":["employee"], "type":["manager"], "IClvl": 1, "mlvl": 1 }
 		      ]
                 }
-    ok = create_host_attr(url, tenant, routejson, token, "superadmin")
+    ok = create_host_attr(routejson)
     while not ok:
         logger.info('Route creation failed, retrying ...')
         time.sleep(1)
-        ok = create_host_attr(url, tenant, routejson, token, "superadmin")
+        ok = create_host_attr(routejson)
 
 
 def config_user_attr(level1, level2):
-    global token
-
     user1attrjson = {"uid":USER1, "category":"employee", "type":"IC", "level":level1,
                      "dept":["ABU","BBU"], "team":["engineering","sales"],
                      "location": "California", "ostype": "Linux", "osver": 20.04 }
     user2attrjson = {"uid":USER2, "category":"employee", "type":"manager", "level":level2,
                      "dept":["ABU","BBU"], "team":["engineering","sales"],
                      "location": "California", "ostype": "Linux", "osver": 20.04 }
-    ok = create_user_attr(url, tenant, user1attrjson, token, "superadmin")
+    ok = create_user_attr(user1attrjson, USER1)
     while not ok:
         logger.info('UserAttr test1 config failed, retrying ...')
         time.sleep(1)
-        ok = create_user_attr(url, tenant, user1attrjson, token, "superadmin")
+        ok = create_user_attr(user1attrjson, USER1)
 
-    ok = create_user_attr(url, tenant, user2attrjson, token, "superadmin")
+    ok = create_user_attr(user2attrjson, USER2)
     while not ok:
         logger.info('UserAttr test2 config failed, retrying ...')
         time.sleep(1)
-        ok = create_user_attr(url, tenant, user2attrjson, token, "superadmin")
+        ok = create_user_attr(user2attrjson, USER2)
 
 
 def config_user(user, service, gateway, pod):
-    global token
-
-    usernm = 'Test User %s' % user
-    userjson = {"uid":user, "name":usernm, "email":user,
-                 "services":[service], "gateway":gateway, "pod":pod}
-    ok = create_user(url, tenant, userjson, token, "superadmin")
+    ok = create_user(user, user, pod, gateway)
     while not ok:
         logger.info('User %s updation failed, retrying ...' % user)
         time.sleep(1)
-        ok = create_user(url, tenant, userjson, token, "superadmin")
+        ok = create_user(user, user, pod, gateway)
 
 
 def config_bundle(bundle, service, gateway, pod):
-    global token
-
-    bundlenm = 'Bundle %s' % bundle
-    bundlejson = {"bid":bundle, "name":bundlenm,
-                   "services":[service], "gateway":gateway, "pod":pod, "cpodrepl": 2}
-    ok = create_bundle(url, tenant, bundlejson, token, "superadmin")
+    ok = create_bundle(bundle, bundle, [service], pod, gateway, 2)
     while not ok:
         logger.info('Bundle %s updation failed, retrying ...' % bundle)
         time.sleep(1)
-        ok = create_bundle(url, tenant, bundlejson, token, "superadmin")
-
+        ok = create_bundle(bundle, bundle, [service], pod, gateway, 2)
 
 def config_default_bundle_attr(depts, teams):
-    global token
-
     bundleattrjson = {"bid":CNCTR3, "dept":depts,
                        "team":teams, "IC":10, "manager":10, "nonemployee":"allow"}
-    ok = create_bundle_attr(url, tenant, bundleattrjson, token, "superadmin")
+    ok = create_bundle_attr(bundleattrjson)
     while not ok:
         logger.info('BundleAttr bundle default config failed, retrying ...')
         time.sleep(1)
-        ok = create_bundle_attr(url, tenant, bundleattrjson, token, "superadmin")
+        ok = create_bundle_attr(bundleattrjson)
 
 
 # If testing in webproxy mode, the curl command will open a connection to port 8181
@@ -602,6 +584,7 @@ class CommonSetup(aetest.CommonSetup):
         global url
         global tenant
         global token
+        global api_instance
 
         token = runCmd("go run ./pkce.go https://dev-635657.okta.com").strip()
         if token == "":
@@ -610,18 +593,11 @@ class CommonSetup(aetest.CommonSetup):
 
         # Load the testbed information variables as environment variables
         load_dotenv(dotenv_path='/tmp/nextensio-kind/environment')
-        url = "https://" + os.getenv('ctrl_ip') + ":8080"
-        ok, tenants = get_tenants(url, token, "superadmin")
-        while not ok:
-            logger.info('Tenant fetch %s failed, retrying ...' % url)
-            time.sleep(1)
-            ok, tenants = get_tenants(url, token, "superadmin")
-        # The test setup is assumed to be created with just one tenant, if we need more we just need
-        # to search for the right tenant name or something inside the returned list of tenants
-        tenant = tenants[0]['_id']
-        if tenant != TENANT:
-            quit_error('Tenant mismatch after readback from DB - %s != %s' % (tenant, TENANT))
-
+        config = swagger_client.Configuration()
+        config.verify_ssl = False
+        config.host = "https://" + os.getenv('ctrl_ip') + ":8080/api/v1"
+        api_instance = swagger_client.DefaultApi(swagger_client.ApiClient(config))
+        api_instance.api_client.set_default_header("Authorization", "Bearer " + token)
 
     def parseTestbed(self, testbed):
         global clusters
@@ -1236,23 +1212,21 @@ class Agent1PodsConnector3PodsClustersMixed(aetest.Testcase):
 
 # Policies for testing connector to connector
 def conn2conn_policy():
-    global token
-
     with open('conn2conn.AccessPolicy','r') as file:
         rego = file.read()
-        ok = create_policy(url, tenant, 'AccessPolicy', rego, token, "superadmin")
+        ok = create_policy('AccessPolicy', rego)
         while not ok:
             logger.info('Access Policy creation failed, retrying ...')
             time.sleep(1)
-            ok = create_policy(url, tenant, 'AccessPolicy', rego, token, "superadmin")
+            ok = create_policy('AccessPolicy', rego)
         
     with open('conn2conn.RoutePolicy','r') as file:
         rego = file.read()
-        ok = create_policy(url, tenant, 'RoutePolicy', rego, token, "superadmin")
+        ok = create_policy('RoutePolicy', rego)
         while not ok:
             logger.info('Route Policy creation failed, retrying ...')
             time.sleep(1)
-            ok = create_policy(url, tenant, 'RoutePolicy', rego, token, "superadmin")
+            ok = create_policy('RoutePolicy', rego)
 
 class AgentConnectorSquareOne(aetest.Testcase):
     '''Agents and connectors back to their very first placement.
@@ -1285,6 +1259,90 @@ class AgentConnectorSquareOne(aetest.Testcase):
     def squareOneSanity(self, testbed, **kwargs):
         basicAccessSanity(kwargs, specs, testbed.devices)
 
+def create_host_attr(routejson):
+    global api_instance
+
+    try:
+        resp = api_instance.add_host_attr(routejson, "superadmin", tenant)
+        if resp.result != "ok":
+            return False
+    except Exception as e:
+        pass
+        return False
+
+    return True
+
+def create_user_attr(userjson, userid):
+    global api_instance
+
+    try:
+        resp = api_instance.add_user_attr(userjson, "superadmin", tenant, userid)
+        if resp.result != "ok":
+            return False
+    except Exception as e:
+        pass
+        return False
+
+    return True
+
+def create_user(uid, name, pod, gateway):
+    global api_instance
+
+    try:
+        add = swagger_client.UserAdd(uid=uid, name=name, pod=pod, gateway=gateway)
+        resp = api_instance.add_user(add, "superadmin", tenant)
+        if resp.result != "ok":
+            return False
+    except Exception as e:
+        pass
+        return False
+
+    return True
+
+def create_bundle(bid, name, services, pod, gateway, cpodrepl):
+    global api_instance
+
+    try:
+        add = swagger_client.BundleStruct(bid=bid, name=bid, services=services, pod=pod, gateway=gateway, cpodrepl=cpodrepl)  
+        resp = api_instance.add_bundle(add, "superadmin", tenant)
+        if resp.result != "ok":
+            return False
+    except Exception as e:
+        pass
+        return False
+
+    return True
+
+def create_bundle_attr(bjson):
+    global api_instance
+
+    try:
+        resp = api_instance.add_bundle_attr(bjson, "superadmin", tenant)
+        if resp.result != "ok":
+            return False
+    except Exception as e:
+        pass
+        return False
+
+    return True
+
+def create_policy(pid, policy):
+    global api_instance
+
+    rego = []
+    for p in policy:
+        rego.append(ord(p))
+    add = swagger_client.AddPolicy(pid=pid, rego=rego)
+    try:
+        resp = api_instance.add_policy_handler(add, "superadmin", tenant)
+        if resp.result != "ok":
+            return False
+    except Exception as e:
+        pass
+        return False
+
+    return True
+
 if __name__ == '__main__':
     import argparse
     from pyats.topology import loader
@@ -1299,5 +1357,13 @@ if __name__ == '__main__':
     if token == "":
         print('Cannot get access token, exiting')
         exit(1)
+
+    # Load the testbed information variables as environment variables
+    load_dotenv(dotenv_path='/tmp/nextensio-kind/environment')
+    config = swagger_client.Configuration()
+    config.verify_ssl = False
+    config.host = "https://" + os.getenv('ctrl_ip') + ":8080/api/v1"
+    api_instance = swagger_client.DefaultApi(swagger_client.ApiClient(config))
+    api_instance.api_client.set_default_header("Authorization", "Bearer " + token)
 
     aetest.main(**vars(args))

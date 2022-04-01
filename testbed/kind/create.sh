@@ -103,6 +103,7 @@ function load_cluster_images {
     $kind load docker-image $image_consul --name $cluster
     $kind load docker-image registry.gitlab.com/nextensio/cluster/minion:latest --name $cluster
     $kind load docker-image registry.gitlab.com/nextensio/clustermgr/mel:latest --name $cluster
+    $kind load docker-image registry.gitlab.com/nextensio/routereflector/consul-rr:latest --name $cluster
 }
 
 function download_nextensio_agents {

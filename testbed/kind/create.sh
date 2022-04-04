@@ -269,33 +269,13 @@ function consul_query_config {
     "Service": "\${name.full}",
     "Failover": {
       "NearestN": 3,
-      "Datacenters": ["gatewaytestc", "gatewaytesta"]
+      "Datacenters": ["$cluster"]
     }
   }
 }
 EOF
     ret=`kubectl exec -it $cluster-consul-server-0 -n consul-system -- curl --request GET http://127.0.0.1:8500/v1/query`
     done
-}
-
-function consul_join {
-    $kubectl config use-context kind-gatewaytesta
-    consul=`$kubectl get pods -n consul-system | grep consul-server | grep Running`;
-    while [ -z "$consul" ]; do
-      echo "Waiting for gatewaytesta consul pod";
-      consul=`$kubectl get pods -n consul-system | grep consul-server | grep Running`;
-      sleep 5;
-    done
-    $kubectl config use-context kind-gatewaytestc
-    consul=`$kubectl get pods -n consul-system | grep consul-server | grep Running`;
-    while [ -z "$consul" ]; do
-      echo "Waiting for gatewaytestc consul pod";
-      consul=`$kubectl get pods -n consul-system | grep consul-server | grep Running`;
-      sleep 5;
-    done
-    # TODO: Again, if consul crashes, will it remember this join config and automatically
-    # rejoin, or we have to monitor and rejoin ourselves ?
-    $kubectl exec -it gatewaytestc-consul-server-0 -n consul-system -- consul join -wan $gatewaytesta_ip
 }
 
 function create_agent {
@@ -387,9 +367,6 @@ function create_gw_clusters {
     # coredns for DNS entries and the cluster manager itself
     bootstrap_cluster gatewaytesta $gatewaytesta_ip $ctrl_ip
     bootstrap_cluster gatewaytestc $gatewaytestc_ip $ctrl_ip
-
-    # Finally, join the consuls in both clusters after ensuring their pods are Running
-    consul_join
 
     # Configure consul in one cluster to query the remote cluster if local service lookup fails
     # Not sure if this needs to be done on both DCs, doing it anyways

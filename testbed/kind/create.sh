@@ -94,6 +94,7 @@ function download_cluster_infra_images {
 function download_nextensio_cluster {
     docker pull registry.gitlab.com/nextensio/clustermgr/mel:latest
     docker pull registry.gitlab.com/nextensio/cluster/minion:latest
+    docker pull registry.gitlab.com/nextensio/routereflector/consul-rr:latest
 }
 
 function load_cluster_images {

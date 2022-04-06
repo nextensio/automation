@@ -22,6 +22,8 @@ spec:
         stdin: true 
         tty: true 
         env:
+          - name: DEVELOPER_TESTBED
+            value: "true"
           - name: MY_POD_CLUSTER
             value: "REPLACE_CLUSTER"
           - name: MY_YAML
